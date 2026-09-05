@@ -8,6 +8,7 @@ import com.tcm.course.mapper.CourseMapper;
 import com.tcm.course.model.Course;
 import com.tcm.course.model.CourseStatus;
 import com.tcm.course.spec.CourseSpecifications;
+import com.tcm.enrollment.EnrollmentRepository;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
@@ -25,6 +26,7 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final CourseMapper courseMapper;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Override
     public CourseResponse create(CourseRequest request) {
@@ -78,8 +80,11 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public void delete(UUID id) {
-        // TODO(TCM-14): reject deletion once the course has enrollments.
-        courseRepository.delete(getOrThrow(id));
+        Course course = getOrThrow(id);
+        if (enrollmentRepository.existsByCourseId(id)) {
+            throw new BadRequestException("Cannot delete a course that has enrollments");
+        }
+        courseRepository.delete(course);
     }
 
     private User resolveTrainer(UUID trainerId) {

@@ -1,5 +1,6 @@
 package com.tcm.user.mapper;
 
+import com.tcm.enrollment.dto.EnrollmentResponse;
 import com.tcm.user.dto.StudentDirectoryResponse;
 import com.tcm.user.dto.StudentSummaryResponse;
 import com.tcm.user.dto.UserRequest;
@@ -45,17 +46,16 @@ public class UserMapper {
         user.setRole(request.role());
     }
 
-    /** See docs/tasks/TCM-13 - counts are placeholders until TCM-14 exists. */
-    public StudentDirectoryResponse toDirectoryResponse(User student) {
-        // TODO(TCM-14): replace with the real active-enrollment count.
-        return new StudentDirectoryResponse(toResponse(student), 0);
+    /** See docs/tasks/TCM-13. {@code activeEnrollments} is the student's count of APPROVED enrollments. */
+    public StudentDirectoryResponse toDirectoryResponse(User student, long activeEnrollments) {
+        return new StudentDirectoryResponse(toResponse(student), (int) activeEnrollments);
     }
 
     /** See docs/tasks/TCM-13 for the documented, stable response shape. */
-    public StudentSummaryResponse toSummaryResponse(User student) {
+    public StudentSummaryResponse toSummaryResponse(User student, List<EnrollmentResponse> enrollments) {
         return new StudentSummaryResponse(
                 toResponse(student),
-                List.of(), // TODO(TCM-14): populate real enrollments
+                enrollments,
                 null, // TODO(TCM-19): populate real attendance rate
                 List.of(), // TODO(TCM-23): populate real grades
                 null, // TODO(TCM-21): populate real payment balance

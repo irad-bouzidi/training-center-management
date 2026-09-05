@@ -10,7 +10,14 @@ import static org.mockito.ArgumentMatchers.isNull;
 
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
+import com.tcm.course.model.Course;
+import com.tcm.course.model.CourseStatus;
+import com.tcm.enrollment.EnrollmentRepository;
+import com.tcm.enrollment.mapper.EnrollmentMapper;
+import com.tcm.enrollment.model.Enrollment;
+import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.user.dto.ResetPasswordResponse;
+import com.tcm.user.dto.StudentDirectoryResponse;
 import com.tcm.user.dto.StudentSummaryResponse;
 import com.tcm.user.dto.UserRequest;
 import com.tcm.user.dto.UserResponse;
@@ -18,6 +25,8 @@ import com.tcm.user.mapper.UserMapper;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
 import com.tcm.user.model.UserStatus;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,11 +53,15 @@ class UserServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, new UserMapper(), passwordEncoder);
+        userService = new UserServiceImpl(
+                userRepository, new UserMapper(), passwordEncoder, enrollmentRepository, new EnrollmentMapper());
     }
 
     private static User existingUser(UUID id, Role role) {
@@ -191,10 +204,25 @@ class UserServiceImplTest {
     }
 
     @Test
+    void searchStudents_populatesActiveEnrollmentCount() {
+        UUID id = UUID.randomUUID();
+        User student = existingUser(id, Role.STUDENT);
+        Pageable pageable = Pageable.unpaged();
+        when(userRepository.search(eq(Role.STUDENT), isNull(), isNull(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(student)));
+        when(enrollmentRepository.countByStudentIdAndStatus(id, EnrollmentStatus.APPROVED)).thenReturn(3L);
+
+        Page<StudentDirectoryResponse> response = userService.searchStudents(null, null, pageable);
+
+        assertThat(response.getContent().get(0).activeEnrollments()).isEqualTo(3);
+    }
+
+    @Test
     void getStudentSummary_returnsProfileWithStubbedFields() {
         UUID id = UUID.randomUUID();
         User student = existingUser(id, Role.STUDENT);
         when(userRepository.findById(id)).thenReturn(Optional.of(student));
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
 
         StudentSummaryResponse response = userService.getStudentSummary(id);
 
@@ -204,6 +232,29 @@ class UserServiceImplTest {
         assertThat(response.grades()).isEmpty();
         assertThat(response.paymentBalance()).isNull();
         assertThat(response.certificates()).isEmpty();
+    }
+
+    @Test
+    void getStudentSummary_populatesRealEnrollments() {
+        UUID id = UUID.randomUUID();
+        User student = existingUser(id, Role.STUDENT);
+        when(userRepository.findById(id)).thenReturn(Optional.of(student));
+        Course course = Course.builder()
+                .id(UUID.randomUUID()).code("JAVA-101").name("Java Fundamentals")
+                .durationHours(40).capacity(20).price(BigDecimal.TEN)
+                .status(CourseStatus.PUBLISHED)
+                .build();
+        Enrollment enrollment = Enrollment.builder()
+                .id(UUID.randomUUID()).student(student).course(course)
+                .status(EnrollmentStatus.PENDING)
+                .build();
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of(enrollment));
+
+        StudentSummaryResponse response = userService.getStudentSummary(id);
+
+        assertThat(response.enrollments()).hasSize(1);
+        assertThat(response.enrollments().get(0).course().code()).isEqualTo("JAVA-101");
+        assertThat(response.enrollments().get(0).status()).isEqualTo(EnrollmentStatus.PENDING);
     }
 
     @Test

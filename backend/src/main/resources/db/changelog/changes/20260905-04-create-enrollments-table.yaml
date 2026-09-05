@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260905-04-create-enrollments-table
+      author: irad
+      comment: >
+        enrollments table per docs/PLAN.md §5 (TCM-14). status is a varchar +
+        check constraint, matching the users/courses convention. student_id
+        and course_id have no ON DELETE action (default RESTRICT) - a
+        student or course with enrollments must not silently lose its
+        enrollment history; the service layer instead rejects course
+        deletion while enrollments exist. decided_by is nullable with
+        ON DELETE SET NULL, matching courses.primary_trainer_id, so removing
+        the deciding admin never blocks on past decisions.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE enrollments (
+                  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  student_id   UUID NOT NULL REFERENCES users(id),
+                  course_id    UUID NOT NULL REFERENCES courses(id),
+                  status       VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+                               CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'COMPLETED')),
+                  enrolled_at  TIMESTAMP NOT NULL DEFAULT now(),
+                  decided_at   TIMESTAMP,
+                  decided_by   UUID REFERENCES users(id) ON DELETE SET NULL
+              );
+
+              CREATE UNIQUE INDEX ux_enrollments_student_course ON enrollments (student_id, course_id);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS enrollments;

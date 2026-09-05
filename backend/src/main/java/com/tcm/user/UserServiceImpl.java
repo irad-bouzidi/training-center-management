@@ -2,6 +2,9 @@ package com.tcm.user;
 
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
+import com.tcm.enrollment.EnrollmentRepository;
+import com.tcm.enrollment.mapper.EnrollmentMapper;
+import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.user.dto.ResetPasswordResponse;
 import com.tcm.user.dto.StudentDirectoryResponse;
 import com.tcm.user.dto.StudentSummaryResponse;
@@ -31,6 +34,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentMapper enrollmentMapper;
 
     @Override
     public UserResponse create(UserRequest request) {
@@ -88,7 +93,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<StudentDirectoryResponse> searchStudents(UserStatus status, String name, Pageable pageable) {
-        return userRepository.search(Role.STUDENT, status, name, pageable).map(userMapper::toDirectoryResponse);
+        return userRepository.search(Role.STUDENT, status, name, pageable)
+                .map(student -> userMapper.toDirectoryResponse(student,
+                        enrollmentRepository.countByStudentIdAndStatus(student.getId(), EnrollmentStatus.APPROVED)));
     }
 
     @Override
@@ -97,7 +104,10 @@ public class UserServiceImpl implements UserService {
         if (user.getRole() != Role.STUDENT) {
             throw new BadRequestException("User " + id + " is not a student");
         }
-        return userMapper.toSummaryResponse(user);
+        var enrollments = enrollmentRepository.findByStudentId(id).stream()
+                .map(enrollmentMapper::toResponse)
+                .toList();
+        return userMapper.toSummaryResponse(user, enrollments);
     }
 
     private User getOrThrow(UUID id) {
