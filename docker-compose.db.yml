@@ -1,0 +1,22 @@
+# Local dev convenience: spin up just Postgres so the backend can be run
+# directly on the host (`mvn spring-boot:run`) without the full stack from
+# TCM-5. Not used by the production/full docker-compose.yml.
+#
+# Usage:
+#   cp .env.example .env
+#   docker compose -f docker-compose.db.yml up -d
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tcm}
+      POSTGRES_USER: ${POSTGRES_USER:-tcm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - tcm_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  tcm_postgres_data:

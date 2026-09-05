@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260101-01-init-extensions
+      author: irad
+      comment: >
+        Enable pgcrypto so gen_random_uuid() is available as the default
+        value generator for UUID primary keys used by every future table.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: CREATE EXTENSION IF NOT EXISTS pgcrypto;
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP EXTENSION IF EXISTS pgcrypto;
