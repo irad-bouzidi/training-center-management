@@ -18,3 +18,9 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    parameters:
+      # Bootstrap admin seeded by 20260905-02-seed-bootstrap-admin.yaml.
+      # Default credentials: admin@tcm.local / ChangeMe123! - documented in
+      # README, rotate before any real deployment.
+      bootstrap-admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@tcm.local}
+      bootstrap-admin-password-hash: ${BOOTSTRAP_ADMIN_PASSWORD_HASH:$2a$10$MWeAhDLU78RJHul4Jc9osuy8MtK8m8RecYyoaTWy/vu4C.Gb9HGuG}

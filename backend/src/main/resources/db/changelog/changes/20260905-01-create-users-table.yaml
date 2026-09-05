@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260905-01-create-users-table
+      author: irad
+      comment: >
+        users table per docs/PLAN.md §5. role/status are varchar + check
+        constraint rather than Postgres enums, so adding a value later is a
+        one-line CHECK change instead of an ALTER TYPE migration.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE users (
+                  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  first_name     VARCHAR(100) NOT NULL,
+                  last_name      VARCHAR(100) NOT NULL,
+                  email          VARCHAR(255) NOT NULL,
+                  password_hash  VARCHAR(255) NOT NULL,
+                  phone          VARCHAR(30),
+                  role           VARCHAR(20) NOT NULL
+                                 CHECK (role IN ('ADMIN', 'TRAINER', 'STUDENT')),
+                  status         VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+                                 CHECK (status IN ('ACTIVE', 'INACTIVE')),
+                  created_at     TIMESTAMP NOT NULL DEFAULT now(),
+                  updated_at     TIMESTAMP NOT NULL DEFAULT now()
+              );
+
+              CREATE UNIQUE INDEX ux_users_email ON users (email);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS users;
