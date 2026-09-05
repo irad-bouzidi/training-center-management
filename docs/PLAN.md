@@ -6,8 +6,8 @@ this first before implementing any `TCM-*` task.
 
 ## 1. Source Requirements
 
-See [`Training Center Management Application.md`](../Training%20Center%20Management%20Application.md)
-at the repo root for the original feature brief. Summary:
+See [`Training Center Management Application.md`](Training%20Center%20Management%20Application.md)
+for the original feature brief. Summary:
 
 - **Roles**: Administrator, Trainer, Student.
 - **Core features**: Course/Training management, Student management,

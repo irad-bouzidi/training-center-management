@@ -5,7 +5,7 @@ students, enrollments, scheduling, attendance, payments, grades, and PDF
 certificate generation — with three roles (Administrator, Trainer, Student)
 and a bonus QR-code attendance feature.
 
-See [`Training Center Management Application.md`](Training%20Center%20Management%20Application.md)
+See [`docs/Training Center Management Application.md`](docs/Training%20Center%20Management%20Application.md)
 for the original feature brief.
 
 ## Tech Stack
