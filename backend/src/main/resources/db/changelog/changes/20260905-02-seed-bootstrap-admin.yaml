@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260905-02-seed-bootstrap-admin
+      author: irad
+      comment: >
+        One bootstrap Administrator account so the system is usable on
+        first boot. Email/password-hash are Liquibase changelog parameters
+        (see spring.liquibase.parameters in application.yml) so they can be
+        overridden per-environment via BOOTSTRAP_ADMIN_EMAIL /
+        BOOTSTRAP_ADMIN_PASSWORD_HASH without touching this file. The
+        default credentials are documented in README - rotate them before
+        any real deployment.
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: first_name
+                  value: System
+              - column:
+                  name: last_name
+                  value: Administrator
+              - column:
+                  name: email
+                  value: ${bootstrap-admin-email}
+              - column:
+                  name: password_hash
+                  value: ${bootstrap-admin-password-hash}
+              - column:
+                  name: role
+                  value: ADMIN
+              - column:
+                  name: status
+                  value: ACTIVE
+      rollback:
+        - delete:
+            tableName: users
+            where: email = '${bootstrap-admin-email}'

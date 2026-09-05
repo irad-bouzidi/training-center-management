@@ -51,6 +51,20 @@ volume, with:
 docker compose down -v
 ```
 
+### Default credentials
+
+A bootstrap Administrator account is seeded by Liquibase on first boot so
+the system is usable right away:
+
+| Email | Password |
+|---|---|
+| `admin@tcm.local` | `ChangeMe123!` |
+
+**Rotate this before any real deployment.** Override it per-environment via
+the `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD_HASH` env vars (the
+password var takes a BCrypt hash, not plaintext) instead of editing the
+changelog - see `backend/src/main/resources/application.yml`.
+
 ### Dev mode (hot-reload)
 
 For backend/frontend hot-reload instead of rebuilding images on every
