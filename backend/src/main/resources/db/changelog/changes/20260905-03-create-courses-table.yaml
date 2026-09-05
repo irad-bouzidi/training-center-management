@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260905-03-create-courses-table
+      author: irad
+      comment: >
+        courses table per docs/PLAN.md §5 (TCM-11). status is a varchar +
+        check constraint, matching the users table's role/status convention,
+        so adding a new status later is a one-line CHECK change rather than
+        an ALTER TYPE migration. primary_trainer_id is nullable with
+        ON DELETE SET NULL so removing a trainer user never blocks on their
+        assigned courses.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE courses (
+                  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  code                VARCHAR(50) NOT NULL,
+                  name                VARCHAR(200) NOT NULL,
+                  description         TEXT,
+                  duration_hours      INT NOT NULL,
+                  capacity            INT NOT NULL,
+                  category            VARCHAR(100),
+                  primary_trainer_id  UUID REFERENCES users(id) ON DELETE SET NULL,
+                  price               NUMERIC(10,2) NOT NULL,
+                  status              VARCHAR(20) NOT NULL DEFAULT 'DRAFT'
+                                      CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
+                  created_at          TIMESTAMP NOT NULL DEFAULT now(),
+                  updated_at          TIMESTAMP NOT NULL DEFAULT now()
+              );
+
+              CREATE UNIQUE INDEX ux_courses_code ON courses (code);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS courses;
