@@ -1,12 +1,12 @@
 import { AppShell } from './AppShell'
 
-// Disabled items are features later tasks build (TCM-15, 16, 18,
+// Disabled items are features later tasks build (TCM-16, 18,
 // 20, 22, 24, 26, 29) - stubbed here per docs/tasks/TCM-9-frontend-auth.md.
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/admin', enabled: true },
   { label: 'Users', to: '/admin/users', enabled: true },
   { label: 'Courses', to: '/admin/courses', enabled: true },
-  { label: 'Students', enabled: false },
+  { label: 'Students', to: '/admin/students', enabled: true },
   { label: 'Enrollments', enabled: false },
   { label: 'Scheduling', enabled: false },
   { label: 'Attendance', enabled: false },

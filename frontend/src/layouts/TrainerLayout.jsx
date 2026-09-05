@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', to: '/trainer', enabled: true },
   { label: 'My Courses', enabled: false },
   { label: 'Course Catalog', to: '/trainer/courses', enabled: true },
+  { label: 'Students', to: '/trainer/students', enabled: true },
   { label: 'Scheduling', enabled: false },
   { label: 'Attendance', enabled: false },
   { label: 'Grades', enabled: false },

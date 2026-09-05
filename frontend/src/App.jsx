@@ -6,6 +6,8 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
 import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
+import { StudentSummaryPage } from '@/features/students/StudentSummaryPage'
+import { StudentsListPage } from '@/features/students/StudentsListPage'
 import { UsersListPage } from '@/features/users/UsersListPage'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
@@ -34,6 +36,8 @@ function App() {
                   <Route path="users" element={<UsersListPage />} />
                   <Route path="courses" element={<CoursesListPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
+                  <Route path="students" element={<StudentsListPage />} />
+                  <Route path="students/:id" element={<StudentSummaryPage />} />
                 </Route>
               </Route>
 
@@ -42,6 +46,8 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="courses" element={<CourseCatalogPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
+                  <Route path="students" element={<StudentsListPage />} />
+                  <Route path="students/:id" element={<StudentSummaryPage />} />
                 </Route>
               </Route>
 

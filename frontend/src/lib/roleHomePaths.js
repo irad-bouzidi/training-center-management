@@ -17,3 +17,13 @@ export function courseListPathForRole(role) {
 export function courseDetailPathForRole(role, id) {
   return `${courseListPathForRole(role)}/${id}`
 }
+
+/** Admin and Trainer both mount the student directory/summary routes at
+ * their own `<home>/students` prefix - see StudentsListPage/StudentSummaryPage. */
+export function studentListPathForRole(role) {
+  return `${homePathForRole(role)}/students`
+}
+
+export function studentDetailPathForRole(role, id) {
+  return `${studentListPathForRole(role)}/${id}`
+}
