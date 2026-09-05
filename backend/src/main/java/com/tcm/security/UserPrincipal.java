@@ -4,6 +4,7 @@ import com.tcm.user.model.User;
 import com.tcm.user.model.UserStatus;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +22,12 @@ public class UserPrincipal implements UserDetails {
 
     public UserPrincipal(User user) {
         this.user = user;
+    }
+
+    /** Convenience delegate so {@code @PreAuthorize} SpEL can read
+     * {@code authentication.principal.id} directly. */
+    public UUID getId() {
+        return user.getId();
     }
 
     @Override
