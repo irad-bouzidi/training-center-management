@@ -24,3 +24,10 @@ spring:
       # README, rotate before any real deployment.
       bootstrap-admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@tcm.local}
       bootstrap-admin-password-hash: ${BOOTSTRAP_ADMIN_PASSWORD_HASH:$2a$10$MWeAhDLU78RJHul4Jc9osuy8MtK8m8RecYyoaTWy/vu4C.Gb9HGuG}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:changeme}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
