@@ -53,6 +53,22 @@ On startup, Liquibase creates its bookkeeping tables
 (`databasechangelog`, `databasechangeloglock`) and applies the changelogs
 under `src/main/resources/db/changelog/`.
 
+## Frontend Development (without full Docker stack)
+
+To run the frontend directly on the host, without the full stack from
+`docker-compose.yml` (added in TCM-5):
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+`VITE_API_BASE_URL` in `frontend/.env` should point at wherever the backend
+is running (e.g. `http://localhost:8080/api/v1` for a backend started per
+the section above).
+
 ## Documentation
 
 - [`docs/PLAN.md`](docs/PLAN.md) — global architecture, conventions, and
