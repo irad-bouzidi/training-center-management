@@ -64,6 +64,15 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
 
+        <!-- Hot-reload for the docker-compose.override.yml.example dev
+             workflow; excluded from the repackaged prod jar automatically. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

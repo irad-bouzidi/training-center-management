@@ -36,6 +36,35 @@ cp .env.example .env
 docker compose up --build
 ```
 
+This brings up `postgres`, `backend`, and `frontend` together, wired
+end-to-end:
+
+- Frontend: http://localhost:5173
+- Backend health check: http://localhost:8080/api/v1/health → `{"status":"UP"}`
+
+Postgres becomes healthy first (`pg_isready`), then the backend starts and
+Liquibase applies its changelogs, then the frontend (nginx, proxying `/api`
+to the backend) comes up. Tear everything down, including the database
+volume, with:
+
+```bash
+docker compose down -v
+```
+
+### Dev mode (hot-reload)
+
+For backend/frontend hot-reload instead of rebuilding images on every
+change, opt into `docker-compose.override.yml.example`:
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+docker compose up --build
+```
+
+This is dev-only (bind-mounted source, `mvn spring-boot:run` +
+spring-boot-devtools for the backend, the Vite dev server for the
+frontend) - never used in production.
+
 ## Backend Development (without full Docker stack)
 
 To run the backend directly on the host (`mvn spring-boot:run`) against a
