@@ -65,6 +65,17 @@ the `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD_HASH` env vars (the
 password var takes a BCrypt hash, not plaintext) instead of editing the
 changelog - see `backend/src/main/resources/application.yml`.
 
+### Authentication
+
+`POST /api/v1/auth/login` (email, password) returns a JWT; send it as
+`Authorization: Bearer <token>` on everything else - `/api/v1/auth/**`
+(other than `/login`) and `/api/v1/health` are the only public routes.
+`GET /api/v1/auth/me` returns the caller's profile. There is no
+self-registration endpoint - accounts are created by Administrators (user
+management API lands in TCM-8). `CORS_ALLOWED_ORIGIN` (defaults to
+`http://localhost:5173`) controls which origin the API accepts
+cross-origin requests from.
+
 ### Dev mode (hot-reload)
 
 For backend/frontend hot-reload instead of rebuilding images on every

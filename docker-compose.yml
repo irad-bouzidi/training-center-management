@@ -30,6 +30,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      CORS_ALLOWED_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     networks:
