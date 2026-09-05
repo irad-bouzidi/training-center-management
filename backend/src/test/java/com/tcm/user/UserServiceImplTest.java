@@ -5,9 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
 import com.tcm.user.dto.ResetPasswordResponse;
+import com.tcm.user.dto.StudentSummaryResponse;
 import com.tcm.user.dto.UserRequest;
 import com.tcm.user.dto.UserResponse;
 import com.tcm.user.mapper.UserMapper;
@@ -21,6 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -169,5 +176,43 @@ class UserServiceImplTest {
 
         assertThat(response.tempPassword()).hasSize(12);
         assertThat(user.getPasswordHash()).isEqualTo("new-hash");
+    }
+
+    @Test
+    void searchStudents_alwaysFiltersByStudentRole() {
+        User student = existingUser(UUID.randomUUID(), Role.STUDENT);
+        Pageable pageable = Pageable.unpaged();
+        when(userRepository.search(eq(Role.STUDENT), isNull(), isNull(), eq(pageable)))
+                .thenReturn(new PageImpl<>(java.util.List.of(student)));
+
+        Page<?> response = userService.searchStudents(null, null, pageable);
+
+        assertThat(response.getContent()).hasSize(1);
+    }
+
+    @Test
+    void getStudentSummary_returnsProfileWithStubbedFields() {
+        UUID id = UUID.randomUUID();
+        User student = existingUser(id, Role.STUDENT);
+        when(userRepository.findById(id)).thenReturn(Optional.of(student));
+
+        StudentSummaryResponse response = userService.getStudentSummary(id);
+
+        assertThat(response.profile().id()).isEqualTo(id);
+        assertThat(response.enrollments()).isEmpty();
+        assertThat(response.attendanceRate()).isNull();
+        assertThat(response.grades()).isEmpty();
+        assertThat(response.paymentBalance()).isNull();
+        assertThat(response.certificates()).isEmpty();
+    }
+
+    @Test
+    void getStudentSummary_nonStudentUser_throwsBadRequest() {
+        UUID id = UUID.randomUUID();
+        User trainer = existingUser(id, Role.TRAINER);
+        when(userRepository.findById(id)).thenReturn(Optional.of(trainer));
+
+        assertThatThrownBy(() -> userService.getStudentSummary(id))
+                .isInstanceOf(BadRequestException.class);
     }
 }
