@@ -3,6 +3,8 @@ package com.tcm.user;
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
 import com.tcm.user.dto.ResetPasswordResponse;
+import com.tcm.user.dto.StudentDirectoryResponse;
+import com.tcm.user.dto.StudentSummaryResponse;
 import com.tcm.user.dto.UserRequest;
 import com.tcm.user.dto.UserResponse;
 import com.tcm.user.mapper.UserMapper;
@@ -82,6 +84,20 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(passwordEncoder.encode(tempPassword));
         userRepository.save(user);
         return new ResetPasswordResponse(tempPassword);
+    }
+
+    @Override
+    public Page<StudentDirectoryResponse> searchStudents(UserStatus status, String name, Pageable pageable) {
+        return userRepository.search(Role.STUDENT, status, name, pageable).map(userMapper::toDirectoryResponse);
+    }
+
+    @Override
+    public StudentSummaryResponse getStudentSummary(UUID id) {
+        User user = getOrThrow(id);
+        if (user.getRole() != Role.STUDENT) {
+            throw new BadRequestException("User " + id + " is not a student");
+        }
+        return userMapper.toSummaryResponse(user);
     }
 
     private User getOrThrow(UUID id) {
