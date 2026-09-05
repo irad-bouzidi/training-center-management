@@ -36,6 +36,23 @@ cp .env.example .env
 docker compose up --build
 ```
 
+## Backend Development (without full Docker stack)
+
+To run the backend directly on the host (`mvn spring-boot:run`) against a
+real Postgres, without the full stack from `docker-compose.yml` (added in
+TCM-5), spin up just the database:
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.db.yml up -d
+cd backend
+mvn spring-boot:run
+```
+
+On startup, Liquibase creates its bookkeeping tables
+(`databasechangelog`, `databasechangeloglock`) and applies the changelogs
+under `src/main/resources/db/changelog/`.
+
 ## Documentation
 
 - [`docs/PLAN.md`](docs/PLAN.md) — global architecture, conventions, and
