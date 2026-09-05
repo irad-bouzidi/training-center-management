@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/context/AuthContext'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { UsersListPage } from '@/features/users/UsersListPage'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
 import { TrainerLayout } from '@/layouts/TrainerLayout'
@@ -27,6 +28,7 @@ function App() {
               <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<HomePage />} />
+                  <Route path="users" element={<UsersListPage />} />
                 </Route>
               </Route>
 
