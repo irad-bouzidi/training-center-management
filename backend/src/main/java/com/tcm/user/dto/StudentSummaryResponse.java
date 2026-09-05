@@ -1,5 +1,6 @@
 package com.tcm.user.dto;
 
+import com.tcm.enrollment.dto.EnrollmentResponse;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -13,12 +14,13 @@ import java.util.List;
  *   paymentBalance: null, certificates: [] }
  * </pre>
  *
- * Each list/aggregate below is a stub populated by a later task - see the
+ * {@code enrollments} is populated for real as of TCM-14; the remaining
+ * lists/aggregates are still stubs populated by a later task - see the
  * {@code // TODO} markers on {@link com.tcm.user.mapper.UserMapper#toSummaryResponse}.
  */
 public record StudentSummaryResponse(
         UserResponse profile,
-        List<Object> enrollments,
+        List<EnrollmentResponse> enrollments,
         Double attendanceRate,
         List<Object> grades,
         BigDecimal paymentBalance,

@@ -11,3 +11,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/20260905-03-create-courses-table.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changes/20260905-04-create-enrollments-table.yaml
+      relativeToChangelogFile: false

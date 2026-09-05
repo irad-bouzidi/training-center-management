@@ -12,6 +12,7 @@ import com.tcm.course.dto.CourseResponse;
 import com.tcm.course.mapper.CourseMapper;
 import com.tcm.course.model.Course;
 import com.tcm.course.model.CourseStatus;
+import com.tcm.enrollment.EnrollmentRepository;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
@@ -38,11 +39,14 @@ class CourseServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+
     private CourseServiceImpl courseService;
 
     @BeforeEach
     void setUp() {
-        courseService = new CourseServiceImpl(courseRepository, userRepository, new CourseMapper());
+        courseService = new CourseServiceImpl(courseRepository, userRepository, new CourseMapper(), enrollmentRepository);
     }
 
     private static CourseRequest requestWithTrainer(UUID trainerId) {
@@ -164,9 +168,23 @@ class CourseServiceImplTest {
         UUID id = UUID.randomUUID();
         Course course = existingCourse(id);
         when(courseRepository.findById(id)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByCourseId(id)).thenReturn(false);
 
         courseService.delete(id);
 
         org.mockito.Mockito.verify(courseRepository).delete(course);
+    }
+
+    @Test
+    void delete_courseWithEnrollments_throwsBadRequest() {
+        UUID id = UUID.randomUUID();
+        Course course = existingCourse(id);
+        when(courseRepository.findById(id)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByCourseId(id)).thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.delete(id))
+                .isInstanceOf(BadRequestException.class);
+
+        org.mockito.Mockito.verify(courseRepository, org.mockito.Mockito.never()).delete(any(Course.class));
     }
 }
