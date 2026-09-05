@@ -1,0 +1,45 @@
+# === Java / Maven (backend) ===
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# === Node (frontend) ===
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# === IDE ===
+.idea/
+.vscode/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+
+# === Env files ===
+.env
+.env.local
+.env.*.local
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/
