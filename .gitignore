@@ -36,6 +36,9 @@ pnpm-debug.log*
 .env.local
 .env.*.local
 
+# === Docker Compose dev overrides (see docker-compose.override.yml.example) ===
+docker-compose.override.yml
+
 # === OS ===
 .DS_Store
 Thumbs.db
