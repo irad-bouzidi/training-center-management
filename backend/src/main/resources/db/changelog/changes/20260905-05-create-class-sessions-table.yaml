@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260905-05-create-class-sessions-table
+      author: irad
+      comment: >
+        class_sessions table per docs/PLAN.md §5 (TCM-17). status is a
+        varchar + check constraint, matching the users/courses/enrollments
+        convention. course_id and trainer_id have no ON DELETE action
+        (default RESTRICT) - a course or trainer must not silently lose its
+        schedule, and a session keeps a trainer for the whole of its life
+        (unlike courses.primary_trainer_id, which is nullable). qr_token and
+        qr_expires_at are created nullable and unused here: only TCM-27's QR
+        attendance flow populates them, but they ship now so that task needs
+        no migration of its own. The time-order check mirrors the service's
+        own endTime > startTime validation, so the invariant survives a
+        write that doesn't go through the service.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE class_sessions (
+                  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  course_id      UUID NOT NULL REFERENCES courses(id),
+                  trainer_id     UUID NOT NULL REFERENCES users(id),
+                  classroom      VARCHAR(100) NOT NULL,
+                  session_date   DATE NOT NULL,
+                  start_time     TIME NOT NULL,
+                  end_time       TIME NOT NULL,
+                  status         VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED'
+                                 CHECK (status IN ('SCHEDULED', 'CANCELLED', 'COMPLETED')),
+                  qr_token       VARCHAR(255),
+                  qr_expires_at  TIMESTAMP,
+                  CONSTRAINT ck_class_sessions_time_order CHECK (end_time > start_time)
+              );
+
+              -- Calendar reads filter by course or trainer within a date
+              -- range; the overlap check reads by (trainer, date) and by
+              -- (classroom, date).
+              CREATE INDEX ix_class_sessions_course_date ON class_sessions (course_id, session_date);
+              CREATE INDEX ix_class_sessions_trainer_date ON class_sessions (trainer_id, session_date);
+              CREATE INDEX ix_class_sessions_classroom_date ON class_sessions (classroom, session_date);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS class_sessions;
