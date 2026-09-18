@@ -9,10 +9,14 @@ import com.tcm.course.model.Course;
 import com.tcm.course.model.CourseStatus;
 import com.tcm.course.spec.CourseSpecifications;
 import com.tcm.enrollment.EnrollmentRepository;
+import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +39,7 @@ public class CourseServiceImpl implements CourseService {
         }
         User trainer = resolveTrainer(request.primaryTrainerId());
         Course course = courseMapper.toNewEntity(request, trainer);
-        return courseMapper.toResponse(courseRepository.save(course));
+        return toResponse(courseRepository.save(course));
     }
 
     @Override
@@ -46,19 +50,19 @@ public class CourseServiceImpl implements CourseService {
         }
         User trainer = resolveTrainer(request.primaryTrainerId());
         courseMapper.applyUpdate(course, request, trainer);
-        return courseMapper.toResponse(courseRepository.save(course));
+        return toResponse(courseRepository.save(course));
     }
 
     @Override
     public CourseResponse changeStatus(UUID id, CourseStatus status) {
         Course course = getOrThrow(id);
         course.setStatus(status);
-        return courseMapper.toResponse(courseRepository.save(course));
+        return toResponse(courseRepository.save(course));
     }
 
     @Override
     public CourseResponse findById(UUID id) {
-        return courseMapper.toResponse(getOrThrow(id));
+        return toResponse(getOrThrow(id));
     }
 
     @Override
@@ -69,13 +73,13 @@ public class CourseServiceImpl implements CourseService {
                 .and(CourseSpecifications.hasCategory(category))
                 .and(CourseSpecifications.hasTrainer(trainerId))
                 .and(CourseSpecifications.nameOrCodeContains(query));
-        return courseRepository.findAll(spec, pageable).map(courseMapper::toResponse);
+        return toResponsePage(courseRepository.findAll(spec, pageable));
     }
 
     @Override
     public Page<CourseResponse> findMine(UUID trainerId, Pageable pageable) {
         Specification<Course> spec = Specification.where(CourseSpecifications.hasTrainer(trainerId));
-        return courseRepository.findAll(spec, pageable).map(courseMapper::toResponse);
+        return toResponsePage(courseRepository.findAll(spec, pageable));
     }
 
     @Override
@@ -85,6 +89,25 @@ public class CourseServiceImpl implements CourseService {
             throw new BadRequestException("Cannot delete a course that has enrollments");
         }
         courseRepository.delete(course);
+    }
+
+    private CourseResponse toResponse(Course course) {
+        return courseMapper.toResponse(course,
+                enrollmentRepository.countByCourseIdAndStatus(course.getId(), EnrollmentStatus.APPROVED));
+    }
+
+    /** One grouped count query for the whole page rather than one per row. */
+    private Page<CourseResponse> toResponsePage(Page<Course> page) {
+        List<Course> courses = page.getContent();
+        if (courses.isEmpty()) {
+            return page.map(course -> courseMapper.toResponse(course, 0L));
+        }
+        Map<UUID, Long> approvedCounts = enrollmentRepository
+                .countByCourseIdInAndStatus(courses.stream().map(Course::getId).toList(), EnrollmentStatus.APPROVED)
+                .stream()
+                .collect(Collectors.toMap(EnrollmentRepository.CourseStatusCount::getCourseId,
+                        EnrollmentRepository.CourseStatusCount::getTotal));
+        return page.map(course -> courseMapper.toResponse(course, approvedCounts.getOrDefault(course.getId(), 0L)));
     }
 
     private User resolveTrainer(UUID trainerId) {

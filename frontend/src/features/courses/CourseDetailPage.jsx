@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/context/AuthContext'
+import { CourseEnrollmentsTab } from '@/features/enrollments/CourseEnrollmentsTab'
 import { CourseFormDialog } from './CourseFormDialog'
 import { CourseRowActions } from './CourseRowActions'
 import { formatDate, formatPrice, statusBadgeVariant, titleCase } from './courseDisplay'
@@ -25,8 +26,9 @@ function Field({ label, value }) {
  * /admin/courses/:id, /trainer/courses/:id, /student/courses/:id) - see
  * docs/tasks/TCM-12-frontend-course-management.md step 4. Only ADMIN gets
  * the edit/status actions; Trainer/Student reach this same route read-only,
- * from the shared catalog (CourseCatalogPage). Schedule/Enrollments tabs are
- * placeholders later tasks fill in (TCM-18, TCM-16).
+ * from the shared catalog (CourseCatalogPage). The Enrollments tab is
+ * role-aware (see CourseEnrollmentsTab, TCM-16); the Schedule tab is a
+ * placeholder TCM-18 fills in.
  */
 export function CourseDetailPage() {
   const { id } = useParams()
@@ -82,8 +84,8 @@ export function CourseDetailPage() {
             <TabsContent value="schedule" className="text-sm text-muted-foreground">
               Scheduling comes in TCM-18.
             </TabsContent>
-            <TabsContent value="enrollments" className="text-sm text-muted-foreground">
-              Enrollment management comes in TCM-16.
+            <TabsContent value="enrollments">
+              <CourseEnrollmentsTab course={course} />
             </TabsContent>
           </Tabs>
         </CardContent>

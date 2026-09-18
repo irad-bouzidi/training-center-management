@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/AuthContext'
+import { EnrollButton } from '@/features/enrollments/EnrollButton'
+import { useMyEnrollmentsByCourseQuery } from '@/features/enrollments/hooks'
 import { courseDetailPathForRole } from '@/lib/roleHomePaths'
 import { formatPrice } from './courseDisplay'
 import { useCoursesQuery } from './hooks'
@@ -16,7 +18,9 @@ const PAGE_SIZE = 12
  * see docs/tasks/TCM-12-frontend-course-management.md step 5. The backend
  * already restricts non-admin callers to PUBLISHED courses regardless of any
  * status filter (see CourseController#search), so no client-side status
- * filtering is needed here. The enroll action lands in TCM-16.
+ * filtering is needed here. A Student additionally gets the enroll action on
+ * each card, per docs/tasks/TCM-16-frontend-course-catalog-enrollment.md
+ * step 2; a Trainer sees the same grid read-only.
  */
 export function CourseCatalogPage() {
   const { user } = useAuth()
@@ -35,6 +39,8 @@ export function CourseCatalogPage() {
   }, [searchInput])
 
   const { data, isLoading } = useCoursesQuery({ page, size: PAGE_SIZE, query: query || undefined })
+  const isStudent = user.role === 'STUDENT'
+  const { data: myEnrollments } = useMyEnrollmentsByCourseQuery(isStudent)
   const courses = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
   const totalElements = data?.totalElements ?? 0
@@ -79,11 +85,17 @@ export function CourseCatalogPage() {
               <div className="flex flex-wrap gap-2">
                 {course.category && <Badge variant="outline">{course.category}</Badge>}
                 <Badge variant="outline">{course.durationHours}h</Badge>
+                <Badge variant="outline">
+                  {course.approvedCount}/{course.capacity} enrolled
+                </Badge>
               </div>
             </CardContent>
-            <CardFooter className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>{course.primaryTrainer?.name ?? 'Unassigned'}</span>
-              <span className="font-medium text-foreground">{formatPrice(course.price)}</span>
+            <CardFooter className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+              <span className="truncate">{course.primaryTrainer?.name ?? 'Unassigned'}</span>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="font-medium text-foreground">{formatPrice(course.price)}</span>
+                {isStudent && <EnrollButton course={course} enrollment={myEnrollments?.get(course.id)} />}
+              </div>
             </CardFooter>
           </Card>
         ))}

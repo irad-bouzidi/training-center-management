@@ -16,6 +16,7 @@ public record CourseResponse(
         TrainerSummary primaryTrainer,
         BigDecimal price,
         CourseStatus status,
+        long approvedCount,
         Instant createdAt,
         Instant updatedAt
 ) {

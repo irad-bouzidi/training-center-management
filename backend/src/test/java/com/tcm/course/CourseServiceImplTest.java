@@ -13,11 +13,13 @@ import com.tcm.course.mapper.CourseMapper;
 import com.tcm.course.model.Course;
 import com.tcm.course.model.CourseStatus;
 import com.tcm.enrollment.EnrollmentRepository;
+import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
 import com.tcm.user.model.UserStatus;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * Unit test with mocked repositories - the real {@link CourseMapper} is used
@@ -161,6 +168,48 @@ class CourseServiceImplTest {
 
         assertThatThrownBy(() -> courseService.findById(id))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void findById_reportsApprovedEnrollmentCount() {
+        UUID id = UUID.randomUUID();
+        when(courseRepository.findById(id)).thenReturn(Optional.of(existingCourse(id)));
+        when(enrollmentRepository.countByCourseIdAndStatus(id, EnrollmentStatus.APPROVED)).thenReturn(7L);
+
+        assertThat(courseService.findById(id).approvedCount()).isEqualTo(7L);
+    }
+
+    /** The catalog reads {@code approvedCount} against {@code capacity} to show a
+     * course as full (TCM-16), so a listing has to carry per-row counts too -
+     * from one grouped query, with the rows it doesn't mention counting zero. */
+    @Test
+    void search_fillsApprovedCountPerRowAndDefaultsToZero() {
+        UUID withEnrollments = UUID.randomUUID();
+        UUID withoutEnrollments = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 20);
+        when(courseRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(existingCourse(withEnrollments), existingCourse(withoutEnrollments))));
+        when(enrollmentRepository.countByCourseIdInAndStatus(List.of(withEnrollments, withoutEnrollments),
+                EnrollmentStatus.APPROVED))
+                .thenReturn(List.of(approvedCount(withEnrollments, 3L)));
+
+        Page<CourseResponse> page = courseService.search(null, null, null, null, pageable);
+
+        assertThat(page.getContent()).extracting(CourseResponse::approvedCount).containsExactly(3L, 0L);
+    }
+
+    private static EnrollmentRepository.CourseStatusCount approvedCount(UUID courseId, long total) {
+        return new EnrollmentRepository.CourseStatusCount() {
+            @Override
+            public UUID getCourseId() {
+                return courseId;
+            }
+
+            @Override
+            public long getTotal() {
+                return total;
+            }
+        };
     }
 
     @Test
