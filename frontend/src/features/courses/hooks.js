@@ -18,13 +18,14 @@ function errorMessage(error, fallback) {
   return error.response?.data?.message ?? fallback
 }
 
-export function useCoursesQuery(params) {
+export function useCoursesQuery(params, options) {
   return useQuery({
     queryKey: coursesKeys.list(params),
     queryFn: () => listCourses(params),
     // Keeps the current page's rows on screen while the next page loads,
     // instead of the table/grid flashing empty between pages/filter changes.
     placeholderData: keepPreviousData,
+    ...options,
   })
 }
 
@@ -36,13 +37,16 @@ export function useCourseQuery(id) {
   })
 }
 
-// Trainer options for CourseFormDialog's Select - one large page is enough
-// for the trainer roster this app expects, so no pagination here.
-export function useTrainersQuery() {
+// Trainer options for the course and schedule forms' Selects - one large page
+// is enough for the trainer roster this app expects, so no pagination here.
+// `options` lets a caller gate the fetch on role (the schedule agenda only
+// needs the roster for its admin-only filter).
+export function useTrainersQuery(options) {
   return useQuery({
     queryKey: ['users', 'list', { role: 'TRAINER', size: 200, forPicker: true }],
     queryFn: () => listUsers({ role: 'TRAINER', size: 200 }),
     select: (data) => data.content,
+    ...options,
   })
 }
 

@@ -7,6 +7,7 @@ import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
 import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
 import { EnrollmentApprovalsPage } from '@/features/enrollments/EnrollmentApprovalsPage'
+import { ScheduleListPage } from '@/features/schedule/ScheduleListPage'
 import { MyEnrollmentsPage } from '@/features/students/MyEnrollmentsPage'
 import { StudentSummaryPage } from '@/features/students/StudentSummaryPage'
 import { StudentsListPage } from '@/features/students/StudentsListPage'
@@ -41,6 +42,7 @@ function App() {
                   <Route path="students" element={<StudentsListPage />} />
                   <Route path="students/:id" element={<StudentSummaryPage />} />
                   <Route path="enrollments" element={<EnrollmentApprovalsPage />} />
+                  <Route path="schedule" element={<ScheduleListPage />} />
                 </Route>
               </Route>
 
@@ -51,6 +53,7 @@ function App() {
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="students" element={<StudentsListPage />} />
                   <Route path="students/:id" element={<StudentSummaryPage />} />
+                  <Route path="schedule" element={<ScheduleListPage />} />
                 </Route>
               </Route>
 
@@ -60,6 +63,7 @@ function App() {
                   <Route path="courses" element={<CourseCatalogPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="enrollments" element={<MyEnrollmentsPage />} />
+                  <Route path="schedule" element={<ScheduleListPage />} />
                 </Route>
               </Route>
             </Route>
