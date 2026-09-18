@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { statusBadgeVariant as enrollmentStatusBadgeVariant } from '@/features/enrollments/enrollmentDisplay'
 import { useStudentSummaryQuery } from './hooks'
-import { enrollmentStatusBadgeVariant, formatDate, fullName, statusBadgeVariant, titleCase } from './studentDisplay'
+import { formatDate, fullName, statusBadgeVariant, titleCase } from './studentDisplay'
 
 function Field({ label, value }) {
   return (

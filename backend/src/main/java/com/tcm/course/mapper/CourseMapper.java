@@ -9,7 +9,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class CourseMapper {
 
-    public CourseResponse toResponse(Course course) {
+    /**
+     * {@code approvedCount} is the number of APPROVED enrollments the course
+     * currently holds - the catalog needs it alongside {@code capacity} to
+     * show a full course as such (see docs/tasks/TCM-16-frontend-course-catalog-enrollment.md
+     * step 2). It isn't derivable from the entity, so callers supply it.
+     */
+    public CourseResponse toResponse(Course course, long approvedCount) {
         return new CourseResponse(
                 course.getId(),
                 course.getCode(),
@@ -21,6 +27,7 @@ public class CourseMapper {
                 toTrainerSummary(course.getPrimaryTrainer()),
                 course.getPrice(),
                 course.getStatus(),
+                approvedCount,
                 course.getCreatedAt(),
                 course.getUpdatedAt());
     }
