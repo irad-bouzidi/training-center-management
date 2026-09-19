@@ -10,6 +10,7 @@ import com.tcm.enrollment.mapper.EnrollmentMapper;
 import com.tcm.enrollment.model.Enrollment;
 import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.enrollment.spec.EnrollmentSpecifications;
+import com.tcm.payment.PaymentService;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final EnrollmentMapper enrollmentMapper;
+    private final PaymentService paymentService;
 
     @Override
     public EnrollmentResponse register(UUID studentId, UUID courseId) {
@@ -59,6 +62,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional
     public EnrollmentResponse decide(UUID enrollmentId, EnrollmentStatus decision, UUID adminId) {
         if (decision != EnrollmentStatus.APPROVED && decision != EnrollmentStatus.REJECTED) {
             throw new BadRequestException("decision must be APPROVED or REJECTED");
@@ -76,7 +80,16 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         enrollment.setStatus(decision);
         enrollment.setDecidedAt(Instant.now());
         enrollment.setDecidedBy(admin);
-        return enrollmentMapper.toResponse(enrollmentRepository.save(enrollment));
+        Enrollment saved = enrollmentRepository.save(enrollment);
+
+        if (decision == EnrollmentStatus.APPROVED) {
+            // An approved seat on a priced course is a fee owed, so the
+            // invoice is raised here rather than left to be remembered
+            // (TCM-21 step 3). Free courses and an already-invoiced pair are
+            // no-ops, so approving stays idempotent from the payment side.
+            paymentService.createInvoiceOnApproval(saved.getStudent(), saved.getCourse());
+        }
+        return enrollmentMapper.toResponse(saved);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.tcm.user.dto.UserRequest;
 import com.tcm.user.dto.UserResponse;
 import com.tcm.user.model.User;
 import com.tcm.user.model.UserStatus;
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -57,15 +58,17 @@ public class UserMapper {
      * @param attendanceRate percentage of marked sessions attended, or null
      *                       while the student has no attendance marks at all
      *                       (TCM-19).
+     * @param paymentBalance what the student still owes across every invoice
+     *                       of theirs, zero when they have none (TCM-21).
      */
     public StudentSummaryResponse toSummaryResponse(User student, List<EnrollmentResponse> enrollments,
-                                                     Double attendanceRate) {
+                                                     Double attendanceRate, BigDecimal paymentBalance) {
         return new StudentSummaryResponse(
                 toResponse(student),
                 enrollments,
                 attendanceRate,
                 List.of(), // TODO(TCM-23): populate real grades
-                null, // TODO(TCM-21): populate real payment balance
+                paymentBalance,
                 List.of()); // TODO(TCM-25): populate real certificates
     }
 }

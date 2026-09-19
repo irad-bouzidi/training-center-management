@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 
 import com.tcm.attendance.AttendanceService;
+import com.tcm.payment.PaymentService;
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
 import com.tcm.course.model.Course;
@@ -60,13 +61,16 @@ class UserServiceImplTest {
     @Mock
     private AttendanceService attendanceService;
 
+    @Mock
+    private PaymentService paymentService;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserServiceImpl(
-                userRepository, new UserMapper(), attendanceService, passwordEncoder, enrollmentRepository,
-                new EnrollmentMapper());
+                userRepository, new UserMapper(), attendanceService, paymentService, passwordEncoder,
+                enrollmentRepository, new EnrollmentMapper());
     }
 
     private static User existingUser(UUID id, Role role) {
@@ -229,6 +233,7 @@ class UserServiceImplTest {
         when(userRepository.findById(id)).thenReturn(Optional.of(student));
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
         when(attendanceService.studentAttendanceSummary(id)).thenReturn(null); // nothing marked yet
+        when(paymentService.outstandingBalance(id)).thenReturn(BigDecimal.ZERO);
 
         StudentSummaryResponse response = userService.getStudentSummary(id);
 
@@ -236,7 +241,7 @@ class UserServiceImplTest {
         assertThat(response.enrollments()).isEmpty();
         assertThat(response.attendanceRate()).isNull();
         assertThat(response.grades()).isEmpty();
-        assertThat(response.paymentBalance()).isNull();
+        assertThat(response.paymentBalance()).isEqualByComparingTo("0");
         assertThat(response.certificates()).isEmpty();
     }
 
@@ -248,6 +253,16 @@ class UserServiceImplTest {
         when(attendanceService.studentAttendanceSummary(id)).thenReturn(75.0);
 
         assertThat(userService.getStudentSummary(id).attendanceRate()).isEqualTo(75.0);
+    }
+
+    @Test
+    void getStudentSummary_populatesRealPaymentBalance() {
+        UUID id = UUID.randomUUID();
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(paymentService.outstandingBalance(id)).thenReturn(new BigDecimal("300.00"));
+
+        assertThat(userService.getStudentSummary(id).paymentBalance()).isEqualByComparingTo("300.00");
     }
 
     @Test
