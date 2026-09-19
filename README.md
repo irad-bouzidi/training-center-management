@@ -234,7 +234,7 @@ downloading a certificate PDF — and fails on any console error:
 ```bash
 cd frontend
 npx playwright install chromium   # the browser, downloaded once
-node scripts/ui-smoke.mjs         # 25 checks, plus a screenshot per page
+node scripts/ui-smoke.mjs         # 26 checks, plus a screenshot per page
 ```
 
 ## Troubleshooting

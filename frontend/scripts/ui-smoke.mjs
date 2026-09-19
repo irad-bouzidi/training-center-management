@@ -111,6 +111,19 @@ async function signIn(email) {
     const text = await page.textContent('body')
     check(`${tab} tab renders real content`, !/coming soon/i.test(text) && !/TCM-\d+/.test(text))
   }
+
+  // Sofia finished her course with full attendance, so she is certifiable
+  // on a freshly seeded database - issuing it here is both the documented
+  // first thing to try and what gives the student leg something to
+  // download. On a re-run she already holds one.
+  const generate = page.locator('button:has-text("Generate certificate")')
+  if (await generate.count()) {
+    await generate.first().click()
+    await page.waitForTimeout(2000)
+    check('certificate is issued from the UI', /CERT-/.test(await page.textContent('body')))
+  } else {
+    check('certificate was already issued', /CERT-/.test(await page.textContent('body')))
+  }
   await page.screenshot({ path: 'shot-admin-student-certificates.png' })
   check('admin pages raise no console errors', errors.length === 0, errors.slice(0, 2).join(' | '))
   await page.close()
