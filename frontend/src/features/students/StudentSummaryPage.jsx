@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAuth } from '@/context/AuthContext'
 import { StudentAttendanceTab } from '@/features/attendance/StudentAttendanceTab'
 import { formatRate } from '@/features/attendance/attendanceDisplay'
 import { statusBadgeVariant as enrollmentStatusBadgeVariant } from '@/features/enrollments/enrollmentDisplay'
+import { StudentPaymentsTab } from '@/features/payments/StudentPaymentsTab'
+import { formatAmount } from '@/features/payments/paymentDisplay'
 import { useStudentSummaryQuery } from './hooks'
 import { formatDate, fullName, statusBadgeVariant, titleCase } from './studentDisplay'
 
@@ -33,15 +36,16 @@ function Stat({ label, value }) {
  * Per-student profile/summary, per
  * docs/tasks/TCM-15-frontend-student-directory.md. "Overview" and
  * "Enrollments" show real data (profile from TCM-13, enrollments from
- * TCM-14) and so does "Attendance" (TCM-19/TCM-20); Grades/Payments/
- * Certificates are still disabled "coming soon" tabs until TCM-24/22/26 fill
- * them in - the backend already reserves their fields on
+ * TCM-14), as do "Attendance" (TCM-19/20) and "Payments" (TCM-21/22);
+ * Grades and Certificates are still disabled "coming soon" tabs until
+ * TCM-24/26 fill them in - the backend already reserves their fields on
  * StudentSummaryResponse as null/empty stubs, so enabling a tab later is a
  * contract-compatible change.
  */
 export function StudentSummaryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { data: summary, isLoading } = useStudentSummaryQuery(id)
 
   if (isLoading) {
@@ -79,9 +83,7 @@ export function StudentSummaryPage() {
               <TabsTrigger value="grades" disabled title="Coming soon">
                 Grades
               </TabsTrigger>
-              <TabsTrigger value="payments" disabled title="Coming soon">
-                Payments
-              </TabsTrigger>
+              <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="certificates" disabled title="Coming soon">
                 Certificates
               </TabsTrigger>
@@ -97,7 +99,7 @@ export function StudentSummaryPage() {
                 <Stat label="Total Enrollments" value={enrollments.length} />
                 <Stat label="Active Enrollments" value={activeEnrollments} />
                 <Stat label="Attendance Rate" value={formatRate(summary.attendanceRate)} />
-                <Stat label="Payment Balance" value={summary.paymentBalance ?? '—'} />
+                <Stat label="Payment Balance" value={formatAmount(summary.paymentBalance ?? 0)} />
               </div>
             </TabsContent>
 
@@ -147,8 +149,8 @@ export function StudentSummaryPage() {
             <TabsContent value="grades" className="text-sm text-muted-foreground">
               Grades come in TCM-24.
             </TabsContent>
-            <TabsContent value="payments" className="text-sm text-muted-foreground">
-              Payments come in TCM-22.
+            <TabsContent value="payments">
+              <StudentPaymentsTab studentId={profile.id} isAdmin={user.role === 'ADMIN'} />
             </TabsContent>
             <TabsContent value="certificates" className="text-sm text-muted-foreground">
               Certificates come in TCM-26.
