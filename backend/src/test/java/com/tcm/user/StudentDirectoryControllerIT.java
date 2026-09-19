@@ -72,9 +72,11 @@ class StudentDirectoryControllerIT {
                 .andExpect(jsonPath("$.profile.id").value(studentId))
                 .andExpect(jsonPath("$.enrollments").isArray())
                 .andExpect(jsonPath("$.enrollments").isEmpty())
+                // Unmarked, so unrated (TCM-19) - as against a balance, which
+                // a student with no invoices owes zero of (TCM-21).
                 .andExpect(jsonPath("$.attendanceRate").isEmpty())
                 .andExpect(jsonPath("$.grades").isArray())
-                .andExpect(jsonPath("$.paymentBalance").isEmpty())
+                .andExpect(jsonPath("$.paymentBalance").value(0))
                 .andExpect(jsonPath("$.certificates").isArray());
     }
 

@@ -3,6 +3,8 @@ package com.tcm.enrollment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tcm.common.BadRequestException;
@@ -14,6 +16,7 @@ import com.tcm.enrollment.dto.EnrollmentResponse;
 import com.tcm.enrollment.mapper.EnrollmentMapper;
 import com.tcm.enrollment.model.Enrollment;
 import com.tcm.enrollment.model.EnrollmentStatus;
+import com.tcm.payment.PaymentService;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
@@ -44,12 +47,15 @@ class EnrollmentServiceImplTest {
     @Mock
     private CourseRepository courseRepository;
 
+    @Mock
+    private PaymentService paymentService;
+
     private EnrollmentServiceImpl enrollmentService;
 
     @BeforeEach
     void setUp() {
         enrollmentService = new EnrollmentServiceImpl(
-                enrollmentRepository, userRepository, courseRepository, new EnrollmentMapper());
+                enrollmentRepository, userRepository, courseRepository, new EnrollmentMapper(), paymentService);
     }
 
     private static User user(UUID id, Role role) {
@@ -155,6 +161,8 @@ class EnrollmentServiceImplTest {
         assertThat(response.status()).isEqualTo(EnrollmentStatus.APPROVED);
         assertThat(response.decidedAt()).isNotNull();
         assertThat(response.decidedBy().id()).isEqualTo(adminId);
+        // The seat is now owed for, so the invoice is raised with it (TCM-21).
+        verify(paymentService).createInvoiceOnApproval(enrollment.getStudent(), course);
     }
 
     @Test
@@ -170,6 +178,7 @@ class EnrollmentServiceImplTest {
         EnrollmentResponse response = enrollmentService.decide(id, EnrollmentStatus.REJECTED, adminId);
 
         assertThat(response.status()).isEqualTo(EnrollmentStatus.REJECTED);
+        verify(paymentService, never()).createInvoiceOnApproval(any(), any());
     }
 
     @Test

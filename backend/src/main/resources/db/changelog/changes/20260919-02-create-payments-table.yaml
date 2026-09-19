@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260919-02-create-payments-table
+      author: irad
+      comment: >
+        payments table per docs/PLAN.md §5 (TCM-21). status is a varchar +
+        check constraint, matching every other table here. amount_paid
+        defaults to 0 and is never allowed past amount_due - the service
+        rejects an overpayment, and the check constraint keeps that true of
+        any write that bypasses it. paid_at is set only when an invoice is
+        settled in full. Neither FK has an ON DELETE action (default
+        RESTRICT): a paid invoice is a financial record and must not
+        disappear with the course or the student it belongs to.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE payments (
+                  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  student_id     UUID NOT NULL REFERENCES users(id),
+                  course_id      UUID NOT NULL REFERENCES courses(id),
+                  amount_due     NUMERIC(10, 2) NOT NULL CHECK (amount_due > 0),
+                  amount_paid    NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (amount_paid >= 0),
+                  status         VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+                                 CHECK (status IN ('PENDING', 'PARTIAL', 'PAID', 'OVERDUE')),
+                  due_date       DATE NOT NULL,
+                  paid_at        TIMESTAMP,
+                  payment_method VARCHAR(50),
+                  notes          TEXT,
+                  CONSTRAINT ck_payments_not_overpaid CHECK (amount_paid <= amount_due)
+              );
+
+              -- A student reads their own invoices; the admin listing and the
+              -- overdue sweep filter by course and by due date.
+              CREATE INDEX ix_payments_student ON payments (student_id);
+              CREATE INDEX ix_payments_course ON payments (course_id);
+              CREATE INDEX ix_payments_due_date ON payments (due_date);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS payments;
