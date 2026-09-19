@@ -22,6 +22,13 @@ import org.springframework.data.repository.query.Param;
 public interface ClassSessionRepository extends JpaRepository<ClassSession, UUID>,
         JpaSpecificationExecutor<ClassSession> {
 
+    /** How many sessions a course has, for TCM-19's course attendance report. */
+    long countByCourseId(UUID courseId);
+
+    /** Whether a trainer is assigned to any session of a course - one half of
+     * "does this trainer teach this course?" in TCM-19's report access check. */
+    boolean existsByCourseIdAndTrainerId(UUID courseId, UUID trainerId);
+
     /**
      * Sessions on the same day that would double-book either the trainer or
      * the classroom: two ranges overlap when each starts before the other

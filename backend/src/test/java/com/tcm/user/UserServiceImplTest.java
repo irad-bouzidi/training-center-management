@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 
+import com.tcm.attendance.AttendanceService;
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
 import com.tcm.course.model.Course;
@@ -56,12 +57,16 @@ class UserServiceImplTest {
     @Mock
     private EnrollmentRepository enrollmentRepository;
 
+    @Mock
+    private AttendanceService attendanceService;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserServiceImpl(
-                userRepository, new UserMapper(), passwordEncoder, enrollmentRepository, new EnrollmentMapper());
+                userRepository, new UserMapper(), attendanceService, passwordEncoder, enrollmentRepository,
+                new EnrollmentMapper());
     }
 
     private static User existingUser(UUID id, Role role) {
@@ -218,11 +223,12 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getStudentSummary_returnsProfileWithStubbedFields() {
+    void getStudentSummary_returnsProfileWithStillStubbedFields() {
         UUID id = UUID.randomUUID();
         User student = existingUser(id, Role.STUDENT);
         when(userRepository.findById(id)).thenReturn(Optional.of(student));
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(attendanceService.studentAttendanceSummary(id)).thenReturn(null); // nothing marked yet
 
         StudentSummaryResponse response = userService.getStudentSummary(id);
 
@@ -232,6 +238,16 @@ class UserServiceImplTest {
         assertThat(response.grades()).isEmpty();
         assertThat(response.paymentBalance()).isNull();
         assertThat(response.certificates()).isEmpty();
+    }
+
+    @Test
+    void getStudentSummary_populatesRealAttendanceRate() {
+        UUID id = UUID.randomUUID();
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(attendanceService.studentAttendanceSummary(id)).thenReturn(75.0);
+
+        assertThat(userService.getStudentSummary(id).attendanceRate()).isEqualTo(75.0);
     }
 
     @Test
