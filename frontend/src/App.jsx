@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { AttendanceReportPage } from '@/features/attendance/AttendanceReportPage'
 import { MarkAttendancePage } from '@/features/attendance/MarkAttendancePage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { MyCertificatesPage } from '@/features/certificates/MyCertificatesPage'
 import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
 import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
@@ -78,6 +79,7 @@ function App() {
                   <Route path="schedule" element={<ScheduleListPage />} />
                   <Route path="payments" element={<MyPaymentsPage />} />
                   <Route path="grades" element={<MyGradesPage />} />
+                  <Route path="certificates" element={<MyCertificatesPage />} />
                 </Route>
               </Route>
             </Route>

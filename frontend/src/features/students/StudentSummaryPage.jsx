@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/context/AuthContext'
 import { StudentAttendanceTab } from '@/features/attendance/StudentAttendanceTab'
 import { formatRate } from '@/features/attendance/attendanceDisplay'
+import { StudentCertificatesTab } from '@/features/certificates/StudentCertificatesTab'
 import { statusBadgeVariant as enrollmentStatusBadgeVariant } from '@/features/enrollments/enrollmentDisplay'
 import { CourseGradesList } from '@/features/grades/CourseGradesList'
 import { formatPercent } from '@/features/grades/gradeDisplay'
@@ -38,11 +39,10 @@ function Stat({ label, value }) {
  * Per-student profile/summary, per
  * docs/tasks/TCM-15-frontend-student-directory.md. "Overview" and
  * "Enrollments" show real data (profile from TCM-13, enrollments from
- * TCM-14), as do "Attendance" (TCM-19/20), "Payments" (TCM-21/22) and
- * "Grades" (TCM-23/24); Certificates is still a disabled "coming soon" tab
- * until TCM-26 fills it in - the backend already reserves its field on
- * StudentSummaryResponse as an empty stub, so enabling a tab later is a
- * contract-compatible change.
+ * TCM-14), as do "Attendance" (TCM-19/20), "Payments" (TCM-21/22), "Grades"
+ * (TCM-23/24) and "Certificates" (TCM-25/26). Every tab is real data now;
+ * the stub fields TCM-13 reserved on StudentSummaryResponse have all been
+ * filled in, exactly as they were meant to be.
  */
 export function StudentSummaryPage() {
   const { id } = useParams()
@@ -84,9 +84,7 @@ export function StudentSummaryPage() {
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="grades">Grades</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
-              <TabsTrigger value="certificates" disabled title="Coming soon">
-                Certificates
-              </TabsTrigger>
+              <TabsTrigger value="certificates">Certificates</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -157,8 +155,8 @@ export function StudentSummaryPage() {
             <TabsContent value="payments">
               <StudentPaymentsTab studentId={profile.id} isAdmin={user.role === 'ADMIN'} />
             </TabsContent>
-            <TabsContent value="certificates" className="text-sm text-muted-foreground">
-              Certificates come in TCM-26.
+            <TabsContent value="certificates">
+              <StudentCertificatesTab studentId={profile.id} enrollments={enrollments} />
             </TabsContent>
           </Tabs>
         </CardContent>
