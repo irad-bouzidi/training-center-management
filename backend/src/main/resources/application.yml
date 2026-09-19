@@ -39,3 +39,12 @@ app:
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
+  # Where the QR code's check-in link points - the frontend, which is what a
+  # phone camera opens (TCM-27).
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+  qr:
+    # A session's QR token is deliberately short-lived: it is shown on a
+    # screen in the room, so it should stop working soon after the class
+    # does. The trainer regenerates it when they need a fresh one.
+    secret: ${QR_SECRET:${JWT_SECRET:changeme}}
+    validity-minutes: ${QR_VALIDITY_MINUTES:15}

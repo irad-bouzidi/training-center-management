@@ -39,6 +39,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(GoneException.class)
+    public ResponseEntity<ApiError> handleGone(GoneException ex, HttpServletRequest request) {
+        return build(HttpStatus.GONE, ex.getMessage(), request);
+    }
+
     @ExceptionHandler({ResourceNotFoundException.class, EntityNotFoundException.class})
     public ResponseEntity<ApiError> handleNotFound(RuntimeException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);

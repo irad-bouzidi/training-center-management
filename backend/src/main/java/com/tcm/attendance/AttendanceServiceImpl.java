@@ -83,6 +83,14 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional
+    public AttendanceResponse markViaQr(UUID sessionId, UUID studentId, AttendanceStatus status) {
+        ClassSession session = getSessionOrThrow(sessionId);
+        return attendanceMapper.toResponse(
+                upsert(session, studentId, status, null, AttendanceMethod.QR, approvedStudentIndex(session)));
+    }
+
+    @Override
+    @Transactional
     public List<AttendanceResponse> markBulk(UUID sessionId, List<AttendanceMarkRequest> entries, UUID markerId,
                                               boolean requesterIsAdmin) {
         ClassSession session = getSessionOrThrow(sessionId);

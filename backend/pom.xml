@@ -24,6 +24,7 @@
         <testcontainers.version>2.0.3</testcontainers.version>
         <jjwt.version>0.13.0</jjwt.version>
         <openpdf.version>3.0.5</openpdf.version>
+        <zxing.version>3.5.4</zxing.version>
     </properties>
 
     <dependencyManagement>
@@ -106,6 +107,19 @@
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
             <version>${openpdf.version}</version>
+        </dependency>
+
+        <!-- QR attendance (TCM-27). `javase` is the part that turns a
+             BitMatrix into a PNG; `core` alone can't write images. -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${zxing.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>${zxing.version}</version>
         </dependency>
 
         <dependency>
