@@ -1,5 +1,6 @@
-import { CheckCircle, MoreHorizontal, Pencil, X } from 'lucide-react'
+import { CheckCircle, ClipboardCheck, MoreHorizontal, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,24 +27,29 @@ import { useSetSessionStatusMutation } from './hooks'
  * Per-session actions, following the CourseRowActions/UserRowActions pattern:
  * a kebab menu plus the confirm dialogs its entries trigger.
  *
- * What's on the menu follows what the backend allows (see
- * ClassSessionController#changeStatus): an ADMIN can reschedule, complete or
- * cancel; the assigned TRAINER can only mark their own session completed. A
- * session that has already been cancelled or completed is finished with - the menu is
- * dropped entirely rather than rendered empty.
+ * What's on the menu follows what the backend allows: an ADMIN can
+ * reschedule, complete or cancel; the assigned TRAINER can only mark their
+ * own session completed (ClassSessionController#changeStatus). Either may
+ * take the session's attendance (TCM-19), including after it has run, which
+ * is the one entry that outlives the SCHEDULED state. A cancelled session
+ * has nothing left to do, so its menu is dropped rather than rendered empty.
  */
 export function SessionRowActions({ session, onEdit }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
   const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false)
   const setSessionStatus = useSetSessionStatusMutation()
 
   const isAdmin = user.role === 'ADMIN'
   // An admin may complete any session; anyone else only one they're assigned
-  // to. Nobody else has an action here at all, so the menu goes away.
+  // to. The same pair may take its attendance (TCM-19), and unlike the status
+  // actions that stays useful after the session has run - a roster is often
+  // marked once the class is over.
   const canComplete = isAdmin || session.trainer.id === user.id
+  const canTakeAttendance = canComplete && session.status !== 'CANCELLED'
 
-  if (session.status !== 'SCHEDULED' || !canComplete) {
+  if (!canTakeAttendance) {
     return null
   }
 
@@ -62,19 +68,27 @@ export function SessionRowActions({ session, onEdit }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {isAdmin && (
+          {canTakeAttendance && (
+            <DropdownMenuItem
+              onSelect={() => navigate(`/${user.role.toLowerCase()}/sessions/${session.id}/attendance`)}
+            >
+              <ClipboardCheck />
+              Take attendance
+            </DropdownMenuItem>
+          )}
+          {isAdmin && session.status === 'SCHEDULED' && (
             <DropdownMenuItem onSelect={() => onEdit(session)}>
               <Pencil />
               Edit
             </DropdownMenuItem>
           )}
-          {canComplete && (
+          {canComplete && session.status === 'SCHEDULED' && (
             <DropdownMenuItem onSelect={() => setCompleteConfirmOpen(true)}>
               <CheckCircle />
               Mark completed
             </DropdownMenuItem>
           )}
-          {isAdmin && (
+          {isAdmin && session.status === 'SCHEDULED' && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={() => setCancelConfirmOpen(true)}>
