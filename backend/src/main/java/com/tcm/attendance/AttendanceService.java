@@ -52,4 +52,12 @@ public interface AttendanceService {
      * {@code StudentSummaryResponse#attendanceRate}.
      */
     Double studentAttendanceSummary(UUID studentId);
+
+    /**
+     * The same figure for one course, or null while they have no marks on it.
+     * Read directly rather than out of {@link #courseAttendanceReport}, whose
+     * rows are the course's APPROVED roster: certification (TCM-25) asks
+     * about students whose enrollment is already COMPLETED.
+     */
+    Double studentCourseAttendanceRate(UUID studentId, UUID courseId);
 }

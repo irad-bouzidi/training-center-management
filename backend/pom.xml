@@ -23,6 +23,7 @@
         <springdoc.version>2.6.0</springdoc.version>
         <testcontainers.version>2.0.3</testcontainers.version>
         <jjwt.version>0.13.0</jjwt.version>
+        <openpdf.version>3.0.5</openpdf.version>
     </properties>
 
     <dependencyManagement>
@@ -96,6 +97,15 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- Certificate PDFs (TCM-25). OpenPDF is the LGPL/MPL-licensed fork
+             of the last freely licensed iText, so it fits a project that
+             isn't AGPL - which iText 7 would require. -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>${openpdf.version}</version>
         </dependency>
 
         <dependency>

@@ -46,6 +46,23 @@ public interface AttendanceRepository extends JpaRepository<AttendanceRecord, UU
             """)
     List<StatusTotal> countByStudentGroupedByStatus(@Param("studentId") UUID studentId);
 
+    /**
+     * One student's tallies on one course, for
+     * {@code AttendanceServiceImpl#studentCourseAttendanceRate}. Read
+     * straight off the records rather than out of the course report, which
+     * lists the APPROVED roster only - by the time a student is being
+     * certified their enrollment is COMPLETED, and they would have dropped
+     * out of it.
+     */
+    @Query("""
+            select r.status as status, count(r) as total
+            from AttendanceRecord r
+            where r.student.id = :studentId and r.session.course.id = :courseId
+            group by r.status
+            """)
+    List<StatusTotal> countByStudentAndCourseGroupedByStatus(@Param("studentId") UUID studentId,
+                                                              @Param("courseId") UUID courseId);
+
     /** Projection for the per-student groupings. */
     interface StatusCount {
 

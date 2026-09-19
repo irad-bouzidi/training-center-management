@@ -33,6 +33,10 @@ services:
       CORS_ALLOWED_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      # Generated certificate PDFs (TCM-25) live on disk, not in the
+      # database, so they need to outlive the container.
+      - certificates:/var/lib/tcm/certificates
     networks:
       - tcm-network
 
@@ -50,6 +54,7 @@ services:
 
 volumes:
   pg_data:
+  certificates:
 
 networks:
   tcm-network:

@@ -214,6 +214,23 @@ class AttendanceServiceImplTest {
     }
 
     @Test
+    void studentCourseAttendanceRate_countsOnlyThatCourse() {
+        when(attendanceRepository.countByStudentAndCourseGroupedByStatus(STUDENT_ID, COURSE_ID)).thenReturn(List.of(
+                statusTotal(AttendanceStatus.PRESENT, 3),
+                statusTotal(AttendanceStatus.ABSENT, 1)));
+
+        assertThat(attendanceService.studentCourseAttendanceRate(STUDENT_ID, COURSE_ID)).isEqualTo(75.0);
+    }
+
+    @Test
+    void studentCourseAttendanceRate_isNullWhenNothingIsMarkedOnIt() {
+        when(attendanceRepository.countByStudentAndCourseGroupedByStatus(STUDENT_ID, COURSE_ID))
+                .thenReturn(List.of());
+
+        assertThat(attendanceService.studentCourseAttendanceRate(STUDENT_ID, COURSE_ID)).isNull();
+    }
+
+    @Test
     void studentAttendanceSummary_isNullUntilSomethingIsMarked() {
         when(attendanceRepository.countByStudentGroupedByStatus(STUDENT_ID)).thenReturn(List.of());
 
