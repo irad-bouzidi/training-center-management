@@ -10,6 +10,8 @@ import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
 import { EnrollmentApprovalsPage } from '@/features/enrollments/EnrollmentApprovalsPage'
 import { ScheduleListPage } from '@/features/schedule/ScheduleListPage'
+import { MyPaymentsPage } from '@/features/payments/MyPaymentsPage'
+import { PaymentsListPage } from '@/features/payments/PaymentsListPage'
 import { MyEnrollmentsPage } from '@/features/students/MyEnrollmentsPage'
 import { StudentSummaryPage } from '@/features/students/StudentSummaryPage'
 import { StudentsListPage } from '@/features/students/StudentsListPage'
@@ -47,6 +49,7 @@ function App() {
                   <Route path="enrollments" element={<EnrollmentApprovalsPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
                   <Route path="sessions/:sessionId/attendance" element={<MarkAttendancePage />} />
+                  <Route path="payments" element={<PaymentsListPage />} />
                 </Route>
               </Route>
 
@@ -69,6 +72,7 @@ function App() {
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="enrollments" element={<MyEnrollmentsPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
+                  <Route path="payments" element={<MyPaymentsPage />} />
                 </Route>
               </Route>
             </Route>

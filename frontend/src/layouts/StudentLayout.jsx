@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: 'Course Catalog', to: '/student/courses', enabled: true },
   { label: 'My Enrollments', to: '/student/enrollments', enabled: true },
   { label: 'Schedule', to: '/student/schedule', enabled: true },
+  { label: 'My Payments', to: '/student/payments', enabled: true },
   { label: 'My Attendance', enabled: false },
   { label: 'My Grades', enabled: false },
   { label: 'My Certificates', enabled: false },
