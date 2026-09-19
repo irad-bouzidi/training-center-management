@@ -3,6 +3,10 @@ import { toast } from 'sonner'
 import { getCourseAttendanceReport, getSessionRoster, markAttendance } from '@/api/attendanceApi'
 import { errorMessage } from '@/features/schedule/hooks'
 
+// Re-exported so the QR hooks alongside this file have one place to reach
+// for it, rather than two features importing the same helper from a third.
+export { errorMessage }
+
 export const attendanceKeys = {
   all: ['attendance'],
   rosters: () => [...attendanceKeys.all, 'roster'],

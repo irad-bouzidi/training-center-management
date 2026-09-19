@@ -76,6 +76,19 @@ management API lands in TCM-8). `CORS_ALLOWED_ORIGIN` (defaults to
 `http://localhost:5173`) controls which origin the API accepts
 cross-origin requests from.
 
+### QR attendance
+
+A trainer puts a session's QR code on screen from the attendance page; a
+student scans it and is marked present. The code encodes
+`FRONTEND_BASE_URL/attend/{sessionId}?token=...`, so **`FRONTEND_BASE_URL`
+must be the origin students actually reach the app on** - a code pointing at
+`localhost` is unscannable from a phone. For a demo with real devices, set it
+to the host's LAN address (e.g. `http://192.168.1.20:5173`) in `.env`.
+
+Codes are short-lived (`QR_VALIDITY_MINUTES`, default 15) and one per session
+at a time: showing a new one immediately invalidates the last. `QR_SECRET`
+signs them and falls back to `JWT_SECRET` when unset.
+
 ### Dev mode (hot-reload)
 
 For backend/frontend hot-reload instead of rebuilding images on every
