@@ -5,6 +5,9 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    # Schema only: the tests build the data they assert on, and demo rows
+    # would quietly change every count they check.
+    contexts: test
 
 certificates:
   storage-path: ${java.io.tmpdir}/tcm-certificates

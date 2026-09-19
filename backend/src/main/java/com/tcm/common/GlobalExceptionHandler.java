@@ -6,9 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
@@ -27,6 +29,26 @@ public class GlobalExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return build(HttpStatus.BAD_REQUEST, message.isBlank() ? "Validation failed" : message, request);
+    }
+
+    /**
+     * A body that isn't there, or isn't JSON, or carries a value no enum or
+     * UUID can be made of. That's the caller's mistake, not the server's -
+     * without this it falls through to the catch-all below and reads as a
+     * 500. Found by TCM-30's smoke pass; the shape of the answer is
+     * docs/PLAN.md §6's, same as every other error here.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException ex,
+                                                          HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Request body is missing or malformed", request);
+    }
+
+    /** A path or query value of the wrong type - {@code /courses/not-a-uuid}. */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                        HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "'" + ex.getName() + "' is not a valid value", request);
     }
 
     @ExceptionHandler(BadRequestException.class)
