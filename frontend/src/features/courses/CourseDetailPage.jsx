@@ -1,6 +1,6 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, BookOpenCheck } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,10 +39,10 @@ export function CourseDetailPage() {
   const { data: course, isLoading } = useCourseQuery(id)
   const [formOpen, setFormOpen] = useState(false)
   const isAdmin = user.role === 'ADMIN'
-  // Students never see anyone's attendance but their own (TCM-19 grants the
-  // report to admins and the course's trainers only), so the tab isn't
-  // offered to them at all rather than shown and then refused.
-  const canSeeAttendance = user.role !== 'STUDENT'
+  // Students never see anyone's attendance or gradebook but their own (TCM-19
+  // and TCM-23 grant both to admins and the course's trainers only), so
+  // neither is offered to them at all rather than shown and then refused.
+  const isStaff = user.role !== 'STUDENT'
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading…</p>
@@ -68,7 +68,17 @@ export function CourseDetailPage() {
             </CardTitle>
             <CardDescription>{course.code}</CardDescription>
           </div>
-          {isAdmin && <CourseRowActions course={course} onEdit={() => setFormOpen(true)} />}
+          <div className="flex items-center gap-2">
+            {isStaff && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/${user.role.toLowerCase()}/courses/${course.id}/grades`}>
+                  <BookOpenCheck />
+                  Gradebook
+                </Link>
+              </Button>
+            )}
+            {isAdmin && <CourseRowActions course={course} onEdit={() => setFormOpen(true)} />}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-sm text-muted-foreground">{course.description || 'No description provided.'}</p>
@@ -86,7 +96,7 @@ export function CourseDetailPage() {
             <TabsList>
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-              {canSeeAttendance && <TabsTrigger value="attendance">Attendance</TabsTrigger>}
+              {isStaff && <TabsTrigger value="attendance">Attendance</TabsTrigger>}
             </TabsList>
             <TabsContent value="schedule">
               <CourseScheduleTab course={course} />
@@ -94,7 +104,7 @@ export function CourseDetailPage() {
             <TabsContent value="enrollments">
               <CourseEnrollmentsTab course={course} />
             </TabsContent>
-            {canSeeAttendance && (
+            {isStaff && (
               <TabsContent value="attendance">
                 <CourseAttendanceReport courseId={course.id} />
               </TabsContent>
