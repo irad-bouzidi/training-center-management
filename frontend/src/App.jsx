@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/context/AuthContext'
 import { AttendanceReportPage } from '@/features/attendance/AttendanceReportPage'
 import { MarkAttendancePage } from '@/features/attendance/MarkAttendancePage'
+import { QrCheckinPage } from '@/features/attendance/QrCheckinPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MyCertificatesPage } from '@/features/certificates/MyCertificatesPage'
 import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
@@ -39,6 +40,13 @@ function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<RootRedirect />} />
+
+              {/* Where a scanned QR code lands (TCM-28). Outside the role
+                  layouts on purpose: it is opened from a phone's camera app,
+                  not navigated to, and only needs the student to be signed
+                  in. */}
+              <Route path="/attend" element={<QrCheckinPage />} />
+              <Route path="/attend/:sessionId" element={<QrCheckinPage />} />
 
               <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
                 <Route path="/admin" element={<AdminLayout />}>

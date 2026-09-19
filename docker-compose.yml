@@ -31,8 +31,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       CORS_ALLOWED_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
-      # The QR check-in link a phone camera opens (TCM-27).
-      FRONTEND_BASE_URL: http://localhost:${FRONTEND_PORT:-5173}
+      # The QR check-in link a phone camera opens (TCM-27). Override in
+      # .env with the host's LAN address to scan from a real device.
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:5173}
+      QR_SECRET: ${QR_SECRET:-${JWT_SECRET}}
+      QR_VALIDITY_MINUTES: ${QR_VALIDITY_MINUTES:-15}
+      CERTIFICATES_MIN_ATTENDANCE_RATE: ${CERTIFICATES_MIN_ATTENDANCE_RATE:-75}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:

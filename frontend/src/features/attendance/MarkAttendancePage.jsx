@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, QrCode } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { formatSessionDate, formatTimeRange } from '@/features/schedule/scheduleDisplay'
+import { SessionQrDialog } from './SessionQrDialog'
 import { STATUS_OPTIONS, titleCase } from './attendanceDisplay'
 import { useMarkAttendanceMutation, useSessionRosterQuery } from './hooks'
 
@@ -16,6 +17,10 @@ import { useMarkAttendanceMutation, useSessionRosterQuery } from './hooks'
  * trainer's and the admin's layout; the backend lets an admin mark any
  * session and a trainer only their own, and answers 403 otherwise, so this
  * page doesn't second-guess it.
+ *
+ * "Show QR" puts the session's code on screen for students to scan
+ * themselves in (TCM-27/28); those scans land in the same roster, marked
+ * with method QR.
  *
  * Marks are held locally until "Save", then submitted as one bulk request -
  * a roster is read and judged as a whole, and one save keeps it atomic.
@@ -31,6 +36,7 @@ export function MarkAttendancePage() {
   // straight off the roster, so nothing has to be copied into state when it
   // arrives and a refetch after saving needs no reconciling.
   const [overrides, setOverrides] = useState({})
+  const [qrOpen, setQrOpen] = useState(false)
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading…</p>
@@ -86,6 +92,10 @@ export function MarkAttendancePage() {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setQrOpen(true)}>
+              <QrCode />
+              Show QR
+            </Button>
             <Button variant="outline" size="sm" disabled={entries.length === 0} onClick={markAllPresent}>
               Mark all present
             </Button>
@@ -157,6 +167,8 @@ export function MarkAttendancePage() {
           </p>
         </CardContent>
       </Card>
+
+      {qrOpen && <SessionQrDialog onOpenChange={() => setQrOpen(false)} session={session} />}
     </div>
   )
 }
