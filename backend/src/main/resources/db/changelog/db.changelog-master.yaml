@@ -23,3 +23,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/20260919-02-create-payments-table.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changes/20260919-03-create-grades-table.yaml
+      relativeToChangelogFile: false
