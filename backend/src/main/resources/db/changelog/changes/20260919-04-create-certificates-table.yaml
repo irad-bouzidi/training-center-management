@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260919-04-create-certificates-table
+      author: irad
+      comment: >
+        certificates table per docs/PLAN.md §5 (TCM-25). certificate_number
+        is unique and human-readable (CERT-<year>-<6 digits>); the sequence
+        behind it lives in the database rather than being counted in Java,
+        so two admins generating at once can't mint the same number. The
+        unique (student_id, course_id) pair is the "one certificate per
+        student per course" rule, which the service reports as a 409 naming
+        the existing certificate. No FK cascades: a certificate is a record
+        of achievement and outlives nothing.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE SEQUENCE certificate_number_seq START WITH 1;
+
+              CREATE TABLE certificates (
+                  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  student_id         UUID NOT NULL REFERENCES users(id),
+                  course_id          UUID NOT NULL REFERENCES courses(id),
+                  certificate_number VARCHAR(50) NOT NULL UNIQUE,
+                  issued_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+                  file_path          VARCHAR(500) NOT NULL,
+                  generated_by       UUID NOT NULL REFERENCES users(id),
+                  CONSTRAINT uq_certificates_student_course UNIQUE (student_id, course_id)
+              );
+
+              -- A student's own certificate list, and the summary's, read by student.
+              CREATE INDEX ix_certificates_student ON certificates (student_id);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: |
+              DROP TABLE IF EXISTS certificates;
+              DROP SEQUENCE IF EXISTS certificate_number_seq;

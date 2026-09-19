@@ -47,6 +47,18 @@ public class EnrollmentController {
         return enrollmentService.decide(id, request.status(), principal.getId());
     }
 
+    /**
+     * APPROVED -&gt; COMPLETED, an administrator's judgement that the student
+     * finished the course. TCM-14 shipped the service method without a route
+     * to it; TCM-25 needs one, since a COMPLETED enrollment is half of what
+     * makes a student certifiable (see CertificateEligibilityService).
+     */
+    @PostMapping("/{id}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public EnrollmentResponse complete(@PathVariable UUID id) {
+        return enrollmentService.markCompleted(id);
+    }
+
     /** Ownership (a non-admin may only cancel their own enrollment) is enforced in the service layer. */
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")

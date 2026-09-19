@@ -26,3 +26,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/20260919-03-create-grades-table.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/changes/20260919-04-create-certificates-table.yaml
+      relativeToChangelogFile: false

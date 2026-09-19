@@ -25,6 +25,14 @@ spring:
       bootstrap-admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@tcm.local}
       bootstrap-admin-password-hash: ${BOOTSTRAP_ADMIN_PASSWORD_HASH:$2a$10$MWeAhDLU78RJHul4Jc9osuy8MtK8m8RecYyoaTWy/vu4C.Gb9HGuG}
 
+certificates:
+  # Where generated certificate PDFs are written. A named Docker volume is
+  # mounted here in docker-compose.yml, so they outlive the container.
+  storage-path: ${CERTIFICATES_STORAGE_PATH:./data/certificates}
+  # Percentage of marked sessions a student must have attended to be
+  # certified - see CertificateEligibilityService.
+  minimum-attendance-rate: ${CERTIFICATES_MIN_ATTENDANCE_RATE:75}
+
 app:
   jwt:
     secret: ${JWT_SECRET:changeme}

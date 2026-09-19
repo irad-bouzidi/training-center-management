@@ -144,6 +144,18 @@ public class AttendanceServiceImpl implements AttendanceService {
                 tally.getOrDefault(AttendanceStatus.LATE, 0L));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Double studentCourseAttendanceRate(UUID studentId, UUID courseId) {
+        Map<AttendanceStatus, Long> tally = new EnumMap<>(AttendanceStatus.class);
+        attendanceRepository.countByStudentAndCourseGroupedByStatus(studentId, courseId)
+                .forEach(row -> tally.put(row.getStatus(), row.getTotal()));
+        return attendanceRate(
+                tally.getOrDefault(AttendanceStatus.PRESENT, 0L),
+                tally.getOrDefault(AttendanceStatus.ABSENT, 0L),
+                tally.getOrDefault(AttendanceStatus.LATE, 0L));
+    }
+
     /**
      * Creates the record or overwrites the existing one - the (session,
      * student) pair is unique, so marking twice corrects a mark instead of

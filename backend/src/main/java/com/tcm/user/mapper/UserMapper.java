@@ -1,5 +1,6 @@
 package com.tcm.user.mapper;
 
+import com.tcm.certificate.dto.CertificateResponse;
 import com.tcm.enrollment.dto.EnrollmentResponse;
 import com.tcm.grade.dto.StudentGradesResponse;
 import com.tcm.user.dto.StudentDirectoryResponse;
@@ -63,10 +64,12 @@ public class UserMapper {
      *                       of theirs, zero when they have none (TCM-21).
      * @param grades         every assessment recorded for them, with the
      *                       weighted average across the lot (TCM-23).
+     * @param certificates   what they have been awarded (TCM-25).
      */
     public StudentSummaryResponse toSummaryResponse(User student, List<EnrollmentResponse> enrollments,
                                                      Double attendanceRate, BigDecimal paymentBalance,
-                                                     StudentGradesResponse grades) {
+                                                     StudentGradesResponse grades,
+                                                     List<CertificateResponse> certificates) {
         return new StudentSummaryResponse(
                 toResponse(student),
                 enrollments,
@@ -74,6 +77,6 @@ public class UserMapper {
                 grades.grades(),
                 grades.weightedAverage(),
                 paymentBalance,
-                List.of()); // TODO(TCM-25): populate real certificates
+                certificates);
     }
 }

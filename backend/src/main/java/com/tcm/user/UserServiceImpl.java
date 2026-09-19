@@ -1,6 +1,7 @@
 package com.tcm.user;
 
 import com.tcm.attendance.AttendanceService;
+import com.tcm.certificate.CertificateService;
 import com.tcm.common.BadRequestException;
 import com.tcm.grade.GradeService;
 import com.tcm.payment.PaymentService;
@@ -39,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final AttendanceService attendanceService;
     private final PaymentService paymentService;
     private final GradeService gradeService;
+    private final CertificateService certificateService;
     private final PasswordEncoder passwordEncoder;
     private final EnrollmentRepository enrollmentRepository;
     private final EnrollmentMapper enrollmentMapper;
@@ -117,7 +119,8 @@ public class UserServiceImpl implements UserService {
                 attendanceService.studentAttendanceSummary(id), paymentService.outstandingBalance(id),
                 // Read as the admin this endpoint is reached as (TCM-13's own
                 // access check has already run), so no course narrowing.
-                gradeService.findForStudent(id, null, id, true));
+                gradeService.findForStudent(id, null, id, true),
+                certificateService.findForStudent(id, id, true));
     }
 
     private User getOrThrow(UUID id) {

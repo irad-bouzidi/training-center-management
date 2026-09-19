@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 
 import com.tcm.attendance.AttendanceService;
+import com.tcm.certificate.CertificateService;
 import com.tcm.grade.GradeService;
 import com.tcm.grade.dto.StudentGradesResponse;
 import com.tcm.payment.PaymentService;
@@ -69,13 +70,16 @@ class UserServiceImplTest {
     @Mock
     private GradeService gradeService;
 
+    @Mock
+    private CertificateService certificateService;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserServiceImpl(
-                userRepository, new UserMapper(), attendanceService, paymentService, gradeService, passwordEncoder,
-                enrollmentRepository, new EnrollmentMapper());
+                userRepository, new UserMapper(), attendanceService, paymentService, gradeService,
+                certificateService, passwordEncoder, enrollmentRepository, new EnrollmentMapper());
     }
 
     private static User existingUser(UUID id, Role role) {
