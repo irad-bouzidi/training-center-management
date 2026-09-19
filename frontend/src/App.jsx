@@ -7,6 +7,9 @@ import { MarkAttendancePage } from '@/features/attendance/MarkAttendancePage'
 import { QrCheckinPage } from '@/features/attendance/QrCheckinPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MyCertificatesPage } from '@/features/certificates/MyCertificatesPage'
+import { AdminDashboardPage } from '@/features/dashboard/AdminDashboardPage'
+import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
+import { TrainerDashboardPage } from '@/features/dashboard/TrainerDashboardPage'
 import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
 import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
@@ -23,7 +26,6 @@ import { UsersListPage } from '@/features/users/UsersListPage'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
 import { TrainerLayout } from '@/layouts/TrainerLayout'
-import { HomePage } from './routes/HomePage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { RoleRoute } from './routes/RoleRoute'
 import { RootRedirect } from './routes/RootRedirect'
@@ -50,7 +52,7 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
                 <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<HomePage />} />
+                  <Route index element={<AdminDashboardPage />} />
                   <Route path="users" element={<UsersListPage />} />
                   <Route path="courses" element={<CoursesListPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
@@ -67,7 +69,7 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['TRAINER']} />}>
                 <Route path="/trainer" element={<TrainerLayout />}>
-                  <Route index element={<HomePage />} />
+                  <Route index element={<TrainerDashboardPage />} />
                   <Route path="courses" element={<CourseCatalogPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="students" element={<StudentsListPage />} />
@@ -80,7 +82,7 @@ function App() {
 
               <Route element={<RoleRoute allowedRoles={['STUDENT']} />}>
                 <Route path="/student" element={<StudentLayout />}>
-                  <Route index element={<HomePage />} />
+                  <Route index element={<StudentDashboardPage />} />
                   <Route path="courses" element={<CourseCatalogPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="enrollments" element={<MyEnrollmentsPage />} />
