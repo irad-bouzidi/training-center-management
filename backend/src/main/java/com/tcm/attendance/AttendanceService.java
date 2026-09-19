@@ -29,6 +29,15 @@ public interface AttendanceService {
                                 boolean requesterIsAdmin);
 
     /**
+     * Marks a student present (or late) by their own QR scan, with
+     * {@code method=QR} and no marker - nobody marked them, they turned up.
+     * Called only by TCM-27's check-in, which has already established that
+     * the scan was of this session's current code; there is no trainer
+     * ownership to check here, because there is no trainer involved.
+     */
+    AttendanceResponse markViaQr(UUID sessionId, UUID studentId, AttendanceStatus status);
+
+    /**
      * Marks a whole roster in one go. Existing marks are updated rather than
      * duplicated, and students left out of {@code entries} are untouched.
      * Returns the resulting records in the order they were submitted.
