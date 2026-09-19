@@ -18,6 +18,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID>, J
 
     List<Enrollment> findByCourseId(UUID courseId);
 
+    /** The APPROVED roster of a course, as TCM-19's attendance roster and report read it. */
+    List<Enrollment> findByCourseIdAndStatus(UUID courseId, EnrollmentStatus status);
+
     /** Used for course-capacity checks (count of APPROVED enrollments). */
     long countByCourseIdAndStatus(UUID courseId, EnrollmentStatus status);
 

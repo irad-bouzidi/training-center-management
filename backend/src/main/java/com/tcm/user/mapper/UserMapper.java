@@ -51,12 +51,19 @@ public class UserMapper {
         return new StudentDirectoryResponse(toResponse(student), (int) activeEnrollments);
     }
 
-    /** See docs/tasks/TCM-13 for the documented, stable response shape. */
-    public StudentSummaryResponse toSummaryResponse(User student, List<EnrollmentResponse> enrollments) {
+    /**
+     * See docs/tasks/TCM-13 for the documented, stable response shape.
+     *
+     * @param attendanceRate percentage of marked sessions attended, or null
+     *                       while the student has no attendance marks at all
+     *                       (TCM-19).
+     */
+    public StudentSummaryResponse toSummaryResponse(User student, List<EnrollmentResponse> enrollments,
+                                                     Double attendanceRate) {
         return new StudentSummaryResponse(
                 toResponse(student),
                 enrollments,
-                null, // TODO(TCM-19): populate real attendance rate
+                attendanceRate,
                 List.of(), // TODO(TCM-23): populate real grades
                 null, // TODO(TCM-21): populate real payment balance
                 List.of()); // TODO(TCM-25): populate real certificates

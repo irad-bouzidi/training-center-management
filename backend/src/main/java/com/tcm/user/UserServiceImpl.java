@@ -1,5 +1,6 @@
 package com.tcm.user;
 
+import com.tcm.attendance.AttendanceService;
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
 import com.tcm.enrollment.EnrollmentRepository;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final AttendanceService attendanceService;
     private final PasswordEncoder passwordEncoder;
     private final EnrollmentRepository enrollmentRepository;
     private final EnrollmentMapper enrollmentMapper;
@@ -107,7 +109,7 @@ public class UserServiceImpl implements UserService {
         var enrollments = enrollmentRepository.findByStudentId(id).stream()
                 .map(enrollmentMapper::toResponse)
                 .toList();
-        return userMapper.toSummaryResponse(user, enrollments);
+        return userMapper.toSummaryResponse(user, enrollments, attendanceService.studentAttendanceSummary(id));
     }
 
     private User getOrThrow(UUID id) {

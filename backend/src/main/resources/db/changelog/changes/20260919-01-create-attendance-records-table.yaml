@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260919-01-create-attendance-records-table
+      author: irad
+      comment: >
+        attendance_records table per docs/PLAN.md §5 (TCM-19). status and
+        method are varchar + check constraints, matching the
+        users/courses/enrollments/class_sessions convention. The unique
+        (session_id, student_id) pair is what makes marking an upsert: a
+        second mark for the same student in the same session updates the
+        existing row instead of adding another. marked_by is nullable
+        because TCM-27's QR self check-in has no marker other than the
+        student themselves; session_id cascades on delete since a record is
+        meaningless without its session, while student_id and marked_by
+        keep the default RESTRICT.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE attendance_records (
+                  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  session_id  UUID NOT NULL REFERENCES class_sessions(id) ON DELETE CASCADE,
+                  student_id  UUID NOT NULL REFERENCES users(id),
+                  status      VARCHAR(20) NOT NULL
+                              CHECK (status IN ('PRESENT', 'ABSENT', 'LATE')),
+                  marked_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+                  marked_by   UUID REFERENCES users(id),
+                  method      VARCHAR(20) NOT NULL DEFAULT 'MANUAL'
+                              CHECK (method IN ('MANUAL', 'QR')),
+                  CONSTRAINT uq_attendance_records_session_student UNIQUE (session_id, student_id)
+              );
+
+              -- The student-facing reads (a student's own attendance rate,
+              -- the per-course report) filter by student; the roster read
+              -- is covered by the unique constraint's index.
+              CREATE INDEX ix_attendance_records_student ON attendance_records (student_id);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS attendance_records;
