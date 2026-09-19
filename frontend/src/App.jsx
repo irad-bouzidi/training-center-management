@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/context/AuthContext'
+import { AttendanceReportPage } from '@/features/attendance/AttendanceReportPage'
+import { MarkAttendancePage } from '@/features/attendance/MarkAttendancePage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
 import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
@@ -39,10 +41,12 @@ function App() {
                   <Route path="users" element={<UsersListPage />} />
                   <Route path="courses" element={<CoursesListPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
+                  <Route path="courses/:courseId/attendance" element={<AttendanceReportPage />} />
                   <Route path="students" element={<StudentsListPage />} />
                   <Route path="students/:id" element={<StudentSummaryPage />} />
                   <Route path="enrollments" element={<EnrollmentApprovalsPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
+                  <Route path="sessions/:sessionId/attendance" element={<MarkAttendancePage />} />
                 </Route>
               </Route>
 
@@ -54,6 +58,7 @@ function App() {
                   <Route path="students" element={<StudentsListPage />} />
                   <Route path="students/:id" element={<StudentSummaryPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
+                  <Route path="sessions/:sessionId/attendance" element={<MarkAttendancePage />} />
                 </Route>
               </Route>
 

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { StudentAttendanceTab } from '@/features/attendance/StudentAttendanceTab'
+import { formatRate } from '@/features/attendance/attendanceDisplay'
 import { statusBadgeVariant as enrollmentStatusBadgeVariant } from '@/features/enrollments/enrollmentDisplay'
 import { useStudentSummaryQuery } from './hooks'
 import { formatDate, fullName, statusBadgeVariant, titleCase } from './studentDisplay'
@@ -31,10 +33,11 @@ function Stat({ label, value }) {
  * Per-student profile/summary, per
  * docs/tasks/TCM-15-frontend-student-directory.md. "Overview" and
  * "Enrollments" show real data (profile from TCM-13, enrollments from
- * TCM-14); Attendance/Grades/Payments/Certificates are disabled "coming
- * soon" tabs until TCM-20/24/22/26 fill them in - the backend already
- * reserves their fields on StudentSummaryResponse as null/empty stubs, so
- * enabling a tab later is a contract-compatible change.
+ * TCM-14) and so does "Attendance" (TCM-19/TCM-20); Grades/Payments/
+ * Certificates are still disabled "coming soon" tabs until TCM-24/22/26 fill
+ * them in - the backend already reserves their fields on
+ * StudentSummaryResponse as null/empty stubs, so enabling a tab later is a
+ * contract-compatible change.
  */
 export function StudentSummaryPage() {
   const { id } = useParams()
@@ -72,9 +75,7 @@ export function StudentSummaryPage() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-              <TabsTrigger value="attendance" disabled title="Coming soon">
-                Attendance
-              </TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="grades" disabled title="Coming soon">
                 Grades
               </TabsTrigger>
@@ -95,7 +96,7 @@ export function StudentSummaryPage() {
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <Stat label="Total Enrollments" value={enrollments.length} />
                 <Stat label="Active Enrollments" value={activeEnrollments} />
-                <Stat label="Attendance Rate" value={summary.attendanceRate ?? '—'} />
+                <Stat label="Attendance Rate" value={formatRate(summary.attendanceRate)} />
                 <Stat label="Payment Balance" value={summary.paymentBalance ?? '—'} />
               </div>
             </TabsContent>
@@ -136,8 +137,12 @@ export function StudentSummaryPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="attendance" className="text-sm text-muted-foreground">
-              Attendance tracking comes in TCM-20.
+            <TabsContent value="attendance">
+              <StudentAttendanceTab
+                studentId={profile.id}
+                enrollments={enrollments}
+                overallRate={summary.attendanceRate}
+              />
             </TabsContent>
             <TabsContent value="grades" className="text-sm text-muted-foreground">
               Grades come in TCM-24.

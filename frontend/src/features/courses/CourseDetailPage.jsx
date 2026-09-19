@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/context/AuthContext'
+import { CourseAttendanceReport } from '@/features/attendance/CourseAttendanceReport'
 import { CourseEnrollmentsTab } from '@/features/enrollments/CourseEnrollmentsTab'
 import { CourseScheduleTab } from '@/features/schedule/CourseScheduleTab'
 import { CourseFormDialog } from './CourseFormDialog'
@@ -27,8 +28,9 @@ function Field({ label, value }) {
  * /admin/courses/:id, /trainer/courses/:id, /student/courses/:id) - see
  * docs/tasks/TCM-12-frontend-course-management.md step 4. Only ADMIN gets
  * the edit/status actions; Trainer/Student reach this same route read-only,
- * from the shared catalog (CourseCatalogPage). Both tabs are role-aware: see
- * CourseScheduleTab (TCM-18) and CourseEnrollmentsTab (TCM-16).
+ * from the shared catalog (CourseCatalogPage). The tabs are role-aware: see
+ * CourseScheduleTab (TCM-18), CourseEnrollmentsTab (TCM-16) and
+ * CourseAttendanceReport (TCM-20).
  */
 export function CourseDetailPage() {
   const { id } = useParams()
@@ -37,6 +39,10 @@ export function CourseDetailPage() {
   const { data: course, isLoading } = useCourseQuery(id)
   const [formOpen, setFormOpen] = useState(false)
   const isAdmin = user.role === 'ADMIN'
+  // Students never see anyone's attendance but their own (TCM-19 grants the
+  // report to admins and the course's trainers only), so the tab isn't
+  // offered to them at all rather than shown and then refused.
+  const canSeeAttendance = user.role !== 'STUDENT'
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading…</p>
@@ -80,6 +86,7 @@ export function CourseDetailPage() {
             <TabsList>
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
+              {canSeeAttendance && <TabsTrigger value="attendance">Attendance</TabsTrigger>}
             </TabsList>
             <TabsContent value="schedule">
               <CourseScheduleTab course={course} />
@@ -87,6 +94,11 @@ export function CourseDetailPage() {
             <TabsContent value="enrollments">
               <CourseEnrollmentsTab course={course} />
             </TabsContent>
+            {canSeeAttendance && (
+              <TabsContent value="attendance">
+                <CourseAttendanceReport courseId={course.id} />
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>
