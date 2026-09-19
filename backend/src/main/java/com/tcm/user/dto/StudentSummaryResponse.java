@@ -1,6 +1,7 @@
 package com.tcm.user.dto;
 
 import com.tcm.enrollment.dto.EnrollmentResponse;
+import com.tcm.grade.dto.GradeResponse;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,19 +11,25 @@ import java.util.List;
  * the contract:
  *
  * <pre>
- * { profile, enrollments: [], attendanceRate: null, grades: [],
- *   paymentBalance: null, certificates: [] }
+ * { profile, enrollments: [], attendanceRate, grades: [], overallGrade,
+ *   paymentBalance, certificates: [] }
  * </pre>
  *
- * {@code enrollments} is populated for real as of TCM-14; the remaining
- * lists/aggregates are still stubs populated by a later task - see the
- * {@code // TODO} markers on {@link com.tcm.user.mapper.UserMapper#toSummaryResponse}.
+ * Real as of: {@code enrollments} TCM-14, {@code attendanceRate} TCM-19,
+ * {@code paymentBalance} TCM-21, {@code grades}/{@code overallGrade} TCM-23.
+ * {@code certificates} is still a stub - see the {@code // TODO} marker on
+ * {@link com.tcm.user.mapper.UserMapper#toSummaryResponse}.
+ *
+ * {@code overallGrade} joined the shape in TCM-23 rather than being reserved
+ * from the start: TCM-13 had no way to know a weighted average was the
+ * figure worth carrying.
  */
 public record StudentSummaryResponse(
         UserResponse profile,
         List<EnrollmentResponse> enrollments,
         Double attendanceRate,
-        List<Object> grades,
+        List<GradeResponse> grades,
+        Double overallGrade,
         BigDecimal paymentBalance,
         List<Object> certificates
 ) {

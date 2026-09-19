@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260919-03-create-grades-table
+      author: irad
+      comment: >
+        grades table per docs/PLAN.md §5 (TCM-23). assessment_type is a
+        varchar + check constraint, matching every other table here. The
+        score bounds (0 <= score <= max_score, max_score > 0) and the weight
+        bound mirror the service's own validation, so the invariants survive
+        a write that doesn't go through it - a weighted average divides by
+        max_score and by the weight total, and neither may be zero or
+        negative. student_id, course_id and graded_by keep the default
+        RESTRICT: a grade is a record of assessment and must not disappear
+        with the people or course it refers to.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE grades (
+                  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                  student_id      UUID NOT NULL REFERENCES users(id),
+                  course_id       UUID NOT NULL REFERENCES courses(id),
+                  assessment_type VARCHAR(20) NOT NULL
+                                  CHECK (assessment_type IN ('EXAM', 'ASSIGNMENT', 'QUIZ', 'PROJECT')),
+                  title           VARCHAR(200) NOT NULL,
+                  score           NUMERIC(5, 2) NOT NULL CHECK (score >= 0),
+                  max_score       NUMERIC(5, 2) NOT NULL CHECK (max_score > 0),
+                  weight          NUMERIC(5, 2) NOT NULL CHECK (weight > 0),
+                  graded_by       UUID NOT NULL REFERENCES users(id),
+                  graded_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+                  comments        TEXT,
+                  CONSTRAINT ck_grades_score_within_max CHECK (score <= max_score)
+              );
+
+              -- The gradebook reads by course; a student's own transcript and
+              -- the summary's overall figure read by student, often narrowed
+              -- to one course.
+              CREATE INDEX ix_grades_course ON grades (course_id);
+              CREATE INDEX ix_grades_student_course ON grades (student_id, course_id);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: DROP TABLE IF EXISTS grades;

@@ -9,6 +9,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 
 import com.tcm.attendance.AttendanceService;
+import com.tcm.grade.GradeService;
+import com.tcm.grade.dto.StudentGradesResponse;
 import com.tcm.payment.PaymentService;
 import com.tcm.common.BadRequestException;
 import com.tcm.common.ResourceNotFoundException;
@@ -64,12 +66,15 @@ class UserServiceImplTest {
     @Mock
     private PaymentService paymentService;
 
+    @Mock
+    private GradeService gradeService;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserServiceImpl(
-                userRepository, new UserMapper(), attendanceService, paymentService, passwordEncoder,
+                userRepository, new UserMapper(), attendanceService, paymentService, gradeService, passwordEncoder,
                 enrollmentRepository, new EnrollmentMapper());
     }
 
@@ -234,6 +239,7 @@ class UserServiceImplTest {
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
         when(attendanceService.studentAttendanceSummary(id)).thenReturn(null); // nothing marked yet
         when(paymentService.outstandingBalance(id)).thenReturn(BigDecimal.ZERO);
+        when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
 
         StudentSummaryResponse response = userService.getStudentSummary(id);
 
@@ -241,8 +247,23 @@ class UserServiceImplTest {
         assertThat(response.enrollments()).isEmpty();
         assertThat(response.attendanceRate()).isNull();
         assertThat(response.grades()).isEmpty();
+        assertThat(response.overallGrade()).isNull();
         assertThat(response.paymentBalance()).isEqualByComparingTo("0");
         assertThat(response.certificates()).isEmpty();
+    }
+
+    /** What a student with nothing recorded gets back from TCM-23. */
+    private static final StudentGradesResponse NO_GRADES = new StudentGradesResponse(List.of(), null);
+
+    @Test
+    void getStudentSummary_populatesRealGrades() {
+        UUID id = UUID.randomUUID();
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(gradeService.findForStudent(id, null, id, true))
+                .thenReturn(new StudentGradesResponse(List.of(), 82.5));
+
+        assertThat(userService.getStudentSummary(id).overallGrade()).isEqualTo(82.5);
     }
 
     @Test
@@ -250,6 +271,7 @@ class UserServiceImplTest {
         UUID id = UUID.randomUUID();
         when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
         when(attendanceService.studentAttendanceSummary(id)).thenReturn(75.0);
 
         assertThat(userService.getStudentSummary(id).attendanceRate()).isEqualTo(75.0);
@@ -260,6 +282,7 @@ class UserServiceImplTest {
         UUID id = UUID.randomUUID();
         when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
         when(paymentService.outstandingBalance(id)).thenReturn(new BigDecimal("300.00"));
 
         assertThat(userService.getStudentSummary(id).paymentBalance()).isEqualByComparingTo("300.00");
@@ -280,6 +303,7 @@ class UserServiceImplTest {
                 .status(EnrollmentStatus.PENDING)
                 .build();
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of(enrollment));
+        when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
 
         StudentSummaryResponse response = userService.getStudentSummary(id);
 

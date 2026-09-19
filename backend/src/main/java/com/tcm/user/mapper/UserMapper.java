@@ -1,6 +1,7 @@
 package com.tcm.user.mapper;
 
 import com.tcm.enrollment.dto.EnrollmentResponse;
+import com.tcm.grade.dto.StudentGradesResponse;
 import com.tcm.user.dto.StudentDirectoryResponse;
 import com.tcm.user.dto.StudentSummaryResponse;
 import com.tcm.user.dto.UserRequest;
@@ -60,14 +61,18 @@ public class UserMapper {
      *                       (TCM-19).
      * @param paymentBalance what the student still owes across every invoice
      *                       of theirs, zero when they have none (TCM-21).
+     * @param grades         every assessment recorded for them, with the
+     *                       weighted average across the lot (TCM-23).
      */
     public StudentSummaryResponse toSummaryResponse(User student, List<EnrollmentResponse> enrollments,
-                                                     Double attendanceRate, BigDecimal paymentBalance) {
+                                                     Double attendanceRate, BigDecimal paymentBalance,
+                                                     StudentGradesResponse grades) {
         return new StudentSummaryResponse(
                 toResponse(student),
                 enrollments,
                 attendanceRate,
-                List.of(), // TODO(TCM-23): populate real grades
+                grades.grades(),
+                grades.weightedAverage(),
                 paymentBalance,
                 List.of()); // TODO(TCM-25): populate real certificates
     }
