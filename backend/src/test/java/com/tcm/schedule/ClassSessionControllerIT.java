@@ -177,20 +177,21 @@ class ClassSessionControllerIT {
 
     @Test
     void student_seesSessionsOnlyForCoursesTheyAreApprovedIn() throws Exception {
-        String trainerId = createUser(trainer());
         String approvedCourseId = createCourse();
         String pendingCourseId = createCourse();
         String unrelatedCourseId = createCourse();
         LocalDate date = uniqueDate();
 
+        // A trainer each: three same-slot sessions would otherwise collide on
+        // the double-booking rule, which is not what this test is about.
         String approvedSessionId = sessionId(
-                createSession(approvedCourseId, trainerId, "Room A", date, NINE, ELEVEN)
+                createSession(approvedCourseId, createUser(trainer()), "Room A", date, NINE, ELEVEN)
                         .andExpect(status().isCreated()));
         String pendingSessionId = sessionId(
-                createSession(pendingCourseId, trainerId, "Room B", date, NINE, ELEVEN)
+                createSession(pendingCourseId, createUser(trainer()), "Room B", date, NINE, ELEVEN)
                         .andExpect(status().isCreated()));
         String unrelatedSessionId = sessionId(
-                createSession(unrelatedCourseId, trainerId, "Room C", date, NINE, ELEVEN)
+                createSession(unrelatedCourseId, createUser(trainer()), "Room C", date, NINE, ELEVEN)
                         .andExpect(status().isCreated()));
 
         String studentEmail = uniqueEmail();
