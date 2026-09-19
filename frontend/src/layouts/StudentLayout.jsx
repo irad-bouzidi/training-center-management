@@ -1,9 +1,8 @@
 import { AppShell } from './AppShell'
 
-// Disabled items are features later tasks build (TCM-26) - stubbed here
-// per docs/tasks/TCM-9-frontend-auth.md. "My Attendance" stays stubbed past
-// TCM-20: the attendance API (TCM-19) is trainer/admin-facing, with no
-// endpoint yet for a student to read their own record.
+// "My Attendance" is the one stub left: the attendance API (TCM-19) is
+// trainer/admin-facing, with no endpoint yet for a student to read their own
+// record. Everything else here is live.
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/student', enabled: true },
   { label: 'Course Catalog', to: '/student/courses', enabled: true },
@@ -12,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'My Payments', to: '/student/payments', enabled: true },
   { label: 'My Attendance', enabled: false },
   { label: 'My Grades', to: '/student/grades', enabled: true },
-  { label: 'My Certificates', enabled: false },
+  { label: 'My Certificates', to: '/student/certificates', enabled: true },
 ]
 
 export function StudentLayout() {
