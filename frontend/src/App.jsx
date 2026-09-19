@@ -10,6 +10,8 @@ import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
 import { EnrollmentApprovalsPage } from '@/features/enrollments/EnrollmentApprovalsPage'
 import { ScheduleListPage } from '@/features/schedule/ScheduleListPage'
+import { GradebookPage } from '@/features/grades/GradebookPage'
+import { MyGradesPage } from '@/features/grades/MyGradesPage'
 import { MyPaymentsPage } from '@/features/payments/MyPaymentsPage'
 import { PaymentsListPage } from '@/features/payments/PaymentsListPage'
 import { MyEnrollmentsPage } from '@/features/students/MyEnrollmentsPage'
@@ -44,6 +46,7 @@ function App() {
                   <Route path="courses" element={<CoursesListPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="courses/:courseId/attendance" element={<AttendanceReportPage />} />
+                  <Route path="courses/:courseId/grades" element={<GradebookPage />} />
                   <Route path="students" element={<StudentsListPage />} />
                   <Route path="students/:id" element={<StudentSummaryPage />} />
                   <Route path="enrollments" element={<EnrollmentApprovalsPage />} />
@@ -62,6 +65,7 @@ function App() {
                   <Route path="students/:id" element={<StudentSummaryPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
                   <Route path="sessions/:sessionId/attendance" element={<MarkAttendancePage />} />
+                  <Route path="courses/:courseId/grades" element={<GradebookPage />} />
                 </Route>
               </Route>
 
@@ -73,6 +77,7 @@ function App() {
                   <Route path="enrollments" element={<MyEnrollmentsPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
                   <Route path="payments" element={<MyPaymentsPage />} />
+                  <Route path="grades" element={<MyGradesPage />} />
                 </Route>
               </Route>
             </Route>

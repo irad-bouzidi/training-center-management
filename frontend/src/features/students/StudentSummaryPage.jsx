@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext'
 import { StudentAttendanceTab } from '@/features/attendance/StudentAttendanceTab'
 import { formatRate } from '@/features/attendance/attendanceDisplay'
 import { statusBadgeVariant as enrollmentStatusBadgeVariant } from '@/features/enrollments/enrollmentDisplay'
+import { CourseGradesList } from '@/features/grades/CourseGradesList'
+import { formatPercent } from '@/features/grades/gradeDisplay'
 import { StudentPaymentsTab } from '@/features/payments/StudentPaymentsTab'
 import { formatAmount } from '@/features/payments/paymentDisplay'
 import { useStudentSummaryQuery } from './hooks'
@@ -36,10 +38,10 @@ function Stat({ label, value }) {
  * Per-student profile/summary, per
  * docs/tasks/TCM-15-frontend-student-directory.md. "Overview" and
  * "Enrollments" show real data (profile from TCM-13, enrollments from
- * TCM-14), as do "Attendance" (TCM-19/20) and "Payments" (TCM-21/22);
- * Grades and Certificates are still disabled "coming soon" tabs until
- * TCM-24/26 fill them in - the backend already reserves their fields on
- * StudentSummaryResponse as null/empty stubs, so enabling a tab later is a
+ * TCM-14), as do "Attendance" (TCM-19/20), "Payments" (TCM-21/22) and
+ * "Grades" (TCM-23/24); Certificates is still a disabled "coming soon" tab
+ * until TCM-26 fills it in - the backend already reserves its field on
+ * StudentSummaryResponse as an empty stub, so enabling a tab later is a
  * contract-compatible change.
  */
 export function StudentSummaryPage() {
@@ -80,9 +82,7 @@ export function StudentSummaryPage() {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="grades" disabled title="Coming soon">
-                Grades
-              </TabsTrigger>
+              <TabsTrigger value="grades">Grades</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="certificates" disabled title="Coming soon">
                 Certificates
@@ -99,6 +99,7 @@ export function StudentSummaryPage() {
                 <Stat label="Total Enrollments" value={enrollments.length} />
                 <Stat label="Active Enrollments" value={activeEnrollments} />
                 <Stat label="Attendance Rate" value={formatRate(summary.attendanceRate)} />
+                <Stat label="Overall Grade" value={formatPercent(summary.overallGrade)} />
                 <Stat label="Payment Balance" value={formatAmount(summary.paymentBalance ?? 0)} />
               </div>
             </TabsContent>
@@ -146,8 +147,12 @@ export function StudentSummaryPage() {
                 overallRate={summary.attendanceRate}
               />
             </TabsContent>
-            <TabsContent value="grades" className="text-sm text-muted-foreground">
-              Grades come in TCM-24.
+            <TabsContent value="grades">
+              <CourseGradesList
+                grades={summary.grades}
+                overall={summary.overallGrade}
+                emptyMessage="Nothing has been graded for this student yet."
+              />
             </TabsContent>
             <TabsContent value="payments">
               <StudentPaymentsTab studentId={profile.id} isAdmin={user.role === 'ADMIN'} />

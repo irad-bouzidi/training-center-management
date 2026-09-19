@@ -1,6 +1,6 @@
 import { AppShell } from './AppShell'
 
-// Disabled items are features later tasks build (TCM-24, 26) - stubbed here
+// Disabled items are features later tasks build (TCM-26) - stubbed here
 // per docs/tasks/TCM-9-frontend-auth.md. "My Attendance" stays stubbed past
 // TCM-20: the attendance API (TCM-19) is trainer/admin-facing, with no
 // endpoint yet for a student to read their own record.
@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'Schedule', to: '/student/schedule', enabled: true },
   { label: 'My Payments', to: '/student/payments', enabled: true },
   { label: 'My Attendance', enabled: false },
-  { label: 'My Grades', enabled: false },
+  { label: 'My Grades', to: '/student/grades', enabled: true },
   { label: 'My Certificates', enabled: false },
 ]
 
