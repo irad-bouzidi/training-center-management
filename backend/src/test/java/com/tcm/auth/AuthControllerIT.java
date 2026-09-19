@@ -92,6 +92,39 @@ class AuthControllerIT {
                 .andExpect(jsonPath("$.role").value("ADMIN"));
     }
 
+    /**
+     * The malformed-request cases every endpoint inherits from
+     * GlobalExceptionHandler, tested here on the one endpoint that needs no
+     * token to reach. Both used to read as 500s - found by TCM-30's smoke
+     * pass.
+     */
+    @Test
+    void aMissingOrUnparseableBody_is400_inTheStandardErrorShape() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Request body is missing or malformed"))
+                .andExpect(jsonPath("$.path").value("/api/v1/auth/login"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{not json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void aPathValueOfTheWrongType_is400_ratherThan500() throws Exception {
+        String token = objectMapper.readTree(mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(BOOTSTRAP_ADMIN_EMAIL, BOOTSTRAP_ADMIN_PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString()).get("token").asText();
+
+        mockMvc.perform(get("/api/v1/courses/not-a-uuid").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("not a valid value")));
+    }
+
     private String loginBody(String email, String password) throws Exception {
         return objectMapper.writeValueAsString(new LoginRequest(email, password));
     }

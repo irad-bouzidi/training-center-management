@@ -57,7 +57,10 @@ export function SessionQrDialog({ onOpenChange, session }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col items-center gap-3">
+        {/* min-w-0 is what keeps the check-in URL from pushing the dialog
+            open: an unbroken string is a single long word, and without it
+            the flex column grows to fit rather than letting it truncate. */}
+        <div className="flex min-w-0 flex-col items-center gap-3">
           {generate.isPending && <p className="text-sm text-muted-foreground">Producing a code…</p>}
 
           {code && (
@@ -76,7 +79,7 @@ export function SessionQrDialog({ onOpenChange, session }) {
                   'This code has expired — show a new one.'
                 )}
               </p>
-              <p className="max-w-full truncate text-xs text-muted-foreground" title={code.checkInUrl}>
+              <p className="w-full truncate text-center text-xs text-muted-foreground" title={code.checkInUrl}>
                 {code.checkInUrl}
               </p>
             </>

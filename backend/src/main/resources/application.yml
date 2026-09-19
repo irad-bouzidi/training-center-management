@@ -18,6 +18,10 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    # Schema changesets carry no context and always run. The demo dataset
+    # (20260919-05) is tagged `demo`, so it ships with a local or Docker run
+    # and stays out of anything started with LIQUIBASE_CONTEXTS=prod.
+    contexts: ${LIQUIBASE_CONTEXTS:demo}
     parameters:
       # Bootstrap admin seeded by 20260905-02-seed-bootstrap-admin.yaml.
       # Default credentials: admin@tcm.local / ChangeMe123! - documented in
