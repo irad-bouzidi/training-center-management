@@ -107,7 +107,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public StudentSummaryResponse getStudentSummary(UUID id) {
+    public StudentSummaryResponse getStudentSummary(UUID id, UUID requesterId, boolean requesterIsAdmin) {
+        // The controller only lets an admin, a trainer or the student
+        // themselves this far, so anyone else here is a trainer.
+        boolean asTrainer = !requesterIsAdmin && !id.equals(requesterId);
+        if (asTrainer && !enrollmentRepository.existsByStudentIdTaughtBy(id, requesterId)) {
+            throw new AccessDeniedException("You may only view students on a course you teach");
+        }
         User user = getOrThrow(id);
         if (user.getRole() != Role.STUDENT) {
             throw new BadRequestException("User " + id + " is not a student");
@@ -117,9 +123,11 @@ public class UserServiceImpl implements UserService {
                 .toList();
         return userMapper.toSummaryResponse(user, enrollments,
                 attendanceService.studentAttendanceSummary(id), paymentService.outstandingBalance(id),
-                // Read as the admin this endpoint is reached as (TCM-13's own
-                // access check has already run), so no course narrowing.
-                gradeService.findForStudent(id, null, id, true),
+                // Access is settled above; a trainer's grades are narrowed to
+                // the courses they grade, everyone else sees them all.
+                asTrainer
+                        ? gradeService.findForStudentTaughtBy(id, requesterId)
+                        : gradeService.findForStudent(id, null, id, true),
                 certificateService.findForStudent(id, id, true));
     }
 

@@ -40,6 +40,14 @@ public interface GradeService {
      */
     StudentGradesResponse findForStudent(UUID studentId, UUID courseId, UUID requesterId, boolean requesterIsAdmin);
 
+    /**
+     * A student's results on just the courses {@code trainerId} is the
+     * primary trainer of, with the weighted average over those alone - what
+     * a trainer sees of a student's grades on their summary. The same scope
+     * {@link #findForStudent} grants a trainer one course at a time.
+     */
+    StudentGradesResponse findForStudentTaughtBy(UUID studentId, UUID trainerId);
+
     /** The gradebook for a course: every approved student, graded or not. */
     CourseGradebookResponse courseGradebook(UUID courseId, UUID requesterId, boolean requesterIsAdmin);
 }

@@ -14,6 +14,17 @@ public interface AttendanceRepository extends JpaRepository<AttendanceRecord, UU
     /** The roster read: every mark already made for a session. */
     List<AttendanceRecord> findBySessionId(UUID sessionId);
 
+    /**
+     * A student's own history for {@code GET /attendance/mine}, newest
+     * session first (and, within a day, the later sitting first).
+     */
+    @Query("""
+            select r from AttendanceRecord r
+            where r.student.id = :studentId
+            order by r.session.sessionDate desc, r.session.startTime desc
+            """)
+    List<AttendanceRecord> findByStudentIdNewestFirst(@Param("studentId") UUID studentId);
+
     /** Upsert lookup - see {@code AttendanceServiceImpl#markOne}. */
     Optional<AttendanceRecord> findBySessionIdAndStudentId(UUID sessionId, UUID studentId);
 
@@ -49,10 +60,8 @@ public interface AttendanceRepository extends JpaRepository<AttendanceRecord, UU
     /**
      * One student's tallies on one course, for
      * {@code AttendanceServiceImpl#studentCourseAttendanceRate}. Read
-     * straight off the records rather than out of the course report, which
-     * lists the APPROVED roster only - by the time a student is being
-     * certified their enrollment is COMPLETED, and they would have dropped
-     * out of it.
+     * straight off the records rather than out of the course report, so no
+     * enrollment status can hide a mark from certification.
      */
     @Query("""
             select r.status as status, count(r) as total

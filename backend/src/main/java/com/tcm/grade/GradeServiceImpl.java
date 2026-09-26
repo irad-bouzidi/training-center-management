@@ -99,6 +99,17 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     @Transactional(readOnly = true)
+    public StudentGradesResponse findForStudentTaughtBy(UUID studentId, UUID trainerId) {
+        List<Grade> grades = gradeRepository.findByStudentIdOrderByGradedAtDesc(studentId).stream()
+                .filter(grade -> grade.getCourse().getPrimaryTrainer() != null
+                        && grade.getCourse().getPrimaryTrainer().getId().equals(trainerId))
+                .toList();
+        return new StudentGradesResponse(grades.stream().map(gradeMapper::toResponse).toList(),
+                weightedAverage(grades));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public CourseGradebookResponse courseGradebook(UUID courseId, UUID requesterId, boolean requesterIsAdmin) {
         Course course = getCourseOrThrow(courseId);
         requireTeaches(course, requesterId, requesterIsAdmin);

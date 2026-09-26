@@ -44,8 +44,10 @@ public class CertificateServiceImpl implements CertificateService {
         requireTeaches(course, issuerId, requesterIsAdmin);
 
         certificateRepository.findByStudentIdAndCourseId(studentId, courseId).ifPresent(existing -> {
-            throw new ConflictException("This student already holds certificate "
-                    + existing.getCertificateNumber() + " for this course");
+            // The id is in the message so the caller can go straight to the
+            // certificate that already exists instead of searching for it.
+            throw new ConflictException("Certificate " + existing.getCertificateNumber()
+                    + " (id " + existing.getId() + ") already issued to this student for this course");
         });
 
         String reason = eligibilityService.ineligibilityReason(studentId, courseId);

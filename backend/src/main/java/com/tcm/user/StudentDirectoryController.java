@@ -1,14 +1,17 @@
 package com.tcm.user;
 
 import com.tcm.common.PageResponse;
+import com.tcm.security.UserPrincipal;
 import com.tcm.user.dto.StudentDirectoryResponse;
 import com.tcm.user.dto.StudentSummaryResponse;
+import com.tcm.user.model.Role;
 import com.tcm.user.model.UserStatus;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,7 +41,9 @@ public class StudentDirectoryController {
 
     @GetMapping("/{id}/summary")
     @PreAuthorize("hasRole('ADMIN') or hasRole('TRAINER') or #id == authentication.principal.id")
-    public StudentSummaryResponse summary(@PathVariable UUID id) {
-        return userService.getStudentSummary(id);
+    public StudentSummaryResponse summary(@PathVariable UUID id, @AuthenticationPrincipal UserPrincipal principal) {
+        // Which students a trainer may see is an ownership question - the
+        // service settles it.
+        return userService.getStudentSummary(id, principal.getId(), principal.getUser().getRole() == Role.ADMIN);
     }
 }

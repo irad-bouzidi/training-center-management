@@ -40,15 +40,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(BEARER_PREFIX.length());
 
             if (jwtService.isValid(token)) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(jwtService.extractEmail(token));
-
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                // Resolved by id (the immutable `sub`), not the email claim:
+                // an email that has since changed hands must not let an old
+                // token authenticate as whoever holds it now. A user who has
+                // since been deleted or deactivated simply isn't
+                // authenticated, and the entry point answers 401.
+                userDetailsService.findById(jwtService.extractUserId(token))
+                        .filter(JwtAuthenticationFilter::isUsable)
+                        .ifPresent(userDetails -> authenticate(userDetails, request));
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static boolean isUsable(UserDetails userDetails) {
+        return userDetails.isEnabled() && userDetails.isAccountNonLocked()
+                && userDetails.isAccountNonExpired() && userDetails.isCredentialsNonExpired();
+    }
+
+    private static void authenticate(UserDetails userDetails, HttpServletRequest request) {
+        var authToken = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 }

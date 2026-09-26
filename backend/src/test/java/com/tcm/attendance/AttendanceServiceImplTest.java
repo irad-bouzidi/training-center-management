@@ -143,6 +143,59 @@ class AttendanceServiceImplTest {
     }
 
     @Test
+    void markBulk_withTheStatusAlreadyRecorded_leavesAQrCheckInUntouched() {
+        ClassSession session = givenSession();
+        User student = student(STUDENT_ID, "Sam", "Student");
+        givenApprovedRoster(student);
+        Instant checkedInAt = Instant.parse("2026-03-02T09:05:00Z");
+        AttendanceRecord qrCheckIn = AttendanceRecord.builder()
+                .id(UUID.randomUUID())
+                .session(session)
+                .student(student)
+                .status(AttendanceStatus.PRESENT)
+                .method(AttendanceMethod.QR)
+                .markedAt(checkedInAt)
+                .build();
+        when(attendanceRepository.findBySessionIdAndStudentId(SESSION_ID, STUDENT_ID))
+                .thenReturn(Optional.of(qrCheckIn));
+
+        // The trainer re-saves the whole roster with this student still PRESENT.
+        var saved = attendanceService.markBulk(
+                SESSION_ID, List.of(new AttendanceMarkRequest(STUDENT_ID, AttendanceStatus.PRESENT)),
+                TRAINER_ID, false);
+
+        assertThat(saved).singleElement().satisfies(response -> {
+            assertThat(response.method()).isEqualTo(AttendanceMethod.QR);
+            assertThat(response.markedAt()).isEqualTo(checkedInAt);
+        });
+        assertThat(qrCheckIn.getMarkedBy()).isNull();
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
+    void markBulk_onACancelledSession_isRejectedAndWritesNothing() {
+        givenSession().setStatus(SessionStatus.CANCELLED);
+
+        assertThatThrownBy(() -> attendanceService.markBulk(
+                SESSION_ID, List.of(new AttendanceMarkRequest(STUDENT_ID, AttendanceStatus.PRESENT)),
+                TRAINER_ID, false))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("cancelled");
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
+    void markOne_onACancelledSession_isRejected() {
+        givenSession().setStatus(SessionStatus.CANCELLED);
+
+        assertThatThrownBy(() -> attendanceService.markOne(
+                SESSION_ID, STUDENT_ID, AttendanceStatus.PRESENT, TRAINER_ID, true))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("cancelled");
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
     void markBulk_byATrainerWhoIsNotAssigned_isDeniedAndWritesNothing() {
         givenSession();
 
@@ -161,7 +214,7 @@ class AttendanceServiceImplTest {
         assertThatThrownBy(() -> attendanceService.markOne(
                 SESSION_ID, STUDENT_ID, AttendanceStatus.PRESENT, TRAINER_ID, false))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("APPROVED enrollment");
+                .hasMessageContaining("APPROVED or COMPLETED enrollment");
     }
 
     @Test
@@ -191,6 +244,47 @@ class AttendanceServiceImplTest {
         CourseAttendanceReportResponse.StudentRow unmarked = report.students().get(1);
         assertThat(unmarked.marked()).isZero();
         assertThat(unmarked.attendanceRate()).isNull();
+    }
+
+    @Test
+    void courseAttendanceReport_keepsStudentsWhoseEnrollmentIsCompleted() {
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course()));
+        when(enrollmentRepository.findByCourseIdAndStatusIn(COURSE_ID, ATTENDING))
+                .thenReturn(List.of(enrollment(student(STUDENT_ID, "Cleo", "Completed"), EnrollmentStatus.COMPLETED)));
+        when(attendanceRepository.countByCourseGroupedByStudentAndStatus(COURSE_ID)).thenReturn(List.of(
+                statusCount(STUDENT_ID, AttendanceStatus.PRESENT, 3)));
+
+        CourseAttendanceReportResponse report = attendanceService.courseAttendanceReport(COURSE_ID, null, true);
+
+        assertThat(report.students()).singleElement().satisfies(row -> {
+            assertThat(row.studentId()).isEqualTo(STUDENT_ID);
+            assertThat(row.present()).isEqualTo(3);
+            assertThat(row.attendanceRate()).isEqualTo(100.0);
+        });
+    }
+
+    @Test
+    void findMine_mapsEachRecordWithItsSessionAndCourse_inTheRepositorysOrder() {
+        ClassSession later = session(UUID.randomUUID(), LocalDate.of(2026, 3, 9));
+        ClassSession earlier = session(SESSION_ID, LocalDate.of(2026, 3, 2));
+        User student = student(STUDENT_ID, "Sam", "Student");
+        when(attendanceRepository.findByStudentIdNewestFirst(STUDENT_ID)).thenReturn(List.of(
+                record(later, student, AttendanceStatus.LATE, AttendanceMethod.MANUAL),
+                record(earlier, student, AttendanceStatus.PRESENT, AttendanceMethod.QR)));
+
+        var mine = attendanceService.findMine(STUDENT_ID);
+
+        assertThat(mine).hasSize(2);
+        assertThat(mine.get(0).sessionId()).isEqualTo(later.getId());
+        assertThat(mine.get(0).sessionDate()).isEqualTo(LocalDate.of(2026, 3, 9));
+        assertThat(mine.get(0).status()).isEqualTo(AttendanceStatus.LATE);
+        assertThat(mine.get(1).sessionId()).isEqualTo(SESSION_ID);
+        assertThat(mine.get(1).method()).isEqualTo(AttendanceMethod.QR);
+        assertThat(mine.get(1).courseId()).isEqualTo(COURSE_ID);
+        assertThat(mine.get(1).courseCode()).isEqualTo("JAVA-101");
+        assertThat(mine.get(1).courseName()).isEqualTo("Java Fundamentals");
+        assertThat(mine.get(1).startTime()).isEqualTo(LocalTime.of(9, 0));
+        assertThat(mine.get(1).endTime()).isEqualTo(LocalTime.of(11, 0));
     }
 
     @Test
@@ -248,31 +342,55 @@ class AttendanceServiceImplTest {
     }
 
     private ClassSession givenSession() {
-        ClassSession session = ClassSession.builder()
-                .id(SESSION_ID)
-                .course(course())
-                .trainer(trainer())
-                .classroom("Room A")
-                .sessionDate(LocalDate.of(2026, 3, 2))
-                .startTime(LocalTime.of(9, 0))
-                .endTime(LocalTime.of(11, 0))
-                .status(SessionStatus.SCHEDULED)
-                .build();
+        ClassSession session = session(SESSION_ID, LocalDate.of(2026, 3, 2));
         when(classSessionRepository.findById(SESSION_ID)).thenReturn(Optional.of(session));
         return session;
     }
 
+    private static ClassSession session(UUID id, LocalDate date) {
+        return ClassSession.builder()
+                .id(id)
+                .course(course())
+                .trainer(trainer())
+                .classroom("Room A")
+                .sessionDate(date)
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(11, 0))
+                .status(SessionStatus.SCHEDULED)
+                .build();
+    }
+
+    private static AttendanceRecord record(ClassSession session, User student, AttendanceStatus status,
+                                           AttendanceMethod method) {
+        return AttendanceRecord.builder()
+                .id(UUID.randomUUID())
+                .session(session)
+                .student(student)
+                .status(status)
+                .method(method)
+                .markedAt(Instant.EPOCH)
+                .build();
+    }
+
+    /** The enrollment statuses whose students the roster and report list. */
+    private static final List<EnrollmentStatus> ATTENDING =
+            List.of(EnrollmentStatus.APPROVED, EnrollmentStatus.COMPLETED);
+
     private void givenApprovedRoster(User... students) {
-        when(enrollmentRepository.findByCourseIdAndStatus(COURSE_ID, EnrollmentStatus.APPROVED))
+        when(enrollmentRepository.findByCourseIdAndStatusIn(COURSE_ID, ATTENDING))
                 .thenReturn(List.of(students).stream()
-                        .map(student -> Enrollment.builder()
-                                .id(UUID.randomUUID())
-                                .student(student)
-                                .course(course())
-                                .status(EnrollmentStatus.APPROVED)
-                                .enrolledAt(Instant.EPOCH)
-                                .build())
+                        .map(student -> enrollment(student, EnrollmentStatus.APPROVED))
                         .toList());
+    }
+
+    private static Enrollment enrollment(User student, EnrollmentStatus status) {
+        return Enrollment.builder()
+                .id(UUID.randomUUID())
+                .student(student)
+                .course(course())
+                .status(status)
+                .enrolledAt(Instant.EPOCH)
+                .build();
     }
 
     private static Course course() {

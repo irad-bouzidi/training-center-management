@@ -37,6 +37,13 @@ public interface UserService {
      * {@code GET /api/v1/students/{id}/summary}. See docs/tasks/TCM-13 for
      * the documented {@link StudentSummaryResponse} shape - fields beyond
      * {@code profile} are stubs until TCM-14/19/21/23/25 populate them.
+     *
+     * <p>Anyone but an admin or the student themselves (i.e. a trainer) must
+     * teach the student - be the primary trainer, or a session trainer, of a
+     * course the student is enrolled in, in any status - or gets
+     * {@code AccessDeniedException}. A trainer's view of {@code grades}/
+     * {@code overallGrade} is further narrowed to the courses they grade,
+     * as {@code GET /students/{id}/grades} would narrow it.
      */
-    StudentSummaryResponse getStudentSummary(UUID id);
+    StudentSummaryResponse getStudentSummary(UUID id, UUID requesterId, boolean requesterIsAdmin);
 }
