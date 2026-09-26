@@ -7,8 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tcm.course.dto.CourseRequest;
+import com.tcm.course.model.CourseStatus;
+import com.tcm.enrollment.dto.EnrollmentRequest;
 import com.tcm.user.dto.UserRequest;
 import com.tcm.user.model.Role;
+import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -103,6 +107,40 @@ class StudentDirectoryControllerIT {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * A trainer sees only students who are enrolled (in any status - here a
+     * still-PENDING request) on a course they teach.
+     */
+    @Test
+    void trainer_canViewTheSummaryOfTheirOwnStudent_butNotAnyoneElses() throws Exception {
+        String trainerEmail = uniqueEmail();
+        String trainerId = createUser(new UserRequest(
+                "Trina", "Trainer", trainerEmail, "Secret123!", null, Role.TRAINER));
+        String strangerEmail = uniqueEmail();
+        createUser(new UserRequest("Stan", "Stranger", strangerEmail, "Secret123!", null, Role.TRAINER));
+
+        String courseId = createCourse(trainerId);
+        String studentEmail = uniqueEmail();
+        String studentId = createUser(new UserRequest(
+                "Sam", "Student", studentEmail, "Secret123!", null, Role.STUDENT));
+        mockMvc.perform(post("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(studentEmail, "Secret123!")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new EnrollmentRequest(UUID.fromString(courseId), null))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/students/" + studentId + "/summary")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(trainerEmail, "Secret123!"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profile.id").value(studentId))
+                .andExpect(jsonPath("$.grades").isArray());
+
+        mockMvc.perform(get("/api/v1/students/" + studentId + "/summary")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(strangerEmail, "Secret123!"))))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     void summary_onNonStudentUser_isBadRequest() throws Exception {
         String trainerId = createUser(new UserRequest(
@@ -111,6 +149,19 @@ class StudentDirectoryControllerIT {
         mockMvc.perform(get("/api/v1/students/" + trainerId + "/summary")
                         .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
                 .andExpect(status().isBadRequest());
+    }
+
+    private String createCourse(String primaryTrainerId) throws Exception {
+        CourseRequest request = new CourseRequest(
+                "CODE-" + UUID.randomUUID(), "Course", null, 40, 20, "Programming",
+                UUID.fromString(primaryTrainerId), BigDecimal.valueOf(500), CourseStatus.PUBLISHED);
+        String response = mockMvc.perform(post("/api/v1/courses")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("id").asText();
     }
 
     private String createUser(UserRequest request) throws Exception {

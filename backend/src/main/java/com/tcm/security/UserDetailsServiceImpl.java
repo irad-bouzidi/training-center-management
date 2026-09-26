@@ -1,6 +1,8 @@
 package com.tcm.security;
 
 import com.tcm.user.UserRepository;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,5 +23,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 // BadCredentialsException (hideUserNotFoundExceptions defaults to true),
                 // so a wrong password and an unknown email look identical to the caller.
                 .orElseThrow(() -> new UsernameNotFoundException("No user with email " + email));
+    }
+
+    /**
+     * The JWT filter's lookup: a token names its user by id ({@code sub}),
+     * which - unlike the email - never changes. Empty for a user who no
+     * longer exists.
+     */
+    public Optional<UserPrincipal> findById(UUID id) {
+        return userRepository.findById(id).map(UserPrincipal::new);
     }
 }

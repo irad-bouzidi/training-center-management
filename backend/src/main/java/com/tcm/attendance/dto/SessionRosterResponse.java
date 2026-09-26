@@ -9,9 +9,9 @@ import java.util.UUID;
 
 /**
  * What the trainer's marking screen renders: the session itself plus one row
- * per APPROVED-enrolled student. {@link Entry#status} is null for a student
- * nobody has marked yet, which is what makes "unmarked" distinguishable from
- * ABSENT.
+ * per APPROVED- or COMPLETED-enrolled student. {@link Entry#status} is null
+ * for a student nobody has marked yet, which is what makes "unmarked"
+ * distinguishable from ABSENT.
  */
 public record SessionRosterResponse(
         ClassSessionResponse session,

@@ -3,6 +3,7 @@ package com.tcm.attendance;
 import com.tcm.attendance.dto.AttendanceMarkRequest;
 import com.tcm.attendance.dto.AttendanceResponse;
 import com.tcm.attendance.dto.CourseAttendanceReportResponse;
+import com.tcm.attendance.dto.MyAttendanceResponse;
 import com.tcm.attendance.dto.SessionRosterResponse;
 import com.tcm.attendance.mapper.AttendanceMapper;
 import com.tcm.attendance.model.AttendanceMethod;
@@ -18,6 +19,7 @@ import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.schedule.ClassSessionRepository;
 import com.tcm.schedule.mapper.ClassSessionMapper;
 import com.tcm.schedule.model.ClassSession;
+import com.tcm.schedule.model.SessionStatus;
 import com.tcm.user.UserRepository;
 import com.tcm.user.model.User;
 import java.time.Instant;
@@ -27,6 +29,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,6 +39,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AttendanceServiceImpl implements AttendanceService {
+
+    /**
+     * Whose attendance a course keeps: its current students plus those who
+     * have finished it. Without COMPLETED, a student would vanish from the
+     * roster and the report the moment their enrollment was closed off.
+     */
+    private static final List<EnrollmentStatus> ATTENDING_STATUSES =
+            List.of(EnrollmentStatus.APPROVED, EnrollmentStatus.COMPLETED);
 
     private final AttendanceRepository attendanceRepository;
     private final ClassSessionRepository classSessionRepository;
@@ -55,7 +66,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendanceRepository.findBySessionId(sessionId)
                 .forEach(record -> marks.put(record.getStudent().getId(), record));
 
-        List<SessionRosterResponse.Entry> entries = approvedStudents(session.getCourse().getId()).stream()
+        List<SessionRosterResponse.Entry> entries = attendingStudents(session.getCourse().getId()).stream()
                 .map(student -> {
                     AttendanceRecord record = marks.get(student.getId());
                     return new SessionRosterResponse.Entry(
@@ -77,8 +88,9 @@ public class AttendanceServiceImpl implements AttendanceService {
                                        boolean requesterIsAdmin) {
         ClassSession session = getSessionOrThrow(sessionId);
         requireSessionAccess(session, markerId, requesterIsAdmin);
+        requireNotCancelled(session);
         return attendanceMapper.toResponse(
-                upsert(session, studentId, status, markerId, AttendanceMethod.MANUAL, approvedStudentIndex(session)));
+                upsert(session, studentId, status, markerId, AttendanceMethod.MANUAL, attendingStudentIndex(session)));
     }
 
     @Override
@@ -86,7 +98,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceResponse markViaQr(UUID sessionId, UUID studentId, AttendanceStatus status) {
         ClassSession session = getSessionOrThrow(sessionId);
         return attendanceMapper.toResponse(
-                upsert(session, studentId, status, null, AttendanceMethod.QR, approvedStudentIndex(session)));
+                upsert(session, studentId, status, null, AttendanceMethod.QR, attendingStudentIndex(session)));
     }
 
     @Override
@@ -95,8 +107,9 @@ public class AttendanceServiceImpl implements AttendanceService {
                                               boolean requesterIsAdmin) {
         ClassSession session = getSessionOrThrow(sessionId);
         requireSessionAccess(session, markerId, requesterIsAdmin);
+        requireNotCancelled(session);
 
-        Map<UUID, User> enrolled = approvedStudentIndex(session);
+        Map<UUID, User> enrolled = attendingStudentIndex(session);
         List<AttendanceResponse> saved = new ArrayList<>(entries.size());
         for (AttendanceMarkRequest entry : entries) {
             saved.add(attendanceMapper.toResponse(
@@ -122,7 +135,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                     .put(row.getStatus(), row.getTotal());
         }
 
-        List<CourseAttendanceReportResponse.StudentRow> rows = approvedStudents(courseId).stream()
+        List<CourseAttendanceReportResponse.StudentRow> rows = attendingStudents(courseId).stream()
                 .map(student -> {
                     Map<AttendanceStatus, Long> tally = tallies.getOrDefault(student.getId(), Map.of());
                     long present = tally.getOrDefault(AttendanceStatus.PRESENT, 0L);
@@ -138,6 +151,14 @@ public class AttendanceServiceImpl implements AttendanceService {
         return new CourseAttendanceReportResponse(
                 course.getId(), course.getCode(), course.getName(),
                 (int) classSessionRepository.countByCourseId(courseId), rows);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyAttendanceResponse> findMine(UUID studentId) {
+        return attendanceRepository.findByStudentIdNewestFirst(studentId).stream()
+                .map(attendanceMapper::toMyResponse)
+                .toList();
     }
 
     @Override
@@ -169,16 +190,25 @@ public class AttendanceServiceImpl implements AttendanceService {
      * student) pair is unique, so marking twice corrects a mark instead of
      * stacking up rows. The marker and the timestamp are refreshed too, so
      * the roster always shows who last said what.
+     *
+     * A mark that wouldn't change the status is left alone entirely: a
+     * trainer re-saving the whole roster isn't a new statement about the
+     * students already marked, and must not turn a QR check-in into a
+     * MANUAL mark attributed to them.
      */
     private AttendanceRecord upsert(ClassSession session, UUID studentId, AttendanceStatus status, UUID markerId,
-                                     AttendanceMethod method, Map<UUID, User> approvedStudents) {
-        User student = approvedStudents.get(studentId);
+                                     AttendanceMethod method, Map<UUID, User> attendingStudents) {
+        User student = attendingStudents.get(studentId);
         if (student == null) {
             throw new BadRequestException(
-                    "Student " + studentId + " has no APPROVED enrollment in this session's course");
+                    "Student " + studentId + " has no APPROVED or COMPLETED enrollment in this session's course");
         }
-        AttendanceRecord record = attendanceRepository
-                .findBySessionIdAndStudentId(session.getId(), studentId)
+        Optional<AttendanceRecord> existing = attendanceRepository
+                .findBySessionIdAndStudentId(session.getId(), studentId);
+        if (existing.isPresent() && existing.get().getStatus() == status) {
+            return existing.get();
+        }
+        AttendanceRecord record = existing
                 .orElseGet(() -> AttendanceRecord.builder()
                         .session(session)
                         .student(student)
@@ -201,16 +231,16 @@ public class AttendanceServiceImpl implements AttendanceService {
         return Math.round((present + late) * 1000.0 / marked) / 10.0;
     }
 
-    private List<User> approvedStudents(UUID courseId) {
-        return enrollmentRepository.findByCourseIdAndStatus(courseId, EnrollmentStatus.APPROVED).stream()
+    private List<User> attendingStudents(UUID courseId) {
+        return enrollmentRepository.findByCourseIdAndStatusIn(courseId, ATTENDING_STATUSES).stream()
                 .map(Enrollment::getStudent)
                 .sorted(Comparator.comparing(AttendanceServiceImpl::fullName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }
 
-    private Map<UUID, User> approvedStudentIndex(ClassSession session) {
+    private Map<UUID, User> attendingStudentIndex(ClassSession session) {
         Map<UUID, User> index = new HashMap<>();
-        approvedStudents(session.getCourse().getId()).forEach(student -> index.put(student.getId(), student));
+        attendingStudents(session.getCourse().getId()).forEach(student -> index.put(student.getId(), student));
         return index;
     }
 
@@ -226,6 +256,13 @@ public class AttendanceServiceImpl implements AttendanceService {
     private static void requireSessionAccess(ClassSession session, UUID requesterId, boolean requesterIsAdmin) {
         if (!requesterIsAdmin && !session.getTrainer().getId().equals(requesterId)) {
             throw new AccessDeniedException("You may only manage attendance for a session you are assigned to");
+        }
+    }
+
+    /** A cancelled session never took place, so there is nothing to mark. */
+    private static void requireNotCancelled(ClassSession session) {
+        if (session.getStatus() == SessionStatus.CANCELLED) {
+            throw new BadRequestException("Attendance cannot be marked for a cancelled session");
         }
     }
 
