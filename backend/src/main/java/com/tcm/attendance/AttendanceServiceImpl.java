@@ -191,10 +191,11 @@ public class AttendanceServiceImpl implements AttendanceService {
      * stacking up rows. The marker and the timestamp are refreshed too, so
      * the roster always shows who last said what.
      *
-     * A mark that wouldn't change the status is left alone entirely: a
-     * trainer re-saving the whole roster isn't a new statement about the
+     * A MANUAL mark that wouldn't change the status is left alone entirely:
+     * a trainer re-saving the whole roster isn't a new statement about the
      * students already marked, and must not turn a QR check-in into a
-     * MANUAL mark attributed to them.
+     * MANUAL mark attributed to them. A QR check-in always records itself,
+     * since the student scanning in is a first-hand statement of presence.
      */
     private AttendanceRecord upsert(ClassSession session, UUID studentId, AttendanceStatus status, UUID markerId,
                                      AttendanceMethod method, Map<UUID, User> attendingStudents) {
@@ -205,7 +206,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
         Optional<AttendanceRecord> existing = attendanceRepository
                 .findBySessionIdAndStudentId(session.getId(), studentId);
-        if (existing.isPresent() && existing.get().getStatus() == status) {
+        if (method == AttendanceMethod.MANUAL && existing.isPresent() && existing.get().getStatus() == status) {
             return existing.get();
         }
         AttendanceRecord record = existing

@@ -173,6 +173,32 @@ class AttendanceServiceImplTest {
     }
 
     @Test
+    void markViaQr_overAManualMarkWithTheSameStatus_recordsTheQrCheckIn() {
+        ClassSession session = givenSession();
+        User student = student(STUDENT_ID, "Sam", "Student");
+        givenApprovedRoster(student);
+        AttendanceRecord manualMark = AttendanceRecord.builder()
+                .id(UUID.randomUUID())
+                .session(session)
+                .student(student)
+                .status(AttendanceStatus.PRESENT)
+                .method(AttendanceMethod.MANUAL)
+                .markedAt(Instant.EPOCH)
+                .markedBy(trainer())
+                .build();
+        when(attendanceRepository.findBySessionIdAndStudentId(SESSION_ID, STUDENT_ID))
+                .thenReturn(Optional.of(manualMark));
+        when(attendanceRepository.save(any(AttendanceRecord.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var response = attendanceService.markViaQr(SESSION_ID, STUDENT_ID, AttendanceStatus.PRESENT);
+
+        assertThat(response.id()).isEqualTo(manualMark.getId());
+        assertThat(response.method()).isEqualTo(AttendanceMethod.QR);
+        assertThat(manualMark.getMarkedBy()).isNull();
+        assertThat(manualMark.getMarkedAt()).isAfter(Instant.EPOCH);
+    }
+
+    @Test
     void markBulk_onACancelledSession_isRejectedAndWritesNothing() {
         givenSession().setStatus(SessionStatus.CANCELLED);
 
