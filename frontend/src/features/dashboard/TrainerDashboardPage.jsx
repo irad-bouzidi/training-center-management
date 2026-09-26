@@ -26,7 +26,7 @@ export function TrainerDashboardPage() {
 
         {summary && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatTile label="My courses" value={formatCount(summary.myCourses)} to="/trainer/courses" />
+            <StatTile label="My courses" value={formatCount(summary.myCourses)} to="/trainer/my-courses" />
             <StatTile
               label="Upcoming sessions"
               value={formatCount(summary.upcomingSessions)}
@@ -51,7 +51,7 @@ export function TrainerDashboardPage() {
                 summary.studentsAwaitingGrades > 0 ? 'Nothing recorded for them yet' : 'Everyone has a grade'
               }
               tone={summary.studentsAwaitingGrades > 0 ? 'attention' : 'default'}
-              to="/trainer/courses"
+              to="/trainer/my-courses"
             />
           </div>
         )}

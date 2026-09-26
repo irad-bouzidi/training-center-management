@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/context/AuthContext'
 import { AttendanceReportPage } from '@/features/attendance/AttendanceReportPage'
 import { MarkAttendancePage } from '@/features/attendance/MarkAttendancePage'
+import { MyAttendancePage } from '@/features/attendance/MyAttendancePage'
 import { QrCheckinPage } from '@/features/attendance/QrCheckinPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MyCertificatesPage } from '@/features/certificates/MyCertificatesPage'
@@ -13,6 +14,7 @@ import { TrainerDashboardPage } from '@/features/dashboard/TrainerDashboardPage'
 import { CourseCatalogPage } from '@/features/courses/CourseCatalogPage'
 import { CourseDetailPage } from '@/features/courses/CourseDetailPage'
 import { CoursesListPage } from '@/features/courses/CoursesListPage'
+import { MyCoursesPage } from '@/features/courses/MyCoursesPage'
 import { EnrollmentApprovalsPage } from '@/features/enrollments/EnrollmentApprovalsPage'
 import { ScheduleListPage } from '@/features/schedule/ScheduleListPage'
 import { GradebookPage } from '@/features/grades/GradebookPage'
@@ -70,6 +72,7 @@ function App() {
               <Route element={<RoleRoute allowedRoles={['TRAINER']} />}>
                 <Route path="/trainer" element={<TrainerLayout />}>
                   <Route index element={<TrainerDashboardPage />} />
+                  <Route path="my-courses" element={<MyCoursesPage />} />
                   <Route path="courses" element={<CourseCatalogPage />} />
                   <Route path="courses/:id" element={<CourseDetailPage />} />
                   <Route path="students" element={<StudentsListPage />} />
@@ -88,6 +91,7 @@ function App() {
                   <Route path="enrollments" element={<MyEnrollmentsPage />} />
                   <Route path="schedule" element={<ScheduleListPage />} />
                   <Route path="payments" element={<MyPaymentsPage />} />
+                  <Route path="attendance" element={<MyAttendancePage />} />
                   <Route path="grades" element={<MyGradesPage />} />
                   <Route path="certificates" element={<MyCertificatesPage />} />
                 </Route>

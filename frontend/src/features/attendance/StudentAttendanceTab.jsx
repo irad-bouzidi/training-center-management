@@ -8,15 +8,18 @@ import { useCourseAttendanceReportQueries } from './hooks'
  *
  * There is no per-student attendance endpoint: TCM-19 exposes the overall
  * rate (on the summary itself) and the per-course report. So the breakdown is
- * assembled from one report per approved course, picking this student's row
- * out of each. A trainer viewing the page may not report on courses they
+ * assembled from one report per course the student is approved on or has
+ * completed (a finished course's record still counts - it is what a
+ * certificate is judged on), picking this student's row out of each. A trainer viewing the page may not report on courses they
  * don't teach; those rows say so instead of failing the whole tab.
  */
 export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
-  const approved = enrollments.filter((enrollment) => enrollment.status === 'APPROVED')
-  const reports = useCourseAttendanceReportQueries(approved.map((enrollment) => enrollment.course.id))
+  const attended = enrollments.filter(
+    (enrollment) => enrollment.status === 'APPROVED' || enrollment.status === 'COMPLETED',
+  )
+  const reports = useCourseAttendanceReportQueries(attended.map((enrollment) => enrollment.course.id))
 
-  if (approved.length === 0) {
+  if (attended.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
         This student isn’t approved on any course yet, so there is nothing to attend.
@@ -43,7 +46,7 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {approved.map((enrollment, index) => {
+          {attended.map((enrollment, index) => {
             const { data: report, isLoading, isError, error } = reports[index]
             const row = report?.students.find((student) => student.studentId === studentId)
 
@@ -61,7 +64,16 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
                       (error.response?.status === 403
                         ? 'Only this course’s trainers and administrators can see its attendance'
                         : 'Unavailable')}
-                    {!isLoading && !isError && !row && 'Not on this course’s roster'}
+                    {/* The course report is built from its roster; a backend
+                        that lists only APPROVED students there leaves a
+                        completed one out, which is not the same as never
+                        having been on the course. */}
+                    {!isLoading &&
+                      !isError &&
+                      !row &&
+                      (enrollment.status === 'COMPLETED'
+                        ? 'Course completed — not in its attendance report'
+                        : 'Not on this course’s roster')}
                   </TableCell>
                 ) : (
                   <>

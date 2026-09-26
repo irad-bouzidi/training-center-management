@@ -30,13 +30,27 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
-      CORS_ALLOWED_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:${FRONTEND_PORT:-5173}}
       # The QR check-in link a phone camera opens (TCM-27). Override in
       # .env with the host's LAN address to scan from a real device.
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:5173}
       QR_SECRET: ${QR_SECRET:-${JWT_SECRET}}
       QR_VALIDITY_MINUTES: ${QR_VALIDITY_MINUTES:-15}
       CERTIFICATES_MIN_ATTENDANCE_RATE: ${CERTIFICATES_MIN_ATTENDANCE_RATE:-75}
+      # Deliberately NOT passed through: CERTIFICATES_STORAGE_PATH.
+      # application-docker.yml pins it to /var/lib/tcm/certificates, the
+      # path the `certificates` volume below is mounted at, so the two can't
+      # drift apart.
+      #
+      # `demo` seeds the sample dataset; `prod` starts with only the admin.
+      LIQUIBASE_CONTEXTS: ${LIQUIBASE_CONTEXTS:-demo}
+      # The bootstrap admin (seeded once, on the first boot of a fresh
+      # database). Spring would take an empty string at face value rather
+      # than falling back to application.yml's defaults, so the same
+      # defaults are repeated here; `$$` is Compose's escape for a literal
+      # `$` in the BCrypt hash of ChangeMe123!.
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@tcm.local}
+      BOOTSTRAP_ADMIN_PASSWORD_HASH: ${BOOTSTRAP_ADMIN_PASSWORD_HASH:-$$2a$$10$$MWeAhDLU78RJHul4Jc9osuy8MtK8m8RecYyoaTWy/vu4C.Gb9HGuG}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:

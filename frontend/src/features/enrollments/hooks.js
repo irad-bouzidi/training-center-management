@@ -2,11 +2,13 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from 'sonner'
 import {
   cancelEnrollment,
+  completeEnrollment,
   decideEnrollment,
   listEnrollments,
   listMyEnrollments,
   registerEnrollment,
 } from '@/api/enrollmentApi'
+import { certificatesKeys } from '@/features/certificates/hooks'
 import { coursesKeys } from '@/features/courses/hooks'
 import { studentsKeys } from '@/features/students/hooks'
 
@@ -118,6 +120,25 @@ export function useDecideEnrollmentMutation() {
     },
     onSuccess: (data) => toast.success(data.status === 'APPROVED' ? 'Enrollment approved' : 'Enrollment rejected'),
     onSettled: () => invalidateAffected(queryClient),
+  })
+}
+
+/**
+ * Marking an enrollment COMPLETED is what makes a certificate issuable
+ * (CertificateEligibilityService), so the student's certificates tab goes
+ * stale along with everything an enrollment change touches.
+ */
+export function useCompleteEnrollmentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: completeEnrollment,
+    onSuccess: () => {
+      invalidateAffected(queryClient)
+      queryClient.invalidateQueries({ queryKey: certificatesKeys.all })
+      toast.success('Enrollment marked completed')
+    },
+    onError: (error) => toast.error(errorMessage(error, 'Failed to mark the enrollment completed')),
   })
 }
 

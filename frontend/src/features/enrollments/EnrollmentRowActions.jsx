@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { CompleteEnrollmentButton } from './CompleteEnrollmentButton'
 import { useDecideEnrollmentMutation } from './hooks'
 
 const DECISIONS = {
@@ -33,12 +34,21 @@ const DECISIONS = {
  * are the point of the approvals queue, so they sit inline on the row rather
  * than behind a kebab menu the way the course/user row actions do.
  *
- * Only PENDING enrollments are decidable (EnrollmentServiceImpl#decide), so a
- * decided row renders nothing.
+ * Only PENDING enrollments are decidable (EnrollmentServiceImpl#decide). An
+ * APPROVED one gets the next step instead - "Mark completed", which is what
+ * lets a certificate be issued - and any other status renders nothing.
  */
 export function EnrollmentRowActions({ enrollment }) {
   const [pendingDecision, setPendingDecision] = useState(null)
   const decide = useDecideEnrollmentMutation()
+
+  if (enrollment.status === 'APPROVED') {
+    return (
+      <div className="flex justify-end">
+        <CompleteEnrollmentButton enrollment={enrollment} />
+      </div>
+    )
+  }
 
   if (enrollment.status !== 'PENDING') {
     return null

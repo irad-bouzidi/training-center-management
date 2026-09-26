@@ -37,6 +37,14 @@ export async function decideEnrollment(id, status) {
   return data
 }
 
+/** ADMIN-only: marks an APPROVED enrollment COMPLETED - the status a
+ * certificate requires (EnrollmentServiceImpl#markCompleted rejects any other
+ * starting status with a 400). */
+export async function completeEnrollment(id) {
+  const { data } = await apiClient.post(`/enrollments/${id}/complete`)
+  return data
+}
+
 /** A student may only cancel their own enrollment; an ADMIN may cancel any
  * (ownership is enforced server-side). */
 export async function cancelEnrollment(id) {

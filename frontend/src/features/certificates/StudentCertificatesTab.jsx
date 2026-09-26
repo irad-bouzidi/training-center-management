@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useAuth } from '@/context/AuthContext'
+import { useMyCoursesQuery } from '@/features/courses/hooks'
+import { CompleteEnrollmentButton } from '@/features/enrollments/CompleteEnrollmentButton'
 import { CertificatesTable } from './CertificatesTable'
 import { blockingReason } from './certificateDisplay'
 import { errorMessage, useCertificatesQuery, useGenerateCertificateMutation } from './hooks'
@@ -16,8 +19,22 @@ import { errorMessage, useCertificatesQuery, useGenerateCertificateMutation } fr
  * The first disables the button with the reason on it; the second can only
  * be found out by asking, so a refusal is shown inline on the row that was
  * tried, in the server's own words.
+ *
+ * Who may issue is a third rule: an ADMIN, or the course's own trainer
+ * (CertificateServiceImpl#requireTeaches). A trainer's button is disabled,
+ * with the reason shown, on courses they don't teach - judged against their
+ * own course list, since an enrollment only carries the course's id. An
+ * ADMIN also gets "Mark completed" on APPROVED rows, the step that unblocks
+ * the button.
  */
 export function StudentCertificatesTab({ studentId, enrollments }) {
+  const { user } = useAuth()
+  const isAdmin = user.role === 'ADMIN'
+  const isTrainer = user.role === 'TRAINER'
+  const { data: taughtCourseIds } = useMyCoursesQuery(
+    { size: 200 },
+    { enabled: isTrainer, select: (data) => new Set(data.content.map((course) => course.id)) },
+  )
   const { data: certificates = [], isLoading } = useCertificatesQuery(studentId)
   const generate = useGenerateCertificateMutation()
   const [refusal, setRefusal] = useState(null)
@@ -59,20 +76,30 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
               <TableRow>
                 <TableHead>Course</TableHead>
                 <TableHead>Enrollment</TableHead>
-                <TableHead className="w-48" />
+                <TableHead className="w-80" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {candidates.map((enrollment) => {
-                const blocked = blockingReason(enrollment)
+                // Until a trainer's own course list arrives, nothing is known
+                // to be theirs - the button waits, disabled, without claiming
+                // a reason it can't back up yet.
+                const waiting = isTrainer && !taughtCourseIds
+                const notTheirs =
+                  isTrainer && taughtCourseIds && !taughtCourseIds.has(enrollment.course.id)
+                    ? 'Only this course’s trainer or an administrator can issue its certificate.'
+                    : null
+                const blocked = notTheirs ?? blockingReason(enrollment)
 
                 return (
                   <TableRow key={enrollment.id}>
                     <TableCell>
                       {enrollment.course.name}{' '}
                       <span className="text-xs text-muted-foreground">{enrollment.course.code}</span>
-                      {refusal?.courseId === enrollment.course.id && (
+                      {refusal?.courseId === enrollment.course.id ? (
                         <p className="text-xs text-destructive">{refusal.message}</p>
+                      ) : (
+                        blocked && <p className="text-xs text-muted-foreground">{blocked}</p>
                       )}
                     </TableCell>
                     <TableCell>
@@ -81,14 +108,17 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        disabled={Boolean(blocked) || generate.isPending}
-                        title={blocked ?? undefined}
-                        onClick={() => issue(enrollment)}
-                      >
-                        Generate certificate
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        {isAdmin && <CompleteEnrollmentButton enrollment={enrollment} />}
+                        <Button
+                          size="sm"
+                          disabled={Boolean(blocked) || waiting || generate.isPending}
+                          title={blocked || undefined}
+                          onClick={() => issue(enrollment)}
+                        >
+                          Generate certificate
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
