@@ -3,6 +3,7 @@ package com.tcm.schedule;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -287,6 +288,102 @@ class ClassSessionControllerIT {
 
         createSession(createCourse(), studentId, "Room A", uniqueDate(), NINE, ELEVEN)
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void admin_canRescheduleASession() throws Exception {
+        String courseId = createCourse();
+        String trainerId = createUser(trainer());
+        LocalDate date = uniqueDate();
+        String sessionId = sessionId(createSession(courseId, trainerId, "Room A", date, NINE, ELEVEN)
+                .andExpect(status().isCreated()));
+        LocalDate newDate = uniqueDate();
+
+        updateSession(sessionId, courseId, trainerId, "Room B", newDate, TEN, NOON, adminToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(sessionId))
+                .andExpect(jsonPath("$.classroom").value("Room B"))
+                .andExpect(jsonPath("$.sessionDate").value(newDate.toString()))
+                .andExpect(jsonPath("$.startTime").value(org.hamcrest.Matchers.startsWith("10:00")))
+                .andExpect(jsonPath("$.endTime").value(org.hamcrest.Matchers.startsWith("12:00")))
+                .andExpect(jsonPath("$.status").value("SCHEDULED"));
+    }
+
+    /** A session mustn't be reported as clashing with the slot it already holds. */
+    @Test
+    void rescheduling_withinItsOwnSlot_doesNotConflictWithItself() throws Exception {
+        String courseId = createCourse();
+        String trainerId = createUser(trainer());
+        LocalDate date = uniqueDate();
+        String sessionId = sessionId(createSession(courseId, trainerId, "Room A", date, NINE, ELEVEN)
+                .andExpect(status().isCreated()));
+
+        updateSession(sessionId, courseId, trainerId, "Room A", date, TEN, ELEVEN, adminToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.startTime").value(org.hamcrest.Matchers.startsWith("10:00")));
+    }
+
+    @Test
+    void rescheduling_intoAnOverlappingBooking_conflicts() throws Exception {
+        String trainerId = createUser(trainer());
+        LocalDate date = uniqueDate();
+        createSession(createCourse(), trainerId, "Room A", date, NINE, ELEVEN).andExpect(status().isCreated());
+        String courseId = createCourse();
+        String sessionId = sessionId(createSession(courseId, trainerId, "Room B", date, ELEVEN, NOON)
+                .andExpect(status().isCreated()));
+
+        // Moving the 11-12 session to 10-12 overlaps the same trainer's 9-11.
+        updateSession(sessionId, courseId, trainerId, "Room B", date, TEN, NOON, adminToken)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("trainer")));
+    }
+
+    @Test
+    void rescheduling_aSessionThatIsNoLongerScheduled_isRejected() throws Exception {
+        String courseId = createCourse();
+        String trainerId = createUser(trainer());
+        LocalDate date = uniqueDate();
+        String sessionId = sessionId(createSession(courseId, trainerId, "Room A", date, NINE, ELEVEN)
+                .andExpect(status().isCreated()));
+        changeStatus(sessionId, SessionStatus.CANCELLED, adminToken).andExpect(status().isOk());
+
+        updateSession(sessionId, courseId, trainerId, "Room A", date, TEN, NOON, adminToken)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rescheduling_anUnknownSession_isNotFound() throws Exception {
+        updateSession(UUID.randomUUID().toString(), createCourse(), createUser(trainer()), "Room A",
+                uniqueDate(), NINE, ELEVEN, adminToken)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void nonAdmin_cannotRescheduleASession_evenTheAssignedTrainer() throws Exception {
+        String trainerEmail = uniqueEmail();
+        String trainerId = createUser(trainer(trainerEmail));
+        String studentEmail = uniqueEmail();
+        createUser(new UserRequest("Sam", "Student", studentEmail, PASSWORD, null, Role.STUDENT));
+        String courseId = createCourse();
+        LocalDate date = uniqueDate();
+        String sessionId = sessionId(createSession(courseId, trainerId, "Room A", date, NINE, ELEVEN)
+                .andExpect(status().isCreated()));
+
+        updateSession(sessionId, courseId, trainerId, "Room B", date, TEN, NOON, login(trainerEmail, PASSWORD))
+                .andExpect(status().isForbidden());
+        updateSession(sessionId, courseId, trainerId, "Room B", date, TEN, NOON, login(studentEmail, PASSWORD))
+                .andExpect(status().isForbidden());
+    }
+
+    private ResultActions updateSession(String sessionId, String courseId, String trainerId, String classroom,
+                                          LocalDate date, LocalTime start, LocalTime end, String token)
+            throws Exception {
+        ClassSessionRequest request = new ClassSessionRequest(
+                UUID.fromString(courseId), UUID.fromString(trainerId), classroom, date, start, end);
+        return mockMvc.perform(put("/api/v1/sessions/" + sessionId)
+                .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)));
     }
 
     private ResultActions createSession(String courseId, String trainerId, String classroom, LocalDate date,

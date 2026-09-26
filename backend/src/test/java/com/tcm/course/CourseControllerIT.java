@@ -1,5 +1,6 @@
 package com.tcm.course;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcm.course.dto.CourseRequest;
 import com.tcm.course.dto.CourseStatusRequest;
 import com.tcm.course.model.CourseStatus;
+import com.tcm.enrollment.dto.EnrollmentRequest;
 import com.tcm.user.dto.UserRequest;
 import com.tcm.user.model.Role;
 import java.math.BigDecimal;
@@ -195,6 +197,70 @@ class CourseControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[?(@.id=='" + publishedId + "')]").exists())
                 .andExpect(jsonPath("$.content[?(@.id=='" + draftId + "')]").doesNotExist());
+    }
+
+    @Test
+    void admin_canDeleteACourseWithNoEnrollments() throws Exception {
+        String courseId = createCourse(uniqueCode(), null, CourseStatus.DRAFT);
+
+        mockMvc.perform(delete("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deletingACourseThatHasEnrollments_isRejected() throws Exception {
+        String courseId = createCourse(uniqueCode(), null, CourseStatus.PUBLISHED);
+        String studentEmail = uniqueEmail();
+        createUser(new UserRequest("Sam", "Student", studentEmail, "Secret123!", null, Role.STUDENT));
+        mockMvc.perform(post("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(studentEmail, "Secret123!")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new EnrollmentRequest(UUID.fromString(courseId), null))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isBadRequest());
+
+        // still there
+        mockMvc.perform(get("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void deletingAnUnknownCourse_isNotFound() throws Exception {
+        mockMvc.perform(delete("/api/v1/courses/" + UUID.randomUUID())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void nonAdmin_cannotDeleteACourse() throws Exception {
+        String trainerEmail = uniqueEmail();
+        String trainerId = createUser(new UserRequest(
+                "Tina", "Trainer", trainerEmail, "Secret123!", null, Role.TRAINER));
+        String studentEmail = uniqueEmail();
+        createUser(new UserRequest("Sam", "Student", studentEmail, "Secret123!", null, Role.STUDENT));
+        // even the course's own trainer may not delete it
+        String courseId = createCourse(uniqueCode(), trainerId, CourseStatus.DRAFT);
+
+        mockMvc.perform(delete("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(trainerEmail, "Secret123!"))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(studentEmail, "Secret123!"))))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/courses/" + courseId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isOk());
     }
 
     private String createCourse(String code, String trainerId, CourseStatus status) throws Exception {
