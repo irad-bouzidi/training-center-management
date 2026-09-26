@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
-import { homePathForRole } from '@/lib/roleHomePaths'
+import { postLoginPathForRole } from '@/lib/roleHomePaths'
 
 // shadcn's own "form" component is an empty stub in the current registry
 // (see TCM-4) - composing react-hook-form directly against Label/Input,
@@ -21,6 +21,7 @@ const loginSchema = z.object({
 export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const {
     register,
     handleSubmit,
@@ -30,7 +31,10 @@ export function LoginPage() {
   async function onSubmit(values) {
     try {
       const user = await login(values.email, values.password)
-      navigate(homePathForRole(user.role), { replace: true })
+      // Back to wherever ProtectedRoute bounced them from - e.g. a QR code
+      // scanned while signed out (/attend/:sessionId?token=…) - when that
+      // role may open it; their own home otherwise.
+      navigate(postLoginPathForRole(user.role, location.state?.from), { replace: true })
     } catch {
       // Deliberately generic - the backend never says which of email/password
       // was wrong (see TCM-7), so neither does this toast.

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { fetchCurrentUser, login as loginRequest } from '@/api/authApi'
 import { AUTH_EXPIRED_EVENT, TOKEN_STORAGE_KEY } from '@/api/client'
@@ -5,6 +6,7 @@ import { AUTH_EXPIRED_EVENT, TOKEN_STORAGE_KEY } from '@/api/client'
 const AuthContext = createContext(undefined)
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient()
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY))
   const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -52,19 +54,26 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired)
   }, [])
 
+  // Every cached query is some user's data - "/enrollments/mine" and friends
+  // are keyed by what was asked, not by who asked. So the cache is dropped
+  // whenever the signed-in identity changes: on logout, and on every login
+  // too, which covers a session that expired (AUTH_EXPIRED_EVENT keeps the
+  // cache) followed by someone else signing in on the same browser.
   const login = useCallback(async (email, password) => {
     const response = await loginRequest(email, password)
+    queryClient.clear()
     localStorage.setItem(TOKEN_STORAGE_KEY, response.token)
     setToken(response.token)
     setUser(response.user)
     return response.user
-  }, [])
+  }, [queryClient])
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
     setToken(null)
     setUser(null)
-  }, [])
+    queryClient.clear()
+  }, [queryClient])
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>

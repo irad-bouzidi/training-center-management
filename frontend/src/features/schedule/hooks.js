@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createSession, listSessions, setSessionStatus, updateSession } from '@/api/scheduleApi'
 
@@ -23,6 +23,24 @@ export function useSessionsQuery(params, options) {
     // instead of the agenda flashing empty between pages/filter changes.
     placeholderData: keepPreviousData,
     ...options,
+  })
+}
+
+/**
+ * The same listing for several courses at once, one query per course - what
+ * the student summary's Schedule tab needs, since there is no per-student
+ * session filter for an admin or trainer to use. Each query keeps the
+ * backend's role scoping, so a trainer only ever gets their own sessions.
+ */
+export function useSessionsForCoursesQueries(courseIds, params) {
+  return useQueries({
+    queries: courseIds.map((courseId) => {
+      const queryParams = { ...params, courseId }
+      return {
+        queryKey: sessionsKeys.list(queryParams),
+        queryFn: () => listSessions(queryParams),
+      }
+    }),
   })
 }
 

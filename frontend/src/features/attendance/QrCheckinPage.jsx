@@ -6,8 +6,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
-import { QrScanner } from './QrScanner'
+import { formatSessionDate } from '@/features/schedule/scheduleDisplay'
+import { parseCheckInUrl, QrScanner } from './QrScanner'
 import { checkInFailure, useQrCheckInMutation } from './qrHooks'
+
+/**
+ * What the paste box holds, as a check-in: either the full link the QR code
+ * encodes (which carries its own session - the only option at a bare
+ * /attend), or just the token when the page was opened on the session's own
+ * link. A path-only link (/attend/…?token=…) is accepted too.
+ *
+ * @returns {{sessionId: string, token: string}|null}
+ */
+function parsePasted(text, sessionIdFromPath) {
+  const trimmed = text.trim()
+  if (!trimmed) {
+    return null
+  }
+
+  const fromLink =
+    parseCheckInUrl(trimmed) ?? (trimmed.startsWith('/') ? parseCheckInUrl(`${window.location.origin}${trimmed}`) : null)
+  if (fromLink) {
+    return fromLink
+  }
+
+  // Anything else is taken as a bare token - unless it plainly is a link
+  // (just not a valid check-in one), which no session would accept.
+  return sessionIdFromPath && !trimmed.includes('/') ? { sessionId: sessionIdFromPath, token: trimmed } : null
+}
+
+/** "Marked present for Java Fundamentals — Mon, 2 Mar 2026", degrading to
+ * whatever of the course and date the response carries. */
+function checkedInSummary(record) {
+  const parts = [record.courseName, record.sessionDate && formatSessionDate(record.sessionDate)].filter(Boolean)
+  return parts.length > 0 ? `Marked present for ${parts.join(' — ')}` : 'Marked present'
+}
 
 /**
  * Where a scanned QR code lands (/attend/:sessionId?token=…), and where a
@@ -17,7 +50,12 @@ import { checkInFailure, useQrCheckInMutation } from './qrHooks'
  * Arriving with a token in the URL checks in straight away: the student has
  * already acted by pointing their camera at the code, and asking them to
  * press another button would be asking twice. Without one, the camera opens,
- * with a paste box for devices that won't give it up.
+ * with a paste box for devices that won't give it up - it takes the full
+ * check-in link (all a bare /attend has to go on), or just the code when
+ * the session's own link was opened.
+ *
+ * A student who scans while signed out comes back here after logging in:
+ * LoginPage returns them to ProtectedRoute's `from`, token and all.
  */
 export function QrCheckinPage() {
   const { sessionId: sessionIdFromPath } = useParams()
@@ -25,12 +63,13 @@ export function QrCheckinPage() {
   const { user } = useAuth()
   const checkIn = useQrCheckInMutation()
   const { mutate } = checkIn
-  const [manualToken, setManualToken] = useState('')
+  const [manualInput, setManualInput] = useState('')
 
   const tokenFromUrl = searchParams.get('token')
   const isStudent = user.role === 'STUDENT'
 
   const submit = useCallback((scanned) => mutate(scanned), [mutate])
+  const pasted = parsePasted(manualInput, sessionIdFromPath)
 
   // A code in the URL is a scan that has already happened.
   useEffect(() => {
@@ -67,7 +106,7 @@ export function QrCheckinPage() {
             <CheckCircle2 className="text-primary" />
             You’re marked present
           </CardTitle>
-          <CardDescription>{record.student.name}</CardDescription>
+          <CardDescription>{checkedInSummary(record)}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="text-muted-foreground">
@@ -110,24 +149,23 @@ export function QrCheckinPage() {
         {!checkIn.isPending && <QrScanner onScan={submit} />}
 
         <div className="space-y-2">
-          <Label htmlFor="manualToken">Can’t scan? Paste the code</Label>
+          <Label htmlFor="manualInput">Can’t scan? Paste the check-in link</Label>
           <div className="flex gap-2">
             <Input
-              id="manualToken"
-              value={manualToken}
-              placeholder="Code from the screen"
-              onChange={(event) => setManualToken(event.target.value)}
+              id="manualInput"
+              value={manualInput}
+              placeholder={sessionIdFromPath ? 'Check-in link or code' : 'https://…/attend/…?token=…'}
+              onChange={(event) => setManualInput(event.target.value)}
             />
-            <Button
-              disabled={!sessionIdFromPath || !manualToken.trim() || checkIn.isPending}
-              onClick={() => submit({ sessionId: sessionIdFromPath, token: manualToken.trim() })}
-            >
+            <Button disabled={!pasted || checkIn.isPending} onClick={() => submit(pasted)}>
               Check in
             </Button>
           </div>
-          {!sessionIdFromPath && (
+          {manualInput.trim() && !pasted && (
             <p className="text-xs text-muted-foreground">
-              Pasting a code works once you’ve opened the session’s own link — scanning carries the session with it.
+              {sessionIdFromPath
+                ? 'That isn’t a check-in link or code.'
+                : 'Paste the whole check-in link — a code on its own doesn’t say which session it’s for.'}
             </p>
           )}
         </div>
