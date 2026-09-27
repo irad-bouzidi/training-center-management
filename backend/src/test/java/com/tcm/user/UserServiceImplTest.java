@@ -3,6 +3,9 @@ package com.tcm.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -245,7 +248,7 @@ class UserServiceImplTest {
         when(paymentService.outstandingBalance(id)).thenReturn(BigDecimal.ZERO);
         when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
 
-        StudentSummaryResponse response = userService.getStudentSummary(id);
+        StudentSummaryResponse response = userService.getStudentSummary(id, ADMIN_ID, true);
 
         assertThat(response.profile().id()).isEqualTo(id);
         assertThat(response.enrollments()).isEmpty();
@@ -259,6 +262,43 @@ class UserServiceImplTest {
     /** What a student with nothing recorded gets back from TCM-23. */
     private static final StudentGradesResponse NO_GRADES = new StudentGradesResponse(List.of(), null);
 
+    private static final UUID ADMIN_ID = UUID.randomUUID();
+
+    @Test
+    void getStudentSummary_byATrainerWhoTeachesTheStudent_narrowsGradesToTheirCourses() {
+        UUID id = UUID.randomUUID();
+        UUID trainerId = UUID.randomUUID();
+        when(enrollmentRepository.existsByStudentIdTaughtBy(id, trainerId)).thenReturn(true);
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(gradeService.findForStudentTaughtBy(id, trainerId))
+                .thenReturn(new StudentGradesResponse(List.of(), 64.0));
+
+        assertThat(userService.getStudentSummary(id, trainerId, false).overallGrade()).isEqualTo(64.0);
+        verify(gradeService, never()).findForStudent(any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void getStudentSummary_byATrainerWhoDoesNotTeachTheStudent_isDenied() {
+        UUID id = UUID.randomUUID();
+        UUID trainerId = UUID.randomUUID();
+        when(enrollmentRepository.existsByStudentIdTaughtBy(id, trainerId)).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.getStudentSummary(id, trainerId, false))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void getStudentSummary_byTheStudentThemselves_needsNoTeachingCheck() {
+        UUID id = UUID.randomUUID();
+        when(userRepository.findById(id)).thenReturn(Optional.of(existingUser(id, Role.STUDENT)));
+        when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of());
+        when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
+
+        assertThat(userService.getStudentSummary(id, id, false).profile().id()).isEqualTo(id);
+        verify(enrollmentRepository, never()).existsByStudentIdTaughtBy(any(), any());
+    }
+
     @Test
     void getStudentSummary_populatesRealGrades() {
         UUID id = UUID.randomUUID();
@@ -267,7 +307,7 @@ class UserServiceImplTest {
         when(gradeService.findForStudent(id, null, id, true))
                 .thenReturn(new StudentGradesResponse(List.of(), 82.5));
 
-        assertThat(userService.getStudentSummary(id).overallGrade()).isEqualTo(82.5);
+        assertThat(userService.getStudentSummary(id, ADMIN_ID, true).overallGrade()).isEqualTo(82.5);
     }
 
     @Test
@@ -278,7 +318,7 @@ class UserServiceImplTest {
         when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
         when(attendanceService.studentAttendanceSummary(id)).thenReturn(75.0);
 
-        assertThat(userService.getStudentSummary(id).attendanceRate()).isEqualTo(75.0);
+        assertThat(userService.getStudentSummary(id, ADMIN_ID, true).attendanceRate()).isEqualTo(75.0);
     }
 
     @Test
@@ -289,7 +329,7 @@ class UserServiceImplTest {
         when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
         when(paymentService.outstandingBalance(id)).thenReturn(new BigDecimal("300.00"));
 
-        assertThat(userService.getStudentSummary(id).paymentBalance()).isEqualByComparingTo("300.00");
+        assertThat(userService.getStudentSummary(id, ADMIN_ID, true).paymentBalance()).isEqualByComparingTo("300.00");
     }
 
     @Test
@@ -309,7 +349,7 @@ class UserServiceImplTest {
         when(enrollmentRepository.findByStudentId(id)).thenReturn(List.of(enrollment));
         when(gradeService.findForStudent(id, null, id, true)).thenReturn(NO_GRADES);
 
-        StudentSummaryResponse response = userService.getStudentSummary(id);
+        StudentSummaryResponse response = userService.getStudentSummary(id, ADMIN_ID, true);
 
         assertThat(response.enrollments()).hasSize(1);
         assertThat(response.enrollments().get(0).course().code()).isEqualTo("JAVA-101");
@@ -322,7 +362,7 @@ class UserServiceImplTest {
         User trainer = existingUser(id, Role.TRAINER);
         when(userRepository.findById(id)).thenReturn(Optional.of(trainer));
 
-        assertThatThrownBy(() -> userService.getStudentSummary(id))
+        assertThatThrownBy(() -> userService.getStudentSummary(id, ADMIN_ID, true))
                 .isInstanceOf(BadRequestException.class);
     }
 }

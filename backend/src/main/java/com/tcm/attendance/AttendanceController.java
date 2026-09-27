@@ -3,6 +3,7 @@ package com.tcm.attendance;
 import com.tcm.attendance.dto.AttendanceBulkMarkRequest;
 import com.tcm.attendance.dto.AttendanceResponse;
 import com.tcm.attendance.dto.CourseAttendanceReportResponse;
+import com.tcm.attendance.dto.MyAttendanceResponse;
 import com.tcm.attendance.dto.SessionRosterResponse;
 import com.tcm.security.UserPrincipal;
 import com.tcm.user.model.Role;
@@ -21,8 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Attendance reads and writes, per docs/tasks/TCM-19. The role annotations
- * only keep students out; which particular session or course a trainer may
- * touch is an ownership question, and the service layer settles it.
+ * only keep students out (bar {@code /attendance/mine}, which is theirs
+ * alone); which particular session or course a trainer may touch is an
+ * ownership question, and the service layer settles it.
  */
 @RestController
 @RequestMapping("/api/v1")
@@ -51,6 +53,12 @@ public class AttendanceController {
     public CourseAttendanceReportResponse report(@PathVariable UUID courseId,
                                                    @AuthenticationPrincipal UserPrincipal principal) {
         return attendanceService.courseAttendanceReport(courseId, principal.getId(), isAdmin(principal));
+    }
+
+    @GetMapping("/attendance/mine")
+    @PreAuthorize("hasRole('STUDENT')")
+    public List<MyAttendanceResponse> mine(@AuthenticationPrincipal UserPrincipal principal) {
+        return attendanceService.findMine(principal.getId());
     }
 
     private static boolean isAdmin(UserPrincipal principal) {

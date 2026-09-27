@@ -31,7 +31,11 @@ services:
     ports: !override
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
+      # Same-origin API calls, as in production: the browser requests
+      # /api/v1/... from the Vite dev server, whose proxy (vite.config.js)
+      # forwards them to the backend container over the Compose network.
       VITE_API_BASE_URL: /api/v1
+      VITE_PROXY_TARGET: http://backend:8080
 
 volumes:
   maven_repo:

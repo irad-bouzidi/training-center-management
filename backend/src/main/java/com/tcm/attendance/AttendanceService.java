@@ -3,6 +3,7 @@ package com.tcm.attendance;
 import com.tcm.attendance.dto.AttendanceMarkRequest;
 import com.tcm.attendance.dto.AttendanceResponse;
 import com.tcm.attendance.dto.CourseAttendanceReportResponse;
+import com.tcm.attendance.dto.MyAttendanceResponse;
 import com.tcm.attendance.dto.SessionRosterResponse;
 import com.tcm.attendance.model.AttendanceMethod;
 import com.tcm.attendance.model.AttendanceStatus;
@@ -12,8 +13,9 @@ import java.util.UUID;
 public interface AttendanceService {
 
     /**
-     * The session's roster: every student holding an APPROVED enrollment in
-     * its course, each with their current mark or null if unmarked.
+     * The session's roster: every student holding an APPROVED (or
+     * COMPLETED) enrollment in its course, each with their current mark or
+     * null if unmarked.
      *
      * @param requesterIsAdmin whether the caller holds ROLE_ADMIN - anyone
      *                         else may only read a session they are the
@@ -23,7 +25,9 @@ public interface AttendanceService {
 
     /**
      * Marks (or re-marks) one student, always as {@link AttendanceMethod#MANUAL}.
-     * Access is checked the same way as {@link #getRoster}.
+     * Access is checked the same way as {@link #getRoster}. A CANCELLED
+     * session can't be marked, and re-marking a student with the status they
+     * already have leaves their record (method, marker, time) untouched.
      */
     AttendanceResponse markOne(UUID sessionId, UUID studentId, AttendanceStatus status, UUID markerId,
                                 boolean requesterIsAdmin);
@@ -40,7 +44,8 @@ public interface AttendanceService {
     /**
      * Marks a whole roster in one go. Existing marks are updated rather than
      * duplicated, and students left out of {@code entries} are untouched.
-     * Returns the resulting records in the order they were submitted.
+     * Returns the resulting records in the order they were submitted. Same
+     * rules as {@link #markOne}.
      */
     List<AttendanceResponse> markBulk(UUID sessionId, List<AttendanceMarkRequest> entries, UUID markerId,
                                        boolean requesterIsAdmin);
@@ -56,6 +61,12 @@ public interface AttendanceService {
     CourseAttendanceReportResponse courseAttendanceReport(UUID courseId, UUID requesterId, boolean requesterIsAdmin);
 
     /**
+     * The caller's own attendance records across every course, newest
+     * session first - {@code GET /api/v1/attendance/mine}.
+     */
+    List<MyAttendanceResponse> findMine(UUID studentId);
+
+    /**
      * A student's overall attendance rate as a percentage across every course
      * of theirs, or null while they have no marks at all. Feeds
      * {@code StudentSummaryResponse#attendanceRate}.
@@ -64,9 +75,8 @@ public interface AttendanceService {
 
     /**
      * The same figure for one course, or null while they have no marks on it.
-     * Read directly rather than out of {@link #courseAttendanceReport}, whose
-     * rows are the course's APPROVED roster: certification (TCM-25) asks
-     * about students whose enrollment is already COMPLETED.
+     * Read directly rather than out of {@link #courseAttendanceReport}, so it
+     * counts every mark on the course whatever the enrollment's status.
      */
     Double studentCourseAttendanceRate(UUID studentId, UUID courseId);
 }

@@ -129,7 +129,9 @@ Set `LIQUIBASE_CONTEXTS=prod` to start with nothing but the administrator.
 self-registration endpoint - accounts are created by Administrators (user
 management API lands in TCM-8). `CORS_ALLOWED_ORIGIN` (defaults to
 `http://localhost:5173`) controls which origin the API accepts
-cross-origin requests from.
+cross-origin requests from. The bundled frontend never needs it: nginx (and
+the Vite proxy in dev mode) forwards `/api` same-origin, passing the
+browser's `Host` header through so Spring sees the call as same-origin.
 
 ### QR attendance
 
@@ -139,6 +141,13 @@ student scans it and is marked present. The code encodes
 must be the origin students actually reach the app on** - a code pointing at
 `localhost` is unscannable from a phone. For a demo with real devices, set it
 to the host's LAN address (e.g. `http://192.168.1.20:5173`) in `.env`.
+`CORS_ALLOWED_ORIGIN` does not need to change: the phone loads the app and
+calls `/api` through the same LAN origin, which the backend treats as
+same-origin. (Only if you point a browser straight at the backend port would
+you also set `CORS_ALLOWED_ORIGIN` to the LAN origin.)
+
+A student who scans while signed out is sent to the login page and, once
+signed in, straight back to the check-in link.
 
 Codes are short-lived (`QR_VALIDITY_MINUTES`, default 15) and one per session
 at a time: showing a new one immediately invalidates the last. `QR_SECRET`
@@ -156,7 +165,10 @@ docker compose up --build
 
 This is dev-only (bind-mounted source, `mvn spring-boot:run` +
 spring-boot-devtools for the backend, the Vite dev server for the
-frontend) - never used in production.
+frontend) - never used in production. The Vite dev server stands in for
+nginx: the browser calls `/api/v1` on the frontend origin and Vite's proxy
+(`vite.config.js`) forwards it to `VITE_PROXY_TARGET` (`http://backend:8080`
+inside Compose).
 
 ## Backend Development (without full Docker stack)
 
@@ -189,7 +201,10 @@ npm run dev
 
 `VITE_API_BASE_URL` in `frontend/.env` should point at wherever the backend
 is running (e.g. `http://localhost:8080/api/v1` for a backend started per
-the section above).
+the section above - a cross-origin call, allowed by `CORS_ALLOWED_ORIGIN`'s
+`http://localhost:5173` default). Alternatively set it to `/api/v1` to go
+through the dev server's proxy, which targets `VITE_PROXY_TARGET` (default
+`http://localhost:8080`).
 
 ## Environment variables
 
@@ -205,13 +220,13 @@ outside Docker, are in `backend/src/main/resources/application.yml`.
 | `FRONTEND_PORT` | `5173` | Host port for the web app. |
 | `JWT_SECRET` | `changeme` | Signs access tokens. **Rotate before any real deployment.** |
 | `JWT_EXPIRATION_MS` | `86400000` | Token lifetime (24h). |
-| `CORS_ALLOWED_ORIGIN` | `http://localhost:5173` | The one origin the API accepts cross-origin requests from. |
+| `CORS_ALLOWED_ORIGIN` | `http://localhost:${FRONTEND_PORT}` | The one origin the API accepts cross-origin requests from. The bundled frontend calls the API same-origin (nginx, or the Vite proxy in dev mode), so this only matters when a browser calls the backend port directly. |
 | `FRONTEND_BASE_URL` | `http://localhost:5173` | Origin encoded into QR check-in links — must be reachable from a phone (see [QR attendance](#qr-attendance)). |
 | `QR_SECRET` | falls back to `JWT_SECRET` | Signs per-session QR tokens. |
 | `QR_VALIDITY_MINUTES` | `15` | How long a session's QR code stays valid. |
-| `CERTIFICATES_STORAGE_PATH` | `/var/lib/tcm/certificates` | Where generated PDFs are written (a named Docker volume). |
+| `CERTIFICATES_STORAGE_PATH` | `./data/certificates` (outside Docker) | Where generated PDFs are written. Only honoured by a backend run outside Docker: in Docker it is fixed at `/var/lib/tcm/certificates` (`application-docker.yml`), where the `certificates` volume is mounted, and not passed through. |
 | `CERTIFICATES_MIN_ATTENDANCE_RATE` | `75` | Attendance percentage required before a certificate can be issued. |
-| `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD_HASH` | `admin@tcm.local` / hash of `ChangeMe123!` | The first administrator, seeded by Liquibase. The password variable takes a BCrypt hash, not plaintext. |
+| `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD_HASH` | `admin@tcm.local` / hash of `ChangeMe123!` | The first administrator, seeded by Liquibase on a fresh database only. The password variable takes a BCrypt hash, not plaintext — single-quote it in `.env` so Compose doesn't expand its `$`s. |
 | `LIQUIBASE_CONTEXTS` | `demo` | Which optional changesets run. `demo` seeds the sample data below; set it to `prod` for a deployment that should start empty. |
 
 ## Verifying a deployment

@@ -27,6 +27,17 @@ export async function markAttendance(sessionId, entries) {
 }
 
 /**
+ * The authenticated STUDENT's own attendance records across every course,
+ * newest first.
+ *
+ * @returns {Promise<{id: string, sessionId: string, courseId: string, courseCode: string, courseName: string, sessionDate: string, startTime: string, endTime: string, status: 'PRESENT'|'ABSENT'|'LATE', method: 'MANUAL'|'QR', markedAt: string}[]>}
+ */
+export async function getMyAttendance() {
+  const { data } = await apiClient.get('/attendance/mine')
+  return data
+}
+
+/**
  * Per-student tallies across every session of a course, for an ADMIN or a
  * trainer of that course.
  *

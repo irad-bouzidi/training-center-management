@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Admin-facing roll-up for one course: every APPROVED-enrolled student with
- * their tallies across the course's sessions. {@code attendanceRate} is the
- * percentage of that student's *marked* sessions at which they turned up
- * (PRESENT or LATE), and is null while they have no marks at all - an
- * unmarked student is not a 0% student.
+ * Admin-facing roll-up for one course: every APPROVED- or COMPLETED-enrolled
+ * student with their tallies across the course's sessions. {@code
+ * attendanceRate} is the percentage of that student's *marked* sessions at
+ * which they turned up (PRESENT or LATE), and is null while they have no
+ * marks at all - an unmarked student is not a 0% student.
  */
 public record CourseAttendanceReportResponse(
         UUID courseId,

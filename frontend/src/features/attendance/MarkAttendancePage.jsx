@@ -24,8 +24,9 @@ import { useMarkAttendanceMutation, useSessionRosterQuery } from './hooks'
  *
  * Marks are held locally until "Save", then submitted as one bulk request -
  * a roster is read and judged as a whole, and one save keeps it atomic.
- * Students left unmarked are simply not sent, which leaves them unmarked
- * rather than recording an absence nobody asserted.
+ * Only marks this viewer changed are sent: students left unmarked stay
+ * unmarked rather than recording an absence nobody asserted, and marks left
+ * alone keep who (or which scan) recorded them.
  */
 export function MarkAttendancePage() {
   const { sessionId } = useParams()
@@ -71,8 +72,17 @@ export function MarkAttendancePage() {
     setOverrides(Object.fromEntries(entries.map((entry) => [entry.studentId, 'PRESENT'])))
   }
 
+  // Only rows whose mark differs from what the roster loaded with are sent.
+  // Resending an unchanged mark would rewrite it as this viewer's MANUAL
+  // mark - turning a student's own QR check-in into one the trainer made.
   function save() {
-    markAttendance.mutate(marked.map((entry) => ({ studentId: entry.studentId, status: markOf(entry) })))
+    const changed = entries.filter((entry) => markOf(entry) && markOf(entry) !== entry.status)
+    markAttendance.mutate(
+      changed.map((entry) => ({ studentId: entry.studentId, status: markOf(entry) })),
+      // Saved marks are the roster's now; dropping the local copies keeps a
+      // later change (say, a QR scan) from being masked by a stale override.
+      { onSuccess: () => setOverrides({}) },
+    )
   }
 
   return (

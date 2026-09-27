@@ -153,6 +153,106 @@ class EnrollmentControllerIT {
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
 
+    @Test
+    void admin_canListEnrollments_filteredByCourseStudentAndStatus() throws Exception {
+        String courseA = createCourse(10, CourseStatus.PUBLISHED);
+        String courseB = createCourse(10, CourseStatus.PUBLISHED);
+        String aliceEmail = uniqueEmail();
+        String aliceId = createUser(new UserRequest("Alice", "Student", aliceEmail, "Secret123!", null, Role.STUDENT));
+        String bobEmail = uniqueEmail();
+        createUser(new UserRequest("Bob", "Student", bobEmail, "Secret123!", null, Role.STUDENT));
+        String aliceToken = login(aliceEmail, "Secret123!");
+        String bobToken = login(bobEmail, "Secret123!");
+
+        String aliceInA = enrollmentId(register(aliceToken, courseA).andExpect(status().isCreated()));
+        String aliceInB = enrollmentId(register(aliceToken, courseB).andExpect(status().isCreated()));
+        String bobInA = enrollmentId(register(bobToken, courseA).andExpect(status().isCreated()));
+        decide(aliceInA, EnrollmentStatus.APPROVED).andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken))
+                        .param("courseId", courseA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[?(@.id=='" + aliceInA + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.id=='" + bobInA + "')]").exists());
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken))
+                        .param("studentId", aliceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[?(@.id=='" + aliceInA + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.id=='" + aliceInB + "')]").exists());
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken))
+                        .param("courseId", courseA)
+                        .param("status", "PENDING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(bobInA));
+    }
+
+    @Test
+    void trainer_canListEnrollmentsOfTheirOwnCourse_butNotAnothers() throws Exception {
+        String trainerEmail = uniqueEmail();
+        String trainerId = createUser(new UserRequest("Tina", "Trainer", trainerEmail, "Secret123!", null, Role.TRAINER));
+        String trainerToken = login(trainerEmail, "Secret123!");
+        String ownCourse = createCourseTaughtBy(trainerId);
+        String otherCourse = createCourseTaughtBy(
+                createUser(new UserRequest("Olly", "Other", uniqueEmail(), "Secret123!", null, Role.TRAINER)));
+
+        String studentEmail = uniqueEmail();
+        String studentId = createUser(new UserRequest("Sam", "Student", studentEmail, "Secret123!", null, Role.STUDENT));
+        String studentToken = login(studentEmail, "Secret123!");
+        String inOwn = enrollmentId(register(studentToken, ownCourse).andExpect(status().isCreated()));
+        String inOther = enrollmentId(register(studentToken, otherCourse).andExpect(status().isCreated()));
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(trainerToken))
+                        .param("courseId", ownCourse))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(inOwn));
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(trainerToken))
+                        .param("courseId", otherCourse))
+                .andExpect(status().isForbidden());
+
+        // no courseId: across their own courses only; a studentId filter doesn't widen that
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(trainerToken))
+                        .param("studentId", studentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[?(@.id=='" + inOwn + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.id=='" + inOther + "')]").doesNotExist());
+    }
+
+    @Test
+    void student_cannotListEnrollments() throws Exception {
+        String studentEmail = uniqueEmail();
+        createUser(new UserRequest("Sam", "Student", studentEmail, "Secret123!", null, Role.STUDENT));
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(studentEmail, "Secret123!"))))
+                .andExpect(status().isForbidden());
+    }
+
+    private String createCourseTaughtBy(String trainerId) throws Exception {
+        CourseRequest request = new CourseRequest(
+                uniqueCode(), "Course", null, 40, 10, "Programming", UUID.fromString(trainerId),
+                BigDecimal.valueOf(500), CourseStatus.PUBLISHED);
+        String response = mockMvc.perform(post("/api/v1/courses")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("id").asText();
+    }
+
     private org.springframework.test.web.servlet.ResultActions register(String studentToken, String courseId) throws Exception {
         return mockMvc.perform(post("/api/v1/enrollments")
                 .header(HttpHeaders.AUTHORIZATION, bearer(studentToken))

@@ -9,11 +9,13 @@ import { useAuth } from '@/context/AuthContext'
 import { StudentAttendanceTab } from '@/features/attendance/StudentAttendanceTab'
 import { formatRate } from '@/features/attendance/attendanceDisplay'
 import { StudentCertificatesTab } from '@/features/certificates/StudentCertificatesTab'
+import { CompleteEnrollmentButton } from '@/features/enrollments/CompleteEnrollmentButton'
 import { statusBadgeVariant as enrollmentStatusBadgeVariant } from '@/features/enrollments/enrollmentDisplay'
 import { CourseGradesList } from '@/features/grades/CourseGradesList'
 import { formatPercent } from '@/features/grades/gradeDisplay'
 import { StudentPaymentsTab } from '@/features/payments/StudentPaymentsTab'
 import { formatAmount } from '@/features/payments/paymentDisplay'
+import { StudentScheduleTab } from '@/features/schedule/StudentScheduleTab'
 import { useStudentSummaryQuery } from './hooks'
 import { formatDate, fullName, statusBadgeVariant, titleCase } from './studentDisplay'
 
@@ -42,13 +44,18 @@ function Stat({ label, value }) {
  * TCM-14), as do "Attendance" (TCM-19/20), "Payments" (TCM-21/22), "Grades"
  * (TCM-23/24) and "Certificates" (TCM-25/26). Every tab is real data now;
  * the stub fields TCM-13 reserved on StudentSummaryResponse have all been
- * filled in, exactly as they were meant to be.
+ * filled in, exactly as they were meant to be. "Schedule" (TCM-18 step 4)
+ * is assembled from the enrolled courses' sessions - see StudentScheduleTab.
+ *
+ * An ADMIN can mark an APPROVED enrollment completed from the Enrollments
+ * tab, which is the step that makes the Certificates tab's button live.
  */
 export function StudentSummaryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { data: summary, isLoading } = useStudentSummaryQuery(id)
+  const isAdmin = user.role === 'ADMIN'
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading…</p>
@@ -81,6 +88,7 @@ export function StudentSummaryPage() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
+              <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="grades">Grades</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -114,6 +122,7 @@ export function StudentSummaryPage() {
                       <TableHead>Enrolled</TableHead>
                       <TableHead>Decided</TableHead>
                       <TableHead>Decided By</TableHead>
+                      {isAdmin && <TableHead className="w-36" />}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -131,6 +140,11 @@ export function StudentSummaryPage() {
                         <TableCell>{formatDate(enrollment.enrolledAt)}</TableCell>
                         <TableCell>{enrollment.decidedAt ? formatDate(enrollment.decidedAt) : '—'}</TableCell>
                         <TableCell>{enrollment.decidedBy?.name ?? '—'}</TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            <CompleteEnrollmentButton enrollment={enrollment} />
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -138,6 +152,9 @@ export function StudentSummaryPage() {
               )}
             </TabsContent>
 
+            <TabsContent value="schedule">
+              <StudentScheduleTab enrollments={enrollments} />
+            </TabsContent>
             <TabsContent value="attendance">
               <StudentAttendanceTab
                 studentId={profile.id}
@@ -153,7 +170,7 @@ export function StudentSummaryPage() {
               />
             </TabsContent>
             <TabsContent value="payments">
-              <StudentPaymentsTab studentId={profile.id} isAdmin={user.role === 'ADMIN'} />
+              <StudentPaymentsTab studentId={profile.id} isAdmin={isAdmin} />
             </TabsContent>
             <TabsContent value="certificates">
               <StudentCertificatesTab studentId={profile.id} enrollments={enrollments} />

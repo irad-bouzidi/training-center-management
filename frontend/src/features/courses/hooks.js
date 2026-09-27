@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { createCourse, getCourse, listCourses, setCourseStatus, updateCourse } from '@/api/courseApi'
+import { createCourse, getCourse, listCourses, listMyCourses, setCourseStatus, updateCourse } from '@/api/courseApi'
 import { listUsers } from '@/api/userApi'
 
 export const coursesKeys = {
@@ -9,6 +9,7 @@ export const coursesKeys = {
   list: (params) => [...coursesKeys.lists(), params],
   details: () => [...coursesKeys.all, 'detail'],
   detail: (id) => [...coursesKeys.details(), id],
+  mine: (params) => [...coursesKeys.all, 'mine', params],
 }
 
 // The backend never has a message body it can't produce (see
@@ -24,6 +25,17 @@ export function useCoursesQuery(params, options) {
     queryFn: () => listCourses(params),
     // Keeps the current page's rows on screen while the next page loads,
     // instead of the table/grid flashing empty between pages/filter changes.
+    placeholderData: keepPreviousData,
+    ...options,
+  })
+}
+
+/** The TRAINER's own courses, all statuses - `options` lets a caller gate it
+ * on role, since /courses/mine 403s for anyone else. */
+export function useMyCoursesQuery(params, options) {
+  return useQuery({
+    queryKey: coursesKeys.mine(params),
+    queryFn: () => listMyCourses(params),
     placeholderData: keepPreviousData,
     ...options,
   })

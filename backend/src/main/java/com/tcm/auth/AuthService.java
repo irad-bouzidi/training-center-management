@@ -20,8 +20,9 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         // Throws BadCredentialsException for both a wrong password and an
-        // unknown email (see UserDetailsServiceImpl) - GlobalExceptionHandler
-        // maps that to a generic 401.
+        // unknown email (see UserDetailsServiceImpl), and DisabledException
+        // for an INACTIVE account - GlobalExceptionHandler maps every
+        // AuthenticationException to the same generic 401.
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 

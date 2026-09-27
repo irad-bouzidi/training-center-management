@@ -9,6 +9,18 @@ export async function listCourses(params) {
   return data
 }
 
+/**
+ * The authenticated TRAINER's own courses - every status, DRAFT and ARCHIVED
+ * included, unlike the catalog (see CourseController#mine).
+ *
+ * @param {{page?: number, size?: number, sort?: string}} params
+ * @returns {Promise<{content: object[], page: number, size: number, totalElements: number, totalPages: number}>}
+ */
+export async function listMyCourses(params) {
+  const { data } = await apiClient.get('/courses/mine', { params })
+  return data
+}
+
 /** @returns {Promise<object>} */
 export async function getCourse(id) {
   const { data } = await apiClient.get(`/courses/${id}`)

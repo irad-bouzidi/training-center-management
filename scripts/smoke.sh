@@ -38,12 +38,16 @@ check "trainer logs in" "ey" "$TINA"
 check "student logs in" "ey" "$SAM"
 
 echo "== Seeded demo data =="
-check "3 demo courses"        '"totalElements": 3' "$(get "$ADMIN" '/courses?size=50' | python3 -m json.tool)"
+COURSES=$(get "$ADMIN" '/courses?size=200')
+for c in JAVA-101 REACT-201 DATA-301; do check "demo course $c" "\"$c\"" "$COURSES"; done
 check "demo students listed"  'sam.student@tcm.local' "$(get "$ADMIN" '/students?size=50')"
 check "schedule seeded"       'Room A' "$(get "$ADMIN" '/sessions?size=50&from=2000-01-01')"
 
 echo "== Admin journey =="
 STAMP=$(date +%s)
+# A far-future date unique to this run, so re-runs never double-book the
+# seeded trainer against a previous run's session.
+SESSION_DATE=$(date -u -d "2030-01-01 +$(( STAMP % 20000 )) days" +%F)
 NEW_USER=$(post "$ADMIN" /users "{\"firstName\":\"Smoke\",\"lastName\":\"Student\",\"email\":\"smoke-$STAMP@tcm.local\",\"password\":\"Secret123!\",\"role\":\"STUDENT\"}")
 NEW_USER_ID=$(echo "$NEW_USER" | jq_ 'd["id"]')
 check "creates a user" "smoke-$STAMP@tcm.local" "$NEW_USER"
@@ -58,10 +62,10 @@ check "student self-enrolls" '"PENDING"' "$ENROLL"
 check "admin approves"       '"APPROVED"' "$(post "$ADMIN" "/enrollments/$ENROLL_ID/decision" '{"status":"APPROVED"}')"
 check "approval raises an invoice" "$COURSE_ID" "$(get "$ADMIN" "/payments?studentId=$NEW_USER_ID")"
 
-SESSION=$(post "$ADMIN" /sessions "{\"courseId\":\"$COURSE_ID\",\"trainerId\":\"11111111-1111-4111-8111-111111111101\",\"classroom\":\"Room S\",\"sessionDate\":\"2027-06-01\",\"startTime\":\"09:00\",\"endTime\":\"11:00\"}")
+SESSION=$(post "$ADMIN" /sessions "{\"courseId\":\"$COURSE_ID\",\"trainerId\":\"11111111-1111-4111-8111-111111111101\",\"classroom\":\"Room S\",\"sessionDate\":\"$SESSION_DATE\",\"startTime\":\"09:00\",\"endTime\":\"11:00\"}")
 SESSION_ID=$(echo "$SESSION" | jq_ 'd["id"]')
 check "schedules a session" 'Room S' "$SESSION"
-check "double-booking is refused" '409' "$(code POST "$ADMIN" /sessions '{"courseId":"'$COURSE_ID'","trainerId":"11111111-1111-4111-8111-111111111101","classroom":"Room S","sessionDate":"2027-06-01","startTime":"10:00","endTime":"12:00"}')"
+check "double-booking is refused" '409' "$(code POST "$ADMIN" /sessions '{"courseId":"'$COURSE_ID'","trainerId":"11111111-1111-4111-8111-111111111101","classroom":"Room S","sessionDate":"'$SESSION_DATE'","startTime":"10:00","endTime":"12:00"}')"
 check "a missing body is 400, not 500" '400' "$(code POST "$ADMIN" /sessions)"
 
 echo "== Trainer journey =="

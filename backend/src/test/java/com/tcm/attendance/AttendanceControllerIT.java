@@ -96,7 +96,10 @@ class AttendanceControllerIT {
         mark(sessionId, trainerToken, new AttendanceMarkRequest(UUID.fromString(studentId), AttendanceStatus.PRESENT))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("PRESENT"))
-                .andExpect(jsonPath("$[0].method").value("MANUAL"));
+                .andExpect(jsonPath("$[0].method").value("MANUAL"))
+                .andExpect(jsonPath("$[0].courseId").value(courseId))
+                .andExpect(jsonPath("$[0].courseName").value("Course"))
+                .andExpect(jsonPath("$[0].sessionDate").isNotEmpty());
 
         mockMvc.perform(get("/api/v1/sessions/" + sessionId + "/attendance")
                         .header(HttpHeaders.AUTHORIZATION, bearer(trainerToken)))
@@ -209,6 +212,52 @@ class AttendanceControllerIT {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void student_readsOwnAttendance_newestSessionFirst() throws Exception {
+        String trainerId = createUser(trainer());
+        String courseId = createCourse();
+        String email = uniqueEmail();
+        String studentId = approvedStudent(courseId, email);
+        String otherStudentId = approvedStudent(courseId);
+
+        // uniqueDate() hands out ever-later days, so the second session is the newer.
+        String earlier = createSession(courseId, trainerId);
+        String later = createSession(courseId, trainerId);
+        markAs(earlier, studentId, AttendanceStatus.PRESENT);
+        markAs(later, studentId, AttendanceStatus.LATE);
+        markAs(later, otherStudentId, AttendanceStatus.ABSENT);
+
+        mockMvc.perform(get("/api/v1/attendance/mine")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(email, PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].sessionId").value(later))
+                .andExpect(jsonPath("$[0].status").value("LATE"))
+                .andExpect(jsonPath("$[0].method").value("MANUAL"))
+                .andExpect(jsonPath("$[0].courseId").value(courseId))
+                .andExpect(jsonPath("$[0].courseName").value("Course"))
+                .andExpect(jsonPath("$[0].courseCode").isNotEmpty())
+                .andExpect(jsonPath("$[0].sessionDate").isNotEmpty())
+                .andExpect(jsonPath("$[0].startTime").value("09:00:00"))
+                .andExpect(jsonPath("$[0].endTime").value("11:00:00"))
+                .andExpect(jsonPath("$[0].markedAt").isNotEmpty())
+                .andExpect(jsonPath("$[1].sessionId").value(earlier))
+                .andExpect(jsonPath("$[1].status").value("PRESENT"));
+    }
+
+    @Test
+    void ownAttendance_isForStudentsOnly() throws Exception {
+        String trainerEmail = uniqueEmail();
+        createUser(trainer(trainerEmail));
+
+        mockMvc.perform(get("/api/v1/attendance/mine")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/attendance/mine")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(trainerEmail, PASSWORD))))
+                .andExpect(status().isForbidden());
+    }
+
     private void markAs(String sessionId, String studentId, AttendanceStatus status) throws Exception {
         mark(sessionId, adminToken, new AttendanceMarkRequest(UUID.fromString(studentId), status))
                 .andExpect(status().isOk());
@@ -223,7 +272,10 @@ class AttendanceControllerIT {
 
     /** Registers a student on the course and approves them, returning their id. */
     private String approvedStudent(String courseId) throws Exception {
-        String email = uniqueEmail();
+        return approvedStudent(courseId, uniqueEmail());
+    }
+
+    private String approvedStudent(String courseId, String email) throws Exception {
         String studentId = createUser(student(email));
         String studentToken = login(email, PASSWORD);
 

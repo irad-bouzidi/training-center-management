@@ -185,6 +185,24 @@ class GradeServiceImplTest {
     }
 
     @Test
+    void findForStudentTaughtBy_keepsOnlyTheTrainersOwnCourses() {
+        Grade theirs = grade(new BigDecimal("18.00"), new BigDecimal("20.00"), new BigDecimal("40.00"));
+        Grade elsewhere = grade(new BigDecimal("5.00"), new BigDecimal("20.00"), new BigDecimal("60.00"));
+        elsewhere.setCourse(Course.builder()
+                .id(UUID.randomUUID()).code("PY-101").name("Python")
+                .durationHours(40).capacity(20).price(BigDecimal.TEN)
+                .primaryTrainer(other(UUID.randomUUID()))
+                .status(CourseStatus.PUBLISHED)
+                .build());
+        when(gradeRepository.findByStudentIdOrderByGradedAtDesc(STUDENT_ID)).thenReturn(List.of(theirs, elsewhere));
+
+        var grades = gradeService.findForStudentTaughtBy(STUDENT_ID, TRAINER_ID);
+
+        assertThat(grades.grades()).hasSize(1);
+        assertThat(grades.weightedAverage()).isEqualTo(90.0);
+    }
+
+    @Test
     void courseGradebook_listsEveryApprovedStudent_gradedOrNot() {
         givenCourse();
         UUID ungradedId = UUID.randomUUID();
