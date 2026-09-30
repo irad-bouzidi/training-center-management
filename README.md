@@ -6,7 +6,20 @@ certificate generation — with three roles (Administrator, Trainer, Student)
 and a bonus QR-code attendance feature.
 
 See [`docs/Training Center Management Application.md`](docs/Training%20Center%20Management%20Application.md)
-for the original feature brief.
+for the original feature brief, and [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
+for step-by-step scenarios covering every use case.
+
+## Features
+
+| Role | What they can do |
+|---|---|
+| Administrator | Manage users (create, edit, deactivate); create and publish courses; approve, reject and complete enrollments; schedule sessions (with double-booking checks for rooms and trainers); record payments and follow up overdue invoices; issue certificates; view the dashboard and cross-cutting reports. |
+| Trainer | See their courses, schedule and rosters; mark attendance manually or by showing a session QR code; grade assessments; view the students enrolled on their courses; issue certificates for courses they teach. |
+| Student | Browse the catalog and request enrollment; see their schedule, attendance, grades and invoices; check in to a session by scanning its QR code; download their PDF certificates. |
+
+A certificate can only be issued once an enrollment is completed and the
+student's attendance meets `CERTIFICATES_MIN_ATTENDANCE_RATE` (75% by
+default).
 
 ## Tech Stack
 
@@ -111,8 +124,9 @@ and a few grades. **Every demo account's password is `ChangeMe123!`.**
 | Trainer | `tina.trainer@tcm.local` | Java Fundamentals — its schedule, rosters to mark, gradebook. |
 | Trainer | `tom.teacher@tcm.local` | React in Practice, with sessions still ahead of it. |
 | Student | `sam.student@tcm.local` | An approved course, a pending request, grades, and an unpaid invoice. |
-| Student | `sara.sassi@tcm.local` | An absence on her record and an overdue invoice. |
+| Student | `sara.sassi@tcm.local` | An absence on her record, a partly paid invoice and an overdue one. |
 | Student | `sofia.benali@tcm.local` | A completed course, fully paid — a certificate can be issued for her. |
+| Student | `sami.khelifi@tcm.local` | An inactive account: sign-in is refused. |
 
 No certificates are seeded: a certificate row needs its PDF on disk, which
 a changelog can't write into the volume. Issuing one for Sofia from her
@@ -126,8 +140,8 @@ Set `LIQUIBASE_CONTEXTS=prod` to start with nothing but the administrator.
 `Authorization: Bearer <token>` on everything else - `/api/v1/auth/**`
 (other than `/login`) and `/api/v1/health` are the only public routes.
 `GET /api/v1/auth/me` returns the caller's profile. There is no
-self-registration endpoint - accounts are created by Administrators (user
-management API lands in TCM-8). `CORS_ALLOWED_ORIGIN` (defaults to
+self-registration endpoint - accounts are created by Administrators.
+Deactivating a user invalidates their existing tokens straight away. `CORS_ALLOWED_ORIGIN` (defaults to
 `http://localhost:5173`) controls which origin the API accepts
 cross-origin requests from. The bundled frontend never needs it: nginx (and
 the Vite proxy in dev mode) forwards `/api` same-origin, passing the
@@ -173,8 +187,7 @@ inside Compose).
 ## Backend Development (without full Docker stack)
 
 To run the backend directly on the host (`mvn spring-boot:run`) against a
-real Postgres, without the full stack from `docker-compose.yml` (added in
-TCM-5), spin up just the database:
+real Postgres, without the full stack from `docker-compose.yml`, spin up just the database:
 
 ```bash
 cp .env.example .env
@@ -190,7 +203,7 @@ under `src/main/resources/db/changelog/`.
 ## Frontend Development (without full Docker stack)
 
 To run the frontend directly on the host, without the full stack from
-`docker-compose.yml` (added in TCM-5):
+`docker-compose.yml`:
 
 ```bash
 cd frontend
@@ -205,6 +218,17 @@ the section above - a cross-origin call, allowed by `CORS_ALLOWED_ORIGIN`'s
 `http://localhost:5173` default). Alternatively set it to `/api/v1` to go
 through the dev server's proxy, which targets `VITE_PROXY_TARGET` (default
 `http://localhost:8080`).
+
+## Tests
+
+```bash
+cd backend && mvn verify      # unit tests + controller integration tests
+cd frontend && npm run lint   # oxlint
+cd frontend && npm run build  # production build
+```
+
+Integration tests (`*IT.java`, run by Failsafe) start a throwaway
+PostgreSQL through Testcontainers, so Docker must be running.
 
 ## Environment variables
 
@@ -227,7 +251,7 @@ outside Docker, are in `backend/src/main/resources/application.yml`.
 | `CERTIFICATES_STORAGE_PATH` | `./data/certificates` (outside Docker) | Where generated PDFs are written. Only honoured by a backend run outside Docker: in Docker it is fixed at `/var/lib/tcm/certificates` (`application-docker.yml`), where the `certificates` volume is mounted, and not passed through. |
 | `CERTIFICATES_MIN_ATTENDANCE_RATE` | `75` | Attendance percentage required before a certificate can be issued. |
 | `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD_HASH` | `admin@tcm.local` / hash of `ChangeMe123!` | The first administrator, seeded by Liquibase on a fresh database only. The password variable takes a BCrypt hash, not plaintext — single-quote it in `.env` so Compose doesn't expand its `$`s. |
-| `LIQUIBASE_CONTEXTS` | `demo` | Which optional changesets run. `demo` seeds the sample data below; set it to `prod` for a deployment that should start empty. |
+| `LIQUIBASE_CONTEXTS` | `demo` | Which optional changesets run. `demo` seeds the [demo data](#demo-accounts); set it to `prod` for a deployment that should start empty. |
 
 ## Verifying a deployment
 
@@ -239,7 +263,7 @@ dashboards, and the main permission boundaries:
 
 ```bash
 docker compose up --build -d
-./scripts/smoke.sh          # 38 checks; exits non-zero if any fail
+./scripts/smoke.sh          # 40 checks; exits non-zero if any fail
 ```
 
 `frontend/scripts/ui-smoke.mjs` walks the same journeys through a real
@@ -249,7 +273,7 @@ downloading a certificate PDF — and fails on any console error:
 ```bash
 cd frontend
 npx playwright install chromium   # the browser, downloaded once
-node scripts/ui-smoke.mjs         # 26 checks, plus a screenshot per page
+node scripts/ui-smoke.mjs         # exits non-zero on any failure; a screenshot per page
 ```
 
 ## Troubleshooting
@@ -266,8 +290,11 @@ node scripts/ui-smoke.mjs         # 26 checks, plus a screenshot per page
 
 ## Documentation
 
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — the user guide: every use
+  case as a step-by-step scenario on the demo data, plus the business rules
+  and error messages.
 - [`docs/PLAN.md`](docs/PLAN.md) — global architecture, conventions, and
-  domain model; read this first.
+  domain model; read this first before changing code.
 - [`docs/tasks/`](docs/tasks/) — one file per implementation task/branch,
   in dependency order.
 
@@ -278,6 +305,9 @@ Feature-complete against the brief. Every task in
 implemented and merged: authentication and user management, courses,
 students and enrollment, scheduling, attendance, payments, grades, PDF
 certificates, the QR-attendance bonus feature, and the role dashboards.
+TCM-31 followed with an audit pass: extra test coverage, tighter trainer
+scoping and token checks, and the trainer "My Courses" and student
+"My Attendance" pages.
 
 ## License
 
