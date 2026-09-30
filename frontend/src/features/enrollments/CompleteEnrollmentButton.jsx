@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ import { useCompleteEnrollmentMutation } from './hooks'
  * responsible for showing it to admins only.
  */
 export function CompleteEnrollmentButton({ enrollment, size = 'sm', variant = 'outline' }) {
+  const { t } = useTranslation('enrollments')
   const [confirming, setConfirming] = useState(false)
   const complete = useCompleteEnrollmentMutation()
 
@@ -34,20 +36,22 @@ export function CompleteEnrollmentButton({ enrollment, size = 'sm', variant = 'o
   return (
     <>
       <Button size={size} variant={variant} onClick={() => setConfirming(true)}>
-        Mark completed
+        {t('complete.button')}
       </Button>
 
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Mark enrollment completed?</AlertDialogTitle>
+            <AlertDialogTitle>{t('complete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {enrollment.student?.name ?? 'This student'} has finished {enrollment.course.name}. Once completed, the
-              enrollment can’t be reopened, and a certificate can be issued if their attendance qualifies.
+              {t('complete.description', {
+                student: enrollment.student?.name ?? t('complete.thisStudent'),
+                course: enrollment.course.name,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               disabled={complete.isPending}
               onClick={(event) => {
@@ -55,7 +59,7 @@ export function CompleteEnrollmentButton({ enrollment, size = 'sm', variant = 'o
                 complete.mutate(enrollment.id, { onSuccess: () => setConfirming(false) })
               }}
             >
-              Mark completed
+              {t('complete.button')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

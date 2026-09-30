@@ -1,5 +1,6 @@
 import { MoreHorizontal, Pencil } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,7 @@ import { useSetCourseStatusMutation } from './hooks'
  * showing.
  */
 export function CourseRowActions({ course, onView, onEdit }) {
+  const { t } = useTranslation('courses')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const setCourseStatus = useSetCourseStatusMutation()
   const transition = STATUS_TRANSITIONS[course.status]
@@ -46,22 +48,22 @@ export function CourseRowActions({ course, onView, onEdit }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${course.name}`}>
+          <Button variant="ghost" size="icon-sm" aria-label={t('rowActions.menuLabel', { name: course.name })}>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {onView && <DropdownMenuItem onSelect={() => onView(course)}>View details</DropdownMenuItem>}
+          {onView && <DropdownMenuItem onSelect={() => onView(course)}>{t('rowActions.viewDetails')}</DropdownMenuItem>}
           <DropdownMenuItem onSelect={() => onEdit(course)}>
             <Pencil />
-            Edit
+            {t('common:actions.edit')}
           </DropdownMenuItem>
           {transition && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setConfirmOpen(true)}>
                 <transition.icon />
-                {transition.label}
+                {t(transition.labelKey)}
               </DropdownMenuItem>
             </>
           )}
@@ -72,15 +74,15 @@ export function CourseRowActions({ course, onView, onEdit }) {
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{transition.label} course?</AlertDialogTitle>
+              <AlertDialogTitle>{t(transition.confirmTitleKey)}</AlertDialogTitle>
               <AlertDialogDescription>
                 {transition.next === 'PUBLISHED'
-                  ? `${course.name} will become visible in the shared catalog.`
-                  : `${course.name} will no longer appear in the shared catalog.`}
+                  ? t('rowActions.publishDescription', { name: course.name })
+                  : t('rowActions.unpublishDescription', { name: course.name })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 disabled={setCourseStatus.isPending}
                 onClick={(event) => {
@@ -88,7 +90,7 @@ export function CourseRowActions({ course, onView, onEdit }) {
                   confirmStatusChange()
                 }}
               >
-                {transition.label}
+                {t(transition.labelKey)}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

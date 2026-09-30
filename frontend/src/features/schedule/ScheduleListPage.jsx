@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,7 +15,6 @@ import {
   formatTimeRange,
   groupByDate,
   statusBadgeVariant,
-  titleCase,
   todayIsoDate,
 } from './scheduleDisplay'
 import { useSessionsQuery } from './hooks'
@@ -39,6 +39,7 @@ const ALL = 'ALL'
  * optional.
  */
 export function ScheduleListPage() {
+  const { t } = useTranslation('schedule')
   const { user } = useAuth()
   const isAdmin = user.role === 'ADMIN'
 
@@ -90,14 +91,14 @@ export function ScheduleListPage() {
     <>
       <Card>
         <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Schedule</CardTitle>
-          {isAdmin && <Button onClick={openCreate}>New Session</Button>}
+          <CardTitle>{t('list.title')}</CardTitle>
+          {isAdmin && <Button onClick={openCreate}>{t('newSession')}</Button>}
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-2">
-              <Label htmlFor="from">From</Label>
+              <Label htmlFor="from">{t('list.from')}</Label>
               <Input
                 id="from"
                 type="date"
@@ -107,7 +108,7 @@ export function ScheduleListPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="to">To</Label>
+              <Label htmlFor="to">{t('list.to')}</Label>
               <Input
                 id="to"
                 type="date"
@@ -120,13 +121,13 @@ export function ScheduleListPage() {
             {isAdmin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="courseFilter">Course</Label>
+                  <Label htmlFor="courseFilter">{t('list.course')}</Label>
                   <Select value={courseId} onValueChange={(value) => updateFilter(setCourseId, value)}>
                     <SelectTrigger id="courseFilter" className="w-56">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={ALL}>All courses</SelectItem>
+                      <SelectItem value={ALL}>{t('list.allCourses')}</SelectItem>
                       {coursesPage?.content?.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
                           {course.name} ({course.code})
@@ -136,13 +137,13 @@ export function ScheduleListPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="trainerFilter">Trainer</Label>
+                  <Label htmlFor="trainerFilter">{t('list.trainer')}</Label>
                   <Select value={trainerId} onValueChange={(value) => updateFilter(setTrainerId, value)}>
                     <SelectTrigger id="trainerFilter" className="w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={ALL}>All trainers</SelectItem>
+                      <SelectItem value={ALL}>{t('list.allTrainers')}</SelectItem>
                       {trainers?.map((trainer) => (
                         <SelectItem key={trainer.id} value={trainer.id}>
                           {trainer.firstName} {trainer.lastName}
@@ -155,9 +156,9 @@ export function ScheduleListPage() {
             )}
           </div>
 
-          {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {isLoading && <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>}
           {!isLoading && days.length === 0 && (
-            <p className="text-sm text-muted-foreground">No sessions scheduled for this period.</p>
+            <p className="text-sm text-muted-foreground">{t('list.empty')}</p>
           )}
 
           <div className="space-y-6">
@@ -179,7 +180,7 @@ export function ScheduleListPage() {
                           {session.classroom} · {session.trainer.name}
                         </p>
                       </div>
-                      <Badge variant={statusBadgeVariant(session.status)}>{titleCase(session.status)}</Badge>
+                      <Badge variant={statusBadgeVariant(session.status)}>{t(`common:enums.sessionStatus.${session.status}`)}</Badge>
                       <SessionRowActions session={session} onEdit={openEdit} />
                     </li>
                   ))}
@@ -189,7 +190,7 @@ export function ScheduleListPage() {
           </div>
 
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <p>{totalElements} session{totalElements === 1 ? '' : 's'}</p>
+            <p>{t('list.count', { count: totalElements })}</p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -197,18 +198,16 @@ export function ScheduleListPage() {
                 disabled={page === 0}
                 onClick={() => setPage((current) => current - 1)}
               >
-                Previous
+                {t('common:actions.previous')}
               </Button>
-              <span>
-                Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-              </span>
+              <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
               >
-                Next
+                {t('common:actions.next')}
               </Button>
             </div>
           </div>

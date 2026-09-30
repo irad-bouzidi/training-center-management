@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
 import { StatTile } from './StatTile'
@@ -11,44 +12,45 @@ import { useTrainerSummaryQuery } from './hooks'
  * attention tone when they aren't zero.
  */
 export function TrainerDashboardPage() {
+  const { t } = useTranslation('dashboard')
   const { user } = useAuth()
   const { data: summary, isLoading } = useTrainerSummaryQuery()
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome, {user.name}</CardTitle>
-        <CardDescription>Your courses, and what’s waiting on you.</CardDescription>
+        <CardTitle>{t('welcome', { name: user.name })}</CardTitle>
+        <CardDescription>{t('trainer.description')}</CardDescription>
       </CardHeader>
 
       <CardContent>
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>}
 
         {summary && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatTile label="My courses" value={formatCount(summary.myCourses)} to="/trainer/my-courses" />
+            <StatTile label={t('trainer.myCourses')} value={formatCount(summary.myCourses)} to="/trainer/my-courses" />
             <StatTile
-              label="Upcoming sessions"
+              label={t('trainer.upcomingSessions')}
               value={formatCount(summary.upcomingSessions)}
-              note="Next 7 days"
+              note={t('trainer.next7Days')}
               to="/trainer/schedule"
             />
             <StatTile
-              label="Sessions to mark"
+              label={t('trainer.sessionsToMark')}
               value={formatCount(summary.sessionsAwaitingAttendance)}
               note={
                 summary.sessionsAwaitingAttendance > 0
-                  ? 'Delivered with no attendance recorded'
-                  : 'Attendance is up to date'
+                  ? t('trainer.sessionsToMarkPending')
+                  : t('trainer.sessionsToMarkNone')
               }
               tone={summary.sessionsAwaitingAttendance > 0 ? 'attention' : 'default'}
               to="/trainer/schedule"
             />
             <StatTile
-              label="Students to grade"
+              label={t('trainer.studentsToGrade')}
               value={formatCount(summary.studentsAwaitingGrades)}
               note={
-                summary.studentsAwaitingGrades > 0 ? 'Nothing recorded for them yet' : 'Everyone has a grade'
+                summary.studentsAwaitingGrades > 0 ? t('trainer.studentsToGradePending') : t('trainer.studentsToGradeNone')
               }
               tone={summary.studentsAwaitingGrades > 0 ? 'attention' : 'default'}
               to="/trainer/my-courses"

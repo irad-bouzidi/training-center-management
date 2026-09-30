@@ -1,9 +1,6 @@
-export const STATUS_OPTIONS = ['ACTIVE', 'INACTIVE']
+import { formatDateTimeAsDate } from '@/lib/format'
 
-/** ACTIVE -> "Active", INACTIVE -> "Inactive". */
-export function titleCase(value) {
-  return value.charAt(0) + value.slice(1).toLowerCase()
-}
+export const STATUS_OPTIONS = ['ACTIVE', 'INACTIVE']
 
 export function fullName(profile) {
   return `${profile.firstName} ${profile.lastName}`
@@ -14,9 +11,5 @@ export function statusBadgeVariant(status) {
 }
 
 export function formatDate(isoString) {
-  return new Date(isoString).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatDateTimeAsDate(isoString)
 }

@@ -1,7 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { createCourse, getCourse, listCourses, listMyCourses, setCourseStatus, updateCourse } from '@/api/courseApi'
 import { listUsers } from '@/api/userApi'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 export const coursesKeys = {
   all: ['courses'],
@@ -10,13 +12,6 @@ export const coursesKeys = {
   details: () => [...coursesKeys.all, 'detail'],
   detail: (id) => [...coursesKeys.details(), id],
   mine: (params) => [...coursesKeys.all, 'mine', params],
-}
-
-// The backend never has a message body it can't produce (see
-// GlobalExceptionHandler) - falling back to a generic string only covers a
-// network-level failure (no response at all).
-function errorMessage(error, fallback) {
-  return error.response?.data?.message ?? fallback
 }
 
 export function useCoursesQuery(params, options) {
@@ -63,19 +58,21 @@ export function useTrainersQuery(options) {
 }
 
 export function useCreateCourseMutation() {
+  const { t } = useTranslation('courses')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: createCourse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: coursesKeys.lists() })
-      toast.success('Course created')
+      toast.success(t('toasts.created'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to create course')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.createFailed'))),
   })
 }
 
 export function useUpdateCourseMutation() {
+  const { t } = useTranslation('courses')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -83,13 +80,14 @@ export function useUpdateCourseMutation() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: coursesKeys.lists() })
       queryClient.invalidateQueries({ queryKey: coursesKeys.detail(variables.id) })
-      toast.success('Course updated')
+      toast.success(t('toasts.updated'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to update course')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.updateFailed'))),
   })
 }
 
 export function useSetCourseStatusMutation() {
+  const { t } = useTranslation('courses')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -98,9 +96,13 @@ export function useSetCourseStatusMutation() {
       queryClient.invalidateQueries({ queryKey: coursesKeys.lists() })
       queryClient.invalidateQueries({ queryKey: coursesKeys.detail(variables.id) })
       toast.success(
-        data.status === 'PUBLISHED' ? 'Course published' : data.status === 'ARCHIVED' ? 'Course archived' : 'Course moved to draft',
+        data.status === 'PUBLISHED'
+          ? t('toasts.published')
+          : data.status === 'ARCHIVED'
+            ? t('toasts.archived')
+            : t('toasts.movedToDraft'),
       )
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to update status')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.statusFailed'))),
   })
 }

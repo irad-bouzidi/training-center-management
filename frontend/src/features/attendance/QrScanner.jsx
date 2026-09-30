@@ -1,5 +1,6 @@
 import { Html5Qrcode } from 'html5-qrcode'
 import { useEffect, useId, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const SCAN_CONFIG = { fps: 10, qrbox: { width: 240, height: 240 } }
 
@@ -30,8 +31,11 @@ export function parseCheckInUrl(text) {
  * when it unmounts, which is exactly what an effect is for.
  */
 export function QrScanner({ onScan }) {
+  const { t } = useTranslation('attendance')
   const elementId = useId().replace(/:/g, '')
-  const [error, setError] = useState(null)
+  // Holds whether the camera failed, not the message, so the text follows
+  // a language switch.
+  const [cameraFailed, setCameraFailed] = useState(false)
 
   useEffect(() => {
     const scanner = new Html5Qrcode(elementId)
@@ -49,9 +53,7 @@ export function QrScanner({ onScan }) {
       .then(() => {
         started = true
       })
-      .catch(() =>
-        setError('This device’s camera isn’t available. Open the link from your camera app, or paste the code below.'),
-      )
+      .catch(() => setCameraFailed(true))
 
     return () => {
       if (started) {
@@ -65,7 +67,7 @@ export function QrScanner({ onScan }) {
   return (
     <div className="space-y-2">
       <div id={elementId} className="overflow-hidden rounded-md border" />
-      {error && <p className="text-sm text-muted-foreground">{error}</p>}
+      {cameraFailed && <p className="text-sm text-muted-foreground">{t('scanner.cameraUnavailable')}</p>}
     </div>
   )
 }

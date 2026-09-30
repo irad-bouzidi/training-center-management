@@ -1,0 +1,960 @@
+{
+  "common": {
+    "appName": "Gestion du centre de formation",
+    "language": {
+      "label": "Langue",
+      "en": "English",
+      "fr": "Français"
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "confirm": "Confirmer",
+      "back": "Retour",
+      "search": "Rechercher",
+      "retry": "Réessayer",
+      "previous": "Précédent",
+      "next": "Suivant"
+    },
+    "states": {
+      "loading": "Chargement…",
+      "error": "Une erreur est survenue",
+      "empty": "Rien à afficher pour le moment"
+    },
+    "pagination": {
+      "pageOf": "Page {{page, number}} sur {{total, number}}"
+    },
+    "errors": {
+      "generic": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "enums": {
+      "role": {
+        "ADMIN": "Administrateur",
+        "TRAINER": "Formateur",
+        "STUDENT": "Étudiant"
+      },
+      "accountStatus": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif"
+      },
+      "courseStatus": {
+        "DRAFT": "Brouillon",
+        "PUBLISHED": "Publiée",
+        "ARCHIVED": "Archivée"
+      },
+      "enrollmentStatus": {
+        "PENDING": "En attente",
+        "APPROVED": "Approuvée",
+        "REJECTED": "Refusée",
+        "CANCELLED": "Annulée",
+        "COMPLETED": "Terminée"
+      },
+      "sessionStatus": {
+        "SCHEDULED": "Planifiée",
+        "CANCELLED": "Annulée",
+        "COMPLETED": "Terminée"
+      },
+      "attendanceStatus": {
+        "PRESENT": "Présent",
+        "LATE": "En retard",
+        "ABSENT": "Absent"
+      },
+      "paymentStatus": {
+        "PENDING": "En attente",
+        "PARTIAL": "Partiel",
+        "PAID": "Payé",
+        "OVERDUE": "En retard"
+      },
+      "assessmentType": {
+        "EXAM": "Examen",
+        "ASSIGNMENT": "Devoir",
+        "QUIZ": "Quiz",
+        "PROJECT": "Projet"
+      },
+      "all": "Tous"
+    }
+  },
+  "ui": {
+    "close": "Fermer"
+  },
+  "layout": {
+    "roles": {
+      "admin": "Administrateur",
+      "trainer": "Formateur",
+      "student": "Étudiant"
+    },
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "users": "Utilisateurs",
+      "courses": "Formations",
+      "students": "Étudiants",
+      "enrollments": "Inscriptions",
+      "schedule": "Planning",
+      "payments": "Paiements",
+      "myCourses": "Mes formations",
+      "courseCatalog": "Catalogue des formations",
+      "myEnrollments": "Mes inscriptions",
+      "myPayments": "Mes paiements",
+      "checkIn": "Pointer",
+      "myAttendance": "Mes présences",
+      "myGrades": "Mes notes",
+      "myCertificates": "Mes certificats"
+    },
+    "comingSoon": "Bientôt disponible",
+    "logOut": "Se déconnecter"
+  },
+  "auth": {
+    "title": "Connexion",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "submitting": "Connexion en cours…",
+    "invalidCredentials": "E-mail ou mot de passe incorrect",
+    "validation": {
+      "emailRequired": "L’e-mail est obligatoire",
+      "emailInvalid": "Saisissez une adresse e-mail valide",
+      "passwordRequired": "Le mot de passe est obligatoire"
+    }
+  },
+  "attendance": {
+    "columns": {
+      "student": "Étudiant",
+      "email": "E-mail",
+      "course": "Formation",
+      "present": "Présent",
+      "late": "En retard",
+      "absent": "Absent",
+      "marked": "Séances pointées",
+      "rate": "Taux",
+      "attendance": "Présence",
+      "recorded": "Enregistré",
+      "date": "Date",
+      "time": "Horaire",
+      "status": "Statut",
+      "method": "Mode"
+    },
+    "markedOfSessions": "{{marked}} / {{total}}",
+    "method": {
+      "QR": "QR",
+      "MANUAL": "Manuel"
+    },
+    "reportPage": {
+      "title": "Présence",
+      "courseLabel": "{{name}} ({{code}})",
+      "fallbackDescription": "Rapport de présence de la formation"
+    },
+    "courseReport": {
+      "forbidden": "Le rapport de présence est réservé aux administrateurs et aux formateurs de la formation.",
+      "loadError": "Impossible de charger ce rapport.",
+      "sessionCount_one": "{{count, number}} séance",
+      "sessionCount_other": "{{count, number}} séances",
+      "explanation": "Les retards sont comptés comme des présences, et chaque taux est calculé sur les séances pour lesquelles l’étudiant a effectivement été pointé.",
+      "empty": "Aucune inscription n’a encore été approuvée pour cette formation.",
+      "sessionCount_many": "{{count, number}} séances"
+    },
+    "markPage": {
+      "forbidden": "Vous ne pouvez faire l’appel que pour les séances qui vous sont attribuées.",
+      "loadError": "Impossible de charger cette séance.",
+      "showQr": "Afficher le code QR",
+      "markAllPresent": "Marquer tous présents",
+      "empty": "Aucune inscription n’a encore été approuvée pour cette formation : il n’y a pas de liste d’appel.",
+      "rowLabel": "Présence de {{name}}",
+      "notRecorded": "Non enregistré",
+      "markedCount": "{{marked}} sur {{total}} pointés",
+      "markedCountUnsaved": "{{marked}} sur {{total}} pointés · modifications non enregistrées"
+    },
+    "myPage": {
+      "title": "Mes présences",
+      "description": "Toutes les séances pour lesquelles vous avez été pointé. Les retards comptent comme des présences.",
+      "loadError": "Impossible de charger vos présences.",
+      "empty": "Aucune présence n’a encore été enregistrée pour vous.",
+      "byCourse": "Par formation",
+      "sessions": "Séances"
+    },
+    "checkIn": {
+      "notStudentTitle": "Le pointage est réservé aux étudiants",
+      "notStudentDescription": "L’appel de vos séances se fait depuis le planning, où vous pouvez aussi afficher le code QR.",
+      "goToSchedule": "Aller au planning",
+      "successTitle": "Présence confirmée",
+      "summaryWithDetails": "Présence enregistrée pour {{details}}",
+      "summary": "Présence enregistrée",
+      "recordedAt": "Enregistré à {{time}}. Vous n’avez rien d’autre à faire : votre formateur le voit immédiatement.",
+      "backToSchedule": "Retour à mon planning",
+      "title": "Pointer",
+      "pending": "Pointage en cours…",
+      "instructions": "Scannez le code affiché par votre formateur.",
+      "manualLabel": "Impossible de scanner ? Collez le lien de pointage",
+      "manualPlaceholderWithSession": "Lien ou code de pointage",
+      "manualPlaceholder": "https://…/attend/…?token=…",
+      "submit": "Pointer",
+      "invalidWithSession": "Ce n’est pas un lien ou un code de pointage.",
+      "invalid": "Collez le lien de pointage complet : un code seul n’indique pas la séance concernée."
+    },
+    "failure": {
+      "expiredTitle": "Ce code n’est plus valide",
+      "expiredDetail": "Demandez à votre formateur d’en afficher un nouveau.",
+      "forbiddenTitle": "Vous n’êtes pas inscrit à cette formation",
+      "forbiddenDetail": "Le pointage est réservé aux étudiants inscrits.",
+      "wrongSessionTitle": "Ce code ne correspond pas à cette séance",
+      "wrongSessionDetail": "Scannez à nouveau le code affiché.",
+      "genericTitle": "Échec du pointage",
+      "genericDetail": "Réessayez dans un instant."
+    },
+    "scanner": {
+      "cameraUnavailable": "La caméra de cet appareil n’est pas disponible. Ouvrez le lien depuis l’application appareil photo, ou collez le code ci-dessous."
+    },
+    "qrDialog": {
+      "title": "Scannez pour pointer",
+      "producing": "Génération du code…",
+      "imageAlt": "Code QR pour {{course}}",
+      "expiresIn": "Expire dans <countdown>{{countdown}}</countdown>",
+      "expired": "Ce code a expiré : affichez-en un nouveau.",
+      "newCode": "Nouveau code"
+    },
+    "studentTab": {
+      "empty": "Aucune inscription de cet étudiant n’a encore été approuvée : il n’y a aucune séance à suivre.",
+      "overall": "Taux de présence global : <rate>{{rate}}</rate> — les retards comptent comme des présences, et seules les séances pour lesquelles l’étudiant a été pointé sont prises en compte.",
+      "forbidden": "Seuls les formateurs de cette formation et les administrateurs peuvent consulter ses présences",
+      "unavailable": "Indisponible",
+      "completedNotInReport": "Formation terminée : non incluse dans le rapport de présence",
+      "notOnRoster": "Ne figure pas sur la liste d’appel de cette formation"
+    },
+    "toasts": {
+      "saved": "Présences enregistrées",
+      "saveFailed": "Impossible d’enregistrer les présences",
+      "qrFailed": "Impossible de générer un code QR"
+    }
+  },
+  "certificates": {
+    "blockingReason": "Cette inscription est {{status}}. Elle doit être marquée comme terminée avant qu’un certificat puisse être délivré.",
+    "table": {
+      "course": "Formation",
+      "number": "N° de certificat",
+      "issued": "Délivré le",
+      "download": "Télécharger le PDF"
+    },
+    "mine": {
+      "title": "Mes certificats",
+      "description": "Les formations que vous avez terminées et les certificats qui vous ont été délivrés.",
+      "empty": "Aucun certificat ne vous a encore été délivré."
+    },
+    "studentTab": {
+      "issued": "Certificats délivrés",
+      "issuedEmpty": "Aucun certificat n’a encore été délivré à cet étudiant.",
+      "eligible": "Formations éligibles à la certification",
+      "allCertified": "Toutes les formations auxquelles cet étudiant est inscrit ont été certifiées.",
+      "course": "Formation",
+      "enrollment": "Inscription",
+      "notTheirs": "Seul le formateur de cette formation ou un administrateur peut en délivrer le certificat.",
+      "generate": "Générer le certificat",
+      "issueFailed": "Ce certificat n’a pas pu être délivré"
+    },
+    "toasts": {
+      "issued": "Certificat {{number}} délivré",
+      "downloadFailed": "Impossible de télécharger le certificat"
+    }
+  },
+  "courses": {
+    "shared": {
+      "noDescription": "Aucune description fournie.",
+      "unassigned": "Non attribué",
+      "hours": "{{count, number}} h",
+      "gradebook": "Carnet de notes",
+      "count_one": "{{count, number}} formation",
+      "count_other": "{{count, number}} formations",
+      "count_many": "{{count, number}} formations"
+    },
+    "list": {
+      "title": "Formations",
+      "newCourse": "Nouvelle formation",
+      "searchPlaceholder": "Rechercher par nom ou code…",
+      "categoryPlaceholder": "Catégorie…",
+      "allStatuses": "Tous les statuts",
+      "empty": "Aucune formation trouvée.",
+      "columns": {
+        "code": "Code",
+        "name": "Nom",
+        "trainer": "Formateur",
+        "capacity": "Capacité",
+        "price": "Prix",
+        "status": "Statut"
+      }
+    },
+    "catalog": {
+      "title": "Catalogue des formations",
+      "searchPlaceholder": "Rechercher une formation…",
+      "empty": "Aucune formation publiée trouvée.",
+      "enrolled": "{{approved}}/{{capacity}} inscrits"
+    },
+    "mine": {
+      "title": "Mes formations",
+      "description": "Toutes les formations dont vous êtes le formateur, quel que soit leur statut.",
+      "empty": "Aucune formation ne vous a encore été attribuée.",
+      "columns": {
+        "code": "Code",
+        "name": "Nom",
+        "category": "Catégorie",
+        "enrolled": "Inscrits",
+        "status": "Statut"
+      }
+    },
+    "detail": {
+      "notFound": "Formation introuvable.",
+      "fields": {
+        "trainer": "Formateur",
+        "category": "Catégorie",
+        "duration": "Durée",
+        "capacity": "Capacité",
+        "price": "Prix",
+        "created": "Créée le"
+      },
+      "tabs": {
+        "schedule": "Planning",
+        "enrollments": "Inscriptions",
+        "attendance": "Présence"
+      }
+    },
+    "form": {
+      "createTitle": "Nouvelle formation",
+      "editTitle": "Modifier la formation",
+      "createDescription": "Créez une nouvelle formation, puis publiez-la lorsqu’elle est prête.",
+      "editDescription": "Modifiez {{name}}.",
+      "fields": {
+        "code": "Code",
+        "name": "Nom",
+        "description": "Description",
+        "durationHours": "Durée (heures)",
+        "capacity": "Capacité",
+        "category": "Catégorie",
+        "price": "Prix",
+        "trainer": "Formateur"
+      },
+      "trainerPlaceholder": "Sélectionnez un formateur",
+      "noTrainer": "Aucun formateur attribué",
+      "errors": {
+        "codeRequired": "Le code est obligatoire",
+        "nameRequired": "Le nom est obligatoire",
+        "durationRequired": "La durée est obligatoire",
+        "capacityRequired": "La capacité est obligatoire",
+        "priceRequired": "Le prix est obligatoire",
+        "wholeNumber": "La valeur doit être un nombre entier",
+        "positive": "La valeur doit être supérieure à zéro",
+        "nonNegative": "La valeur doit être supérieure ou égale à zéro"
+      }
+    },
+    "rowActions": {
+      "menuLabel": "Actions pour {{name}}",
+      "viewDetails": "Voir les détails",
+      "publishDescription": "{{name}} sera visible dans le catalogue partagé.",
+      "unpublishDescription": "{{name}} n’apparaîtra plus dans le catalogue partagé."
+    },
+    "transitions": {
+      "publish": "Publier",
+      "archive": "Archiver",
+      "republish": "Republier",
+      "publishConfirm": "Publier la formation ?",
+      "archiveConfirm": "Archiver la formation ?",
+      "republishConfirm": "Republier la formation ?"
+    },
+    "toasts": {
+      "created": "Formation créée",
+      "createFailed": "Impossible de créer la formation",
+      "updated": "Formation mise à jour",
+      "updateFailed": "Impossible de mettre à jour la formation",
+      "published": "Formation publiée",
+      "archived": "Formation archivée",
+      "movedToDraft": "Formation repassée en brouillon",
+      "statusFailed": "Impossible de mettre à jour le statut"
+    }
+  },
+  "dashboard": {
+    "welcome": "Bienvenue, {{name}}",
+    "admin": {
+      "description": "L’activité du centre en ce moment.",
+      "sections": {
+        "people": "Personnes et formations",
+        "teaching": "Enseignement",
+        "money": "Finances"
+      },
+      "activeStudents": "Étudiants actifs",
+      "activeTrainers": "Formateurs actifs",
+      "publishedCourses": "Formations publiées",
+      "pendingEnrollments": "Inscriptions en attente",
+      "pendingWaiting": "En attente d’une décision",
+      "pendingNone": "Rien en attente",
+      "upcomingSessions": "Séances à venir",
+      "next7Days": "7 prochains jours",
+      "averageAttendance": "Taux de présence moyen",
+      "acrossMarkedSessions": "Sur toutes les séances pointées",
+      "certificatesIssued": "Certificats délivrés",
+      "thisMonth": "Ce mois-ci",
+      "outstandingBalance": "Reste à payer",
+      "owedAcrossInvoices": "Dû sur l’ensemble des factures",
+      "overdueInvoices": "Factures en retard",
+      "overduePast": "Échéance dépassée",
+      "overdueNone": "Aucune échéance dépassée"
+    },
+    "trainer": {
+      "description": "Vos formations, et ce qui attend votre action.",
+      "myCourses": "Mes formations",
+      "upcomingSessions": "Séances à venir",
+      "next7Days": "7 prochains jours",
+      "sessionsToMark": "Appels à faire",
+      "sessionsToMarkPending": "Séances terminées sans présence enregistrée",
+      "sessionsToMarkNone": "Les présences sont à jour",
+      "studentsToGrade": "Étudiants à noter",
+      "studentsToGradePending": "Aucune note enregistrée pour eux",
+      "studentsToGradeNone": "Tout le monde a une note"
+    },
+    "student": {
+      "description": "Où vous en êtes dans vos formations.",
+      "activeEnrollments": "Inscriptions actives",
+      "totalEnrollments": "{{total}} au total",
+      "attendance": "Taux de présence",
+      "acrossMarkedSessions": "Sur toutes les séances pointées",
+      "overallGrade": "Note globale",
+      "balanceOwed": "Reste à payer",
+      "stillToPay": "Montant à régler",
+      "nothingOutstanding": "Rien à payer",
+      "certificates": "Certificats"
+    }
+  },
+  "enrollments": {
+    "shared": {
+      "count_one": "{{count, number}} inscription",
+      "count_other": "{{count, number}} inscriptions",
+      "count_many": "{{count, number}} inscriptions"
+    },
+    "enroll": {
+      "button": "S’inscrire",
+      "blocked": {
+        "pending": "En attente d’approbation",
+        "approved": "Déjà inscrit",
+        "completed": "Terminée",
+        "rejected": "Refusée",
+        "cancelled": "Annulée",
+        "full": "Complet"
+      }
+    },
+    "complete": {
+      "button": "Marquer comme terminée",
+      "title": "Marquer l’inscription comme terminée ?",
+      "description": "{{student}} a terminé {{course}}. Une fois terminée, l’inscription ne pourra plus être rouverte, et un certificat pourra être délivré si l’assiduité de l’étudiant le permet.",
+      "thisStudent": "Cet étudiant"
+    },
+    "decisions": {
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "approveTitle": "Approuver l’inscription ?",
+      "rejectTitle": "Refuser l’inscription ?",
+      "approveDescription": "{{student}} obtiendra une place dans {{course}}.",
+      "rejectDescription": "{{student}} ne sera pas inscrit à {{course}} et ne pourra pas refaire de demande."
+    },
+    "courseTab": {
+      "requestedOn": "Demande envoyée le {{date}}",
+      "notEnrolled": "Vous n’êtes pas inscrit à cette formation.",
+      "rosterRestricted": "Seuls le formateur de cette formation et les administrateurs peuvent voir les inscrits.",
+      "empty": "Personne ne s’est encore inscrit à cette formation.",
+      "columns": {
+        "student": "Étudiant",
+        "status": "Statut",
+        "requested": "Date de demande"
+      }
+    },
+    "approvals": {
+      "title": "Inscriptions",
+      "allStatuses": "Tous les statuts",
+      "emptyPending": "Aucune demande d’inscription en attente de décision.",
+      "empty": "Aucune inscription trouvée.",
+      "columns": {
+        "student": "Étudiant",
+        "course": "Formation",
+        "status": "Statut",
+        "requested": "Date de demande",
+        "decidedBy": "Traitée par"
+      }
+    },
+    "toasts": {
+      "requested": "Demande d’inscription envoyée",
+      "requestFailed": "Impossible d’envoyer la demande d’inscription",
+      "approved": "Inscription approuvée",
+      "rejected": "Inscription refusée",
+      "decideFailed": "Impossible de mettre à jour l’inscription",
+      "completed": "Inscription marquée comme terminée",
+      "completeFailed": "Impossible de marquer l’inscription comme terminée",
+      "cancelled": "Inscription annulée",
+      "cancelFailed": "Impossible d’annuler l’inscription"
+    }
+  },
+  "grades": {
+    "courseList": {
+      "overall": "Moyenne générale : <strong>{{average}}</strong> — chaque évaluation est pondérée par son coefficient dans la note finale.",
+      "empty": "Aucune note enregistrée pour le moment."
+    },
+    "table": {
+      "assessment": "Évaluation",
+      "type": "Type",
+      "score": "Note",
+      "weight": "Coefficient",
+      "result": "Résultat",
+      "gradedBy": "Notée par",
+      "scoreOutOf": "{{score}} / {{max}}"
+    },
+    "form": {
+      "addTitle": "Ajouter une évaluation",
+      "editTitle": "Modifier l’évaluation",
+      "saveChanges": "Enregistrer les modifications",
+      "saveFailed": "Impossible d’enregistrer l’évaluation",
+      "type": "Type",
+      "title": "Intitulé",
+      "titlePlaceholder": "Examen de mi-parcours",
+      "score": "Note",
+      "maxScore": "Sur",
+      "weight": "Coefficient",
+      "weightHint": "Les coefficients représentent la part de chaque évaluation dans la note finale. Leur total n’a pas besoin d’atteindre 100 : la moyenne est calculée sur les coefficients déjà saisis, ce qui permet de noter une formation avant que toutes les évaluations soient définies.",
+      "comments": "Commentaires",
+      "errors": {
+        "titleRequired": "L’intitulé est obligatoire",
+        "scoreRequired": "La note est obligatoire",
+        "scoreNegative": "La note ne peut pas être négative",
+        "maxScoreRequired": "Le barème est obligatoire",
+        "maxScorePositive": "Le barème doit être supérieur à zéro",
+        "weightRequired": "Le coefficient est obligatoire",
+        "weightPositive": "Le coefficient doit être supérieur à zéro",
+        "scoreExceedsMax": "La note ne peut pas dépasser le barème",
+        "titleTooLong": "Le titre ne doit pas dépasser 200 caractères"
+      }
+    },
+    "gradebook": {
+      "title": "Carnet de notes",
+      "course": "{{name}} ({{code}})",
+      "forbidden": "Le carnet de notes est réservé aux administrateurs et au formateur de la formation.",
+      "loadFailed": "Impossible de charger ce carnet de notes.",
+      "noStudents": "Aucune inscription n’a encore été approuvée pour cette formation.",
+      "expand": "Afficher les notes de {{name}}",
+      "collapse": "Masquer les notes de {{name}}",
+      "assessmentCount_one": "{{count, number}} évaluation",
+      "assessmentCount_other": "{{count, number}} évaluations",
+      "studentEmpty": "Aucune note enregistrée pour cet étudiant pour le moment.",
+      "delete": {
+        "title": "Supprimer cette évaluation ?",
+        "description": "L’évaluation « {{title}} » de {{name}} sera supprimée et sa moyenne recalculée sans elle. Cette action est irréversible.",
+        "cancel": "Conserver",
+        "confirm": "Supprimer"
+      },
+      "assessmentCount_many": "{{count, number}} évaluations"
+    },
+    "myGrades": {
+      "title": "Mes notes",
+      "description": "Toutes les évaluations enregistrées à votre nom, formation par formation.",
+      "empty": "Aucune note ne vous a encore été attribuée."
+    },
+    "toasts": {
+      "created": "Évaluation enregistrée",
+      "updated": "Évaluation mise à jour",
+      "deleted": "Évaluation supprimée",
+      "deleteFailed": "Impossible de supprimer l’évaluation"
+    }
+  },
+  "payments": {
+    "myPayments": {
+      "title": "Mes paiements",
+      "description": "Ce que vous devez et ce que vous avez réglé, formation par formation.",
+      "outstandingBalance": "Reste à payer",
+      "overdue": "Paiement en retard",
+      "empty": "Vous n’avez aucune facture : vous ne devez rien."
+    },
+    "list": {
+      "title": "Paiements",
+      "filters": {
+        "status": "Statut",
+        "allStatuses": "Tous les statuts",
+        "course": "Formation",
+        "allCourses": "Toutes les formations",
+        "courseOption": "{{name}} ({{code}})",
+        "student": "Étudiant",
+        "allStudents": "Tous les étudiants"
+      },
+      "empty": "Aucune facture ne correspond à ces filtres.",
+      "summary_one": "{{count, number}} facture · {{amount}} restant à payer sur cette page",
+      "summary_other": "{{count, number}} factures · {{amount}} restant à payer sur cette page",
+      "summary_many": "{{count, number}} factures · {{amount}} restant à payer sur cette page"
+    },
+    "table": {
+      "student": "Étudiant",
+      "course": "Formation",
+      "amountDue": "Montant dû",
+      "amountPaid": "Montant réglé",
+      "outstanding": "Reste à payer",
+      "dueDate": "Date d’échéance",
+      "status": "Statut",
+      "recordPayment": "Enregistrer un paiement"
+    },
+    "dialog": {
+      "title": "Enregistrer un paiement",
+      "description": "{{student}} · {{course}} · {{outstanding}} restant à payer sur {{due}}",
+      "amount": "Montant",
+      "method": "Mode de paiement",
+      "methodPlaceholder": "Espèces, carte, virement…",
+      "notes": "Remarques",
+      "submit": "Enregistrer le paiement",
+      "submitting": "Enregistrement…",
+      "failed": "Impossible d’enregistrer le paiement",
+      "errors": {
+        "amountRequired": "Le montant est obligatoire",
+        "amountPositive": "Le montant doit être supérieur à zéro",
+        "amountTooHigh": "Il ne reste que {{amount}} à payer sur cette facture",
+        "methodTooLong": "Le mode de paiement ne doit pas dépasser 50 caractères"
+      }
+    },
+    "studentTab": {
+      "adminOnly": "Seuls les administrateurs peuvent consulter les factures d’un étudiant.",
+      "outstanding": "Reste à payer : <strong>{{amount}}</strong>",
+      "empty": "Cet étudiant n’a aucune facture."
+    },
+    "toasts": {
+      "settled": "Facture soldée",
+      "recorded": "Paiement enregistré"
+    }
+  },
+  "schedule": {
+    "newSession": "Nouvelle séance",
+    "columns": {
+      "date": "Date",
+      "time": "Horaire",
+      "course": "Formation",
+      "classroom": "Salle",
+      "trainer": "Formateur",
+      "status": "Statut"
+    },
+    "courseTab": {
+      "empty": "Aucune séance n’est encore planifiée pour cette formation."
+    },
+    "studentTab": {
+      "notApproved": "Aucune inscription de cet étudiant n’a encore été approuvée : aucune séance n’est donc prévue pour lui.",
+      "trainerScope": "Seules les séances que vous animez sont affichées.",
+      "loadFailed": "Certaines formations de cet étudiant n’ont pas pu être chargées.",
+      "upcoming": "À venir",
+      "upcomingEmpty": "Aucune séance prévue à partir d’aujourd’hui.",
+      "past": "Passées",
+      "pastEmpty": "Aucune séance n’a encore eu lieu."
+    },
+    "list": {
+      "title": "Planning",
+      "from": "Du",
+      "to": "Au",
+      "course": "Formation",
+      "trainer": "Formateur",
+      "allCourses": "Toutes les formations",
+      "allTrainers": "Tous les formateurs",
+      "empty": "Aucune séance planifiée sur cette période.",
+      "count_one": "{{count, number}} séance",
+      "count_other": "{{count, number}} séances",
+      "count_many": "{{count, number}} séances"
+    },
+    "actions": {
+      "when": "{{date}}, {{time}}",
+      "menuLabel": "Actions pour {{course}} le {{when}}",
+      "takeAttendance": "Faire l’appel",
+      "markCompleted": "Marquer comme terminée",
+      "cancelSession": "Annuler la séance",
+      "completeConfirm": {
+        "title": "Marquer la séance comme terminée ?",
+        "description": "La séance de {{course}} du {{when}} sera enregistrée comme dispensée. Cette action est irréversible."
+      },
+      "cancelConfirm": {
+        "title": "Annuler la séance ?",
+        "description": "La séance de {{course}} du {{when}} sera annulée, ce qui libérera {{classroom}} et son formateur pour d’autres réservations. Une séance annulée ne peut pas être rouverte.",
+        "keep": "Conserver"
+      }
+    },
+    "form": {
+      "createTitle": "Nouvelle séance",
+      "editTitle": "Modifier la séance",
+      "createDescription": "Planifiez une séance de formation avec un formateur et une salle.",
+      "editDescription": "Reprogrammez la séance de {{course}}.",
+      "course": "Formation",
+      "coursePlaceholder": "Sélectionnez une formation",
+      "trainer": "Formateur",
+      "trainerPlaceholder": "Sélectionnez un formateur",
+      "classroom": "Salle",
+      "date": "Date",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "saveFailed": "Impossible d’enregistrer la séance",
+      "errors": {
+        "courseRequired": "La formation est obligatoire",
+        "trainerRequired": "Le formateur est obligatoire",
+        "classroomRequired": "La salle est obligatoire",
+        "dateRequired": "La date est obligatoire",
+        "startTimeRequired": "L’heure de début est obligatoire",
+        "endTimeRequired": "L’heure de fin est obligatoire",
+        "endAfterStart": "L’heure de fin doit être postérieure à l’heure de début"
+      }
+    },
+    "toasts": {
+      "created": "Séance planifiée",
+      "updated": "Séance mise à jour",
+      "cancelled": "Séance annulée",
+      "completed": "Séance marquée comme terminée",
+      "statusFailed": "Impossible de mettre à jour la séance"
+    }
+  },
+  "students": {
+    "list": {
+      "title": "Étudiants",
+      "searchPlaceholder": "Rechercher par nom…",
+      "allStatuses": "Tous les statuts",
+      "columns": {
+        "name": "Nom",
+        "email": "E-mail",
+        "activeEnrollments": "Inscriptions actives",
+        "status": "Statut"
+      },
+      "empty": "Aucun étudiant trouvé.",
+      "count_one": "{{count, number}} étudiant",
+      "count_other": "{{count, number}} étudiants",
+      "count_many": "{{count, number}} étudiants"
+    },
+    "summary": {
+      "notFound": "Étudiant introuvable.",
+      "tabs": {
+        "overview": "Aperçu",
+        "enrollments": "Inscriptions",
+        "schedule": "Planning",
+        "attendance": "Présence",
+        "grades": "Notes",
+        "payments": "Paiements",
+        "certificates": "Certificats"
+      },
+      "fields": {
+        "phone": "Téléphone",
+        "memberSince": "Membre depuis le"
+      },
+      "stats": {
+        "totalEnrollments": "Inscriptions au total",
+        "activeEnrollments": "Inscriptions actives",
+        "attendanceRate": "Taux de présence",
+        "overallGrade": "Note globale",
+        "paymentBalance": "Reste à payer"
+      },
+      "enrollments": {
+        "empty": "Aucune inscription pour le moment.",
+        "columns": {
+          "course": "Formation",
+          "status": "Statut",
+          "enrolled": "Date d’inscription",
+          "decided": "Date de décision",
+          "decidedBy": "Traitée par"
+        }
+      },
+      "grades": {
+        "empty": "Aucune note n’a encore été attribuée à cet étudiant."
+      }
+    },
+    "myEnrollments": {
+      "title": "Mes inscriptions",
+      "columns": {
+        "course": "Formation",
+        "status": "Statut",
+        "requested": "Date de demande",
+        "decided": "Date de décision"
+      },
+      "empty": "Vous n’êtes inscrit à aucune formation pour le moment : parcourez le catalogue pour commencer.",
+      "count_one": "{{count, number}} inscription",
+      "count_other": "{{count, number}} inscriptions",
+      "cancelConfirm": {
+        "title": "Annuler l’inscription ?",
+        "description": "Votre inscription à {{course}} sera retirée et vous ne pourrez plus demander à suivre cette formation.",
+        "keep": "Conserver",
+        "confirm": "Annuler l’inscription"
+      },
+      "count_many": "{{count, number}} inscriptions"
+    }
+  },
+  "users": {
+    "fields": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "role": "Rôle",
+      "status": "Statut",
+      "created": "Créé le"
+    },
+    "list": {
+      "title": "Utilisateurs",
+      "newUser": "Nouvel utilisateur",
+      "searchPlaceholder": "Rechercher par nom…",
+      "allRoles": "Tous les rôles",
+      "allStatuses": "Tous les statuts",
+      "columns": {
+        "name": "Nom"
+      },
+      "empty": "Aucun utilisateur trouvé.",
+      "count_one": "{{count, number}} utilisateur",
+      "count_other": "{{count, number}} utilisateurs",
+      "count_many": "{{count, number}} utilisateurs"
+    },
+    "detail": {
+      "title": "Détails de l’utilisateur",
+      "description": "Informations du compte"
+    },
+    "form": {
+      "createTitle": "Nouvel utilisateur",
+      "editTitle": "Modifier l’utilisateur",
+      "createDescription": "Créez un compte administrateur, formateur ou étudiant.",
+      "editDescription": "Modifiez le compte de {{name}}.",
+      "temporaryPassword": "Mot de passe temporaire",
+      "rolePlaceholder": "Sélectionnez un rôle",
+      "statusHint": "Les utilisateurs inactifs ne peuvent pas se connecter.",
+      "errors": {
+        "firstNameRequired": "Le prénom est obligatoire",
+        "lastNameRequired": "Le nom est obligatoire",
+        "emailRequired": "L’e-mail est obligatoire",
+        "emailInvalid": "Saisissez une adresse e-mail valide",
+        "roleRequired": "Le rôle est obligatoire",
+        "passwordRequired": "Le mot de passe est obligatoire"
+      }
+    },
+    "actions": {
+      "menuLabel": "Actions pour {{name}}",
+      "view": "Voir les détails",
+      "activate": "Activer",
+      "deactivate": "Désactiver",
+      "resetPassword": "Réinitialiser le mot de passe"
+    },
+    "statusConfirm": {
+      "activateTitle": "Activer l’utilisateur ?",
+      "deactivateTitle": "Désactiver l’utilisateur ?",
+      "activateDescription": "{{name}} pourra de nouveau se connecter.",
+      "deactivateDescription": "{{name}} ne pourra plus se connecter."
+    },
+    "resetConfirm": {
+      "title": "Réinitialiser le mot de passe ?",
+      "description": "Un nouveau mot de passe temporaire sera généré pour {{name}} et son mot de passe actuel ne sera plus valide."
+    },
+    "tempPassword": {
+      "title": "Mot de passe temporaire",
+      "description": "Transmettez-le à {{name}} par un autre canal : il ne sera plus affiché.",
+      "done": "Terminé"
+    },
+    "toasts": {
+      "created": "Utilisateur créé",
+      "createFailed": "Impossible de créer l’utilisateur",
+      "updated": "Utilisateur mis à jour",
+      "updateFailed": "Impossible de mettre à jour l’utilisateur",
+      "activated": "Utilisateur activé",
+      "deactivated": "Utilisateur désactivé",
+      "statusFailed": "Impossible de mettre à jour le statut",
+      "resetPasswordFailed": "Impossible de réinitialiser le mot de passe"
+    }
+  },
+  "serverErrors": {
+    "validationFailed": "La validation a échoué",
+    "malformedRequest": "Le contenu de la requête est manquant ou mal formé",
+    "invalidValue": "« {{field}} » n’est pas une valeur valide",
+    "invalidCredentials": "E-mail ou mot de passe incorrect",
+    "forbidden": "Vous n’avez pas l’autorisation d’effectuer cette action",
+    "unexpected": "Une erreur inattendue est survenue",
+    "authenticationRequired": "Vous devez être connecté pour accéder à cette ressource",
+    "notFound": "L’élément demandé est introuvable",
+    "noCourse": "Aucune formation avec l’identifiant {{id}}",
+    "noUser": "Aucun utilisateur avec l’identifiant {{id}}",
+    "noSession": "Aucune séance avec l’identifiant {{id}}",
+    "noPayment": "Aucun paiement avec l’identifiant {{id}}",
+    "noGrade": "Aucune note avec l’identifiant {{id}}",
+    "noEnrollment": "Aucune inscription avec l’identifiant {{id}}",
+    "noCertificate": "Aucun certificat avec l’identifiant {{id}}",
+    "emailTaken": "Un utilisateur avec cet e-mail existe déjà",
+    "passwordRequired": "Le mot de passe est obligatoire",
+    "notAStudent": "L’utilisateur {{id}} n’est pas un étudiant",
+    "courseCodeTaken": "Une formation avec ce code existe déjà",
+    "courseHasEnrollments": "Impossible de supprimer une formation qui a des inscriptions",
+    "primaryTrainerNotTrainer": "Le formateur principal doit être un utilisateur ayant le rôle Formateur",
+    "courseNotOpen": "Cette formation n’est pas ouverte aux inscriptions",
+    "courseFull": "Cette formation a atteint sa capacité maximale",
+    "alreadyEnrolled": "L’étudiant est déjà inscrit à cette formation",
+    "studentIdRequired": "Un étudiant doit être indiqué lorsqu’un administrateur effectue l’inscription",
+    "studentNotStudent": "L’étudiant doit être un utilisateur ayant le rôle Étudiant",
+    "invalidDecision": "La décision doit être Approuvée ou Refusée",
+    "onlyPendingDecided": "Seules les inscriptions en attente peuvent être approuvées ou refusées",
+    "onlyApprovedCompleted": "Seules les inscriptions approuvées peuvent être marquées comme terminées",
+    "onlyPendingOrApprovedCancelled": "Seules les inscriptions en attente ou approuvées peuvent être annulées",
+    "trainerNotTrainer": "Le formateur doit être un utilisateur ayant le rôle Formateur",
+    "endBeforeStart": "L’heure de fin doit être postérieure à l’heure de début",
+    "invalidSessionStatus": "Le statut doit être Annulée ou Terminée",
+    "onlyScheduledRescheduled": "Seules les séances planifiées peuvent être reprogrammées",
+    "onlyScheduledCompleted": "Seules les séances planifiées peuvent être marquées comme terminées",
+    "onlyScheduledCancelled": "Seules les séances planifiées peuvent être annulées",
+    "trainerAndClassroomBooked": "Ce formateur et cette salle sont déjà réservés pour une séance qui chevauche celle-ci",
+    "trainerBooked": "Ce formateur est déjà réservé pour une séance qui chevauche celle-ci",
+    "classroomBooked": "Cette salle est déjà réservée pour une séance qui chevauche celle-ci",
+    "attendanceCancelledSession": "Impossible de faire l’appel pour une séance annulée",
+    "noEnrollmentForSession": "L’étudiant {{id}} n’a aucune inscription approuvée ou terminée dans la formation de cette séance",
+    "checkInCancelledSession": "Cette séance a été annulée : il n’y a rien à pointer",
+    "qrInvalid": "Ce code QR n’est pas valide pour cette séance",
+    "qrExpired": "Ce code QR a expiré : demandez au formateur d’en afficher un nouveau",
+    "qrReplaced": "Ce code QR a été remplacé par un plus récent : demandez le code actuel",
+    "paymentExceedsOutstanding": "Ce paiement dépasse les {{amount}} restant dus sur cette facture",
+    "scoreExceedsMax": "La note ne doit pas dépasser la note maximale",
+    "noApprovedEnrollment": "L’étudiant {{id}} n’a aucune inscription approuvée dans cette formation",
+    "certificateAlreadyIssued": "Le certificat {{number}} a déjà été délivré à cet étudiant pour cette formation",
+    "certificateNotEnrolled": "Cet étudiant n’est pas inscrit à cette formation",
+    "certificateNotCompleted": "L’inscription de cet étudiant doit être marquée comme terminée avant la délivrance d’un certificat (elle est actuellement {{status}})",
+    "certificateNoAttendance": "Aucune présence n’a été enregistrée pour cet étudiant dans cette formation : impossible de vérifier le seuil requis de {{required}}",
+    "certificateAttendanceTooLow": "Le taux de présence dans cette formation est de {{rate}}, en dessous des {{required}} requis pour un certificat",
+    "validation": {
+      "item": "{{field}} : {{message}}",
+      "separator": " ; ",
+      "notBlank": "ne doit pas être vide",
+      "notNull": "est obligatoire",
+      "email": "doit être une adresse e-mail valide",
+      "size": "doit contenir entre {{min}} et {{max}} caractères",
+      "positive": "doit être supérieur à zéro",
+      "nonNegative": "ne doit pas être négatif",
+      "min": "doit être au moins égal à {{min}}",
+      "max": "doit être au plus égal à {{max}}",
+      "sizeMax": "ne doit pas dépasser {{max}} caractères"
+    },
+    "fields": {
+      "amount": "Montant",
+      "amountDue": "Montant dû",
+      "assessmentType": "Type",
+      "capacity": "Capacité",
+      "classroom": "Salle",
+      "code": "Code",
+      "courseId": "Formation",
+      "dueDate": "Date d’échéance",
+      "durationHours": "Durée",
+      "email": "E-mail",
+      "endTime": "Heure de fin",
+      "entries": "Présences",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "maxScore": "Note maximale",
+      "name": "Nom",
+      "password": "Mot de passe",
+      "paymentMethod": "Mode de paiement",
+      "price": "Prix",
+      "role": "Rôle",
+      "score": "Note",
+      "sessionDate": "Date",
+      "sessionId": "Séance",
+      "startTime": "Heure de début",
+      "status": "Statut",
+      "studentId": "Étudiant",
+      "title": "Titre",
+      "token": "Code QR",
+      "trainerId": "Formateur",
+      "weight": "Coefficient",
+      "decision": "Décision",
+      "primaryTrainerId": "Formateur principal",
+      "phone": "Téléphone"
+    }
+  }
+}

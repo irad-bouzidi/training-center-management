@@ -6,15 +6,15 @@ import { AppShell } from './AppShell'
 // and certificates are issued from a student's summary (TCM-26). The
 // cross-cutting figures are the dashboard itself (TCM-29).
 const NAV_ITEMS = [
-  { label: 'Dashboard', to: '/admin', enabled: true },
-  { label: 'Users', to: '/admin/users', enabled: true },
-  { label: 'Courses', to: '/admin/courses', enabled: true },
-  { label: 'Students', to: '/admin/students', enabled: true },
-  { label: 'Enrollments', to: '/admin/enrollments', enabled: true },
-  { label: 'Schedule', to: '/admin/schedule', enabled: true },
-  { label: 'Payments', to: '/admin/payments', enabled: true },
+  { labelKey: 'nav.dashboard', to: '/admin', enabled: true },
+  { labelKey: 'nav.users', to: '/admin/users', enabled: true },
+  { labelKey: 'nav.courses', to: '/admin/courses', enabled: true },
+  { labelKey: 'nav.students', to: '/admin/students', enabled: true },
+  { labelKey: 'nav.enrollments', to: '/admin/enrollments', enabled: true },
+  { labelKey: 'nav.schedule', to: '/admin/schedule', enabled: true },
+  { labelKey: 'nav.payments', to: '/admin/payments', enabled: true },
 ]
 
 export function AdminLayout() {
-  return <AppShell title="Admin" navItems={NAV_ITEMS} />
+  return <AppShell titleKey="roles.admin" navItems={NAV_ITEMS} />
 }

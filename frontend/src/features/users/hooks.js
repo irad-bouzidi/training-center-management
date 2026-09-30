@@ -1,6 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { createUser, getUser, listUsers, resetPassword, setUserStatus, updateUser } from '@/api/userApi'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 export const usersKeys = {
   all: ['users'],
@@ -8,13 +10,6 @@ export const usersKeys = {
   list: (params) => [...usersKeys.lists(), params],
   details: () => [...usersKeys.all, 'detail'],
   detail: (id) => [...usersKeys.details(), id],
-}
-
-// The backend never has a message body it can't produce (see
-// GlobalExceptionHandler) - falling back to a generic string only covers a
-// network-level failure (no response at all).
-function errorMessage(error, fallback) {
-  return error.response?.data?.message ?? fallback
 }
 
 export function useUsersQuery(params) {
@@ -36,19 +31,21 @@ export function useUserQuery(id) {
 }
 
 export function useCreateUserMutation() {
+  const { t } = useTranslation('users')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() })
-      toast.success('User created')
+      toast.success(t('toasts.created'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to create user')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.createFailed'))),
   })
 }
 
 export function useUpdateUserMutation() {
+  const { t } = useTranslation('users')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -56,13 +53,14 @@ export function useUpdateUserMutation() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() })
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(variables.id) })
-      toast.success('User updated')
+      toast.success(t('toasts.updated'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to update user')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.updateFailed'))),
   })
 }
 
 export function useSetUserStatusMutation() {
+  const { t } = useTranslation('users')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -70,17 +68,19 @@ export function useSetUserStatusMutation() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() })
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(variables.id) })
-      toast.success(data.status === 'ACTIVE' ? 'User activated' : 'User deactivated')
+      toast.success(data.status === 'ACTIVE' ? t('toasts.activated') : t('toasts.deactivated'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to update status')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.statusFailed'))),
   })
 }
 
 export function useResetPasswordMutation() {
+  const { t } = useTranslation('users')
+
   return useMutation({
     // No success toast here - the caller shows the temp password in a
     // dialog, which is confirmation enough.
     mutationFn: resetPassword,
-    onError: (error) => toast.error(errorMessage(error, 'Failed to reset password')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.resetPasswordFailed'))),
   })
 }

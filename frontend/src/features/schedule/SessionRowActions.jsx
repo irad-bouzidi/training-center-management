@@ -1,5 +1,6 @@
 import { CheckCircle, ClipboardCheck, MoreHorizontal, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertDialog,
@@ -35,6 +36,7 @@ import { useSetSessionStatusMutation } from './hooks'
  * has nothing left to do, so its menu is dropped rather than rendered empty.
  */
 export function SessionRowActions({ session, onEdit }) {
+  const { t } = useTranslation('schedule')
   const { user } = useAuth()
   const navigate = useNavigate()
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
@@ -57,13 +59,17 @@ export function SessionRowActions({ session, onEdit }) {
     setSessionStatus.mutate({ id: session.id, status }, { onSuccess: () => closeDialog(false) })
   }
 
-  const when = `${formatSessionDate(session.sessionDate)}, ${formatTimeRange(session.startTime, session.endTime)}`
+  const when = t('actions.when', {
+    date: formatSessionDate(session.sessionDate),
+    time: formatTimeRange(session.startTime, session.endTime),
+  })
+  const course = session.course.name
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${session.course.name} on ${when}`}>
+          <Button variant="ghost" size="icon-sm" aria-label={t('actions.menuLabel', { course, when })}>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
@@ -73,19 +79,19 @@ export function SessionRowActions({ session, onEdit }) {
               onSelect={() => navigate(`/${user.role.toLowerCase()}/sessions/${session.id}/attendance`)}
             >
               <ClipboardCheck />
-              Take attendance
+              {t('actions.takeAttendance')}
             </DropdownMenuItem>
           )}
           {isAdmin && session.status === 'SCHEDULED' && (
             <DropdownMenuItem onSelect={() => onEdit(session)}>
               <Pencil />
-              Edit
+              {t('common:actions.edit')}
             </DropdownMenuItem>
           )}
           {canComplete && session.status === 'SCHEDULED' && (
             <DropdownMenuItem onSelect={() => setCompleteConfirmOpen(true)}>
               <CheckCircle />
-              Mark completed
+              {t('actions.markCompleted')}
             </DropdownMenuItem>
           )}
           {isAdmin && session.status === 'SCHEDULED' && (
@@ -93,7 +99,7 @@ export function SessionRowActions({ session, onEdit }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={() => setCancelConfirmOpen(true)}>
                 <X />
-                Cancel session
+                {t('actions.cancelSession')}
               </DropdownMenuItem>
             </>
           )}
@@ -103,13 +109,11 @@ export function SessionRowActions({ session, onEdit }) {
       <AlertDialog open={completeConfirmOpen} onOpenChange={setCompleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Mark session completed?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {session.course.name} on {when} will be recorded as delivered. This can't be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('actions.completeConfirm.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('actions.completeConfirm.description', { course, when })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               disabled={setSessionStatus.isPending}
               onClick={(event) => {
@@ -117,7 +121,7 @@ export function SessionRowActions({ session, onEdit }) {
                 changeStatus('COMPLETED', setCompleteConfirmOpen)
               }}
             >
-              Mark completed
+              {t('actions.markCompleted')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -126,14 +130,13 @@ export function SessionRowActions({ session, onEdit }) {
       <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel session?</AlertDialogTitle>
+            <AlertDialogTitle>{t('actions.cancelConfirm.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {session.course.name} on {when} will be called off, freeing {session.classroom} and its trainer for
-              other bookings. A cancelled session can't be reopened.
+              {t('actions.cancelConfirm.description', { course, when, classroom: session.classroom })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogCancel>{t('actions.cancelConfirm.keep')}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={setSessionStatus.isPending}
@@ -142,7 +145,7 @@ export function SessionRowActions({ session, onEdit }) {
                 changeStatus('CANCELLED', setCancelConfirmOpen)
               }}
             >
-              Cancel session
+              {t('actions.cancelSession')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

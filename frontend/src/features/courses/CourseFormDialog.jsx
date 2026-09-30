@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,15 +24,22 @@ const NO_TRAINER = 'NONE'
 // course's current status; Publish/Archive/Republish are separate actions
 // (see CourseRowActions), same stub-shadcn-Form situation as LoginPage (see
 // TCM-9) - react-hook-form is composed directly against Label/Input/Select.
+// Messages are `courses:` i18n keys, translated where they render.
 const schema = z.object({
-  code: z.string().min(1, 'Code is required'),
-  name: z.string().min(1, 'Name is required'),
+  code: z.string().min(1, 'form.errors.codeRequired'),
+  name: z.string().min(1, 'form.errors.nameRequired'),
   description: z.string().optional(),
-  durationHours: z.coerce.number('Duration is required').int('Must be a whole number').positive('Must be positive'),
-  capacity: z.coerce.number('Capacity is required').int('Must be a whole number').positive('Must be positive'),
+  durationHours: z.coerce
+    .number('form.errors.durationRequired')
+    .int('form.errors.wholeNumber')
+    .positive('form.errors.positive'),
+  capacity: z.coerce
+    .number('form.errors.capacityRequired')
+    .int('form.errors.wholeNumber')
+    .positive('form.errors.positive'),
   category: z.string().optional(),
   primaryTrainerId: z.string().optional(),
-  price: z.coerce.number('Price is required').nonnegative('Must be zero or more'),
+  price: z.coerce.number('form.errors.priceRequired').nonnegative('form.errors.nonNegative'),
 })
 
 const EMPTY_VALUES = {
@@ -50,6 +58,7 @@ const EMPTY_VALUES = {
  * edit - see docs/tasks/TCM-12-frontend-course-management.md step 3.
  */
 export function CourseFormDialog({ open, onOpenChange, course }) {
+  const { t } = useTranslation('courses')
   const isEdit = Boolean(course)
   const { data: trainers } = useTrainersQuery()
   const createCourse = useCreateCourseMutation()
@@ -105,34 +114,34 @@ export function CourseFormDialog({ open, onOpenChange, course }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit course' : 'New course'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('form.editTitle') : t('form.createTitle')}</DialogTitle>
           <DialogDescription>
-            {isEdit ? `Update ${course.name}.` : "Create a new course, then publish it when it's ready."}
+            {isEdit ? t('form.editDescription', { name: course.name }) : t('form.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="code">Code</Label>
+              <Label htmlFor="code">{t('form.fields.code')}</Label>
               <Input id="code" aria-invalid={Boolean(errors.code)} {...register('code')} />
-              {errors.code && <p className="text-sm text-destructive">{errors.code.message}</p>}
+              {errors.code && <p className="text-sm text-destructive">{t(errors.code.message)}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t('form.fields.name')}</Label>
               <Input id="name" aria-invalid={Boolean(errors.name)} {...register('name')} />
-              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+              {errors.name && <p className="text-sm text-destructive">{t(errors.name.message)}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('form.fields.description')}</Label>
             <Textarea id="description" {...register('description')} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="durationHours">Duration (hours)</Label>
+              <Label htmlFor="durationHours">{t('form.fields.durationHours')}</Label>
               <Input
                 id="durationHours"
                 type="number"
@@ -140,10 +149,10 @@ export function CourseFormDialog({ open, onOpenChange, course }) {
                 aria-invalid={Boolean(errors.durationHours)}
                 {...register('durationHours')}
               />
-              {errors.durationHours && <p className="text-sm text-destructive">{errors.durationHours.message}</p>}
+              {errors.durationHours && <p className="text-sm text-destructive">{t(errors.durationHours.message)}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
+              <Label htmlFor="capacity">{t('form.fields.capacity')}</Label>
               <Input
                 id="capacity"
                 type="number"
@@ -151,17 +160,17 @@ export function CourseFormDialog({ open, onOpenChange, course }) {
                 aria-invalid={Boolean(errors.capacity)}
                 {...register('capacity')}
               />
-              {errors.capacity && <p className="text-sm text-destructive">{errors.capacity.message}</p>}
+              {errors.capacity && <p className="text-sm text-destructive">{t(errors.capacity.message)}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">{t('form.fields.category')}</Label>
               <Input id="category" {...register('category')} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
+              <Label htmlFor="price">{t('form.fields.price')}</Label>
               <Input
                 id="price"
                 type="number"
@@ -170,22 +179,22 @@ export function CourseFormDialog({ open, onOpenChange, course }) {
                 aria-invalid={Boolean(errors.price)}
                 {...register('price')}
               />
-              {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
+              {errors.price && <p className="text-sm text-destructive">{t(errors.price.message)}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="primaryTrainerId">Trainer</Label>
+            <Label htmlFor="primaryTrainerId">{t('form.fields.trainer')}</Label>
             <Controller
               name="primaryTrainerId"
               control={control}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="primaryTrainerId" className="w-full">
-                    <SelectValue placeholder="Select a trainer" />
+                    <SelectValue placeholder={t('form.trainerPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_TRAINER}>No trainer assigned</SelectItem>
+                    <SelectItem value={NO_TRAINER}>{t('form.noTrainer')}</SelectItem>
                     {trainers?.map((trainer) => (
                       <SelectItem key={trainer.id} value={trainer.id}>
                         {trainer.firstName} {trainer.lastName}
@@ -199,10 +208,10 @@ export function CourseFormDialog({ open, onOpenChange, course }) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save'}
+              {isSubmitting ? t('common:actions.saving') : t('common:actions.save')}
             </Button>
           </DialogFooter>
         </form>

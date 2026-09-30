@@ -1,7 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/context/AuthContext'
-import { formatSessionDate, formatTimeRange, statusBadgeVariant, titleCase, todayIsoDate } from './scheduleDisplay'
+import { formatSessionDate, formatTimeRange, statusBadgeVariant, todayIsoDate } from './scheduleDisplay'
 import { useSessionsForCoursesQueries } from './hooks'
 
 // Every session of a course fits one page - a course here is a term of
@@ -9,6 +10,8 @@ import { useSessionsForCoursesQueries } from './hooks'
 const SESSIONS_PER_COURSE = 200
 
 function SessionsTable({ sessions, emptyMessage }) {
+  const { t } = useTranslation('schedule')
+
   if (sessions.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyMessage}</p>
   }
@@ -17,12 +20,12 @@ function SessionsTable({ sessions, emptyMessage }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Date</TableHead>
-          <TableHead>Time</TableHead>
-          <TableHead>Course</TableHead>
-          <TableHead>Classroom</TableHead>
-          <TableHead>Trainer</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>{t('columns.date')}</TableHead>
+          <TableHead>{t('columns.time')}</TableHead>
+          <TableHead>{t('columns.course')}</TableHead>
+          <TableHead>{t('columns.classroom')}</TableHead>
+          <TableHead>{t('columns.trainer')}</TableHead>
+          <TableHead>{t('columns.status')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -37,7 +40,7 @@ function SessionsTable({ sessions, emptyMessage }) {
             <TableCell>{session.classroom}</TableCell>
             <TableCell>{session.trainer.name}</TableCell>
             <TableCell>
-              <Badge variant={statusBadgeVariant(session.status)}>{titleCase(session.status)}</Badge>
+              <Badge variant={statusBadgeVariant(session.status)}>{t(`common:enums.sessionStatus.${session.status}`)}</Badge>
             </TableCell>
           </TableRow>
         ))}
@@ -58,6 +61,7 @@ function SessionsTable({ sessions, emptyMessage }) {
  * the tab says rather than passing off as the student's whole timetable.
  */
 export function StudentScheduleTab({ enrollments }) {
+  const { t } = useTranslation('schedule')
   const { user } = useAuth()
   const courseIds = [
     ...new Set(
@@ -70,14 +74,12 @@ export function StudentScheduleTab({ enrollments }) {
 
   if (courseIds.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        This student isn’t approved on any course yet, so there is nothing scheduled for them.
-      </p>
+      <p className="text-sm text-muted-foreground">{t('studentTab.notApproved')}</p>
     )
   }
 
   if (results.some((result) => result.isLoading)) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   const today = todayIsoDate()
@@ -91,18 +93,18 @@ export function StudentScheduleTab({ enrollments }) {
   return (
     <div className="space-y-6">
       {user.role === 'TRAINER' && (
-        <p className="text-sm text-muted-foreground">Only the sessions you teach are listed.</p>
+        <p className="text-sm text-muted-foreground">{t('studentTab.trainerScope')}</p>
       )}
-      {failed && <p className="text-sm text-destructive">Some of this student’s courses couldn’t be loaded.</p>}
+      {failed && <p className="text-sm text-destructive">{t('studentTab.loadFailed')}</p>}
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Upcoming</h2>
-        <SessionsTable sessions={upcoming} emptyMessage="Nothing scheduled from today on." />
+        <h2 className="text-sm font-semibold">{t('studentTab.upcoming')}</h2>
+        <SessionsTable sessions={upcoming} emptyMessage={t('studentTab.upcomingEmpty')} />
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Past</h2>
-        <SessionsTable sessions={past} emptyMessage="No sessions have taken place yet." />
+        <h2 className="text-sm font-semibold">{t('studentTab.past')}</h2>
+        <SessionsTable sessions={past} emptyMessage={t('studentTab.pastEmpty')} />
       </section>
     </div>
   )

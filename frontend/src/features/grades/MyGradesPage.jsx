@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
 import { CourseGradesList } from './CourseGradesList'
@@ -9,23 +10,24 @@ import { useStudentGradesQuery } from './hooks'
  * its own weighted average.
  */
 export function MyGradesPage() {
+  const { t } = useTranslation('grades')
   const { user } = useAuth()
   const { data, isLoading } = useStudentGradesQuery(user.id)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My Grades</CardTitle>
-        <CardDescription>Every assessment recorded for you, course by course.</CardDescription>
+        <CardTitle>{t('myGrades.title')}</CardTitle>
+        <CardDescription>{t('myGrades.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
         ) : (
           <CourseGradesList
             grades={data?.grades ?? []}
             overall={data?.weightedAverage}
-            emptyMessage="Nothing has been graded for you yet."
+            emptyMessage={t('myGrades.empty')}
           />
         )}
       </CardContent>

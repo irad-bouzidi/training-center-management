@@ -1,5 +1,6 @@
 import { CheckCircle2, QrCode } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
 import { formatSessionDate } from '@/features/schedule/scheduleDisplay'
+import { formatTime } from '@/lib/format'
 import { parseCheckInUrl, QrScanner } from './QrScanner'
 import { checkInFailure, useQrCheckInMutation } from './qrHooks'
 
@@ -37,9 +39,11 @@ function parsePasted(text, sessionIdFromPath) {
 
 /** "Marked present for Java Fundamentals — Mon, 2 Mar 2026", degrading to
  * whatever of the course and date the response carries. */
-function checkedInSummary(record) {
+function checkedInSummary(record, t) {
   const parts = [record.courseName, record.sessionDate && formatSessionDate(record.sessionDate)].filter(Boolean)
-  return parts.length > 0 ? `Marked present for ${parts.join(' — ')}` : 'Marked present'
+  return parts.length > 0
+    ? t('checkIn.summaryWithDetails', { details: parts.join(' — ') })
+    : t('checkIn.summary')
 }
 
 /**
@@ -58,6 +62,7 @@ function checkedInSummary(record) {
  * LoginPage returns them to ProtectedRoute's `from`, token and all.
  */
 export function QrCheckinPage() {
+  const { t } = useTranslation('attendance')
   const { sessionId: sessionIdFromPath } = useParams()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
@@ -82,14 +87,12 @@ export function QrCheckinPage() {
     return (
       <Card className="mx-auto mt-10 max-w-md">
         <CardHeader>
-          <CardTitle>Check-in is for students</CardTitle>
-          <CardDescription>
-            Attendance for your own sessions is marked from the schedule, where you can also show the QR code.
-          </CardDescription>
+          <CardTitle>{t('checkIn.notStudentTitle')}</CardTitle>
+          <CardDescription>{t('checkIn.notStudentDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <Link to={`/${user.role.toLowerCase()}/schedule`}>Go to schedule</Link>
+            <Link to={`/${user.role.toLowerCase()}/schedule`}>{t('checkIn.goToSchedule')}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -104,20 +107,16 @@ export function QrCheckinPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle2 className="text-primary" />
-            You’re marked present
+            {t('checkIn.successTitle')}
           </CardTitle>
-          <CardDescription>{checkedInSummary(record)}</CardDescription>
+          <CardDescription>{checkedInSummary(record, t)}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="text-muted-foreground">
-            Recorded at {new Date(record.markedAt).toLocaleTimeString(undefined, {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-            . Nothing else to do — your trainer sees this straight away.
+            {t('checkIn.recordedAt', { time: formatTime(record.markedAt) })}
           </p>
           <Button asChild variant="outline" size="sm">
-            <Link to="/student/schedule">Back to my schedule</Link>
+            <Link to="/student/schedule">{t('checkIn.backToSchedule')}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -131,10 +130,10 @@ export function QrCheckinPage() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCode />
-          Check in
+          {t('checkIn.title')}
         </CardTitle>
         <CardDescription>
-          {checkIn.isPending ? 'Checking you in…' : 'Scan the code your trainer has on screen.'}
+          {checkIn.isPending ? t('checkIn.pending') : t('checkIn.instructions')}
         </CardDescription>
       </CardHeader>
 
@@ -149,23 +148,25 @@ export function QrCheckinPage() {
         {!checkIn.isPending && <QrScanner onScan={submit} />}
 
         <div className="space-y-2">
-          <Label htmlFor="manualInput">Can’t scan? Paste the check-in link</Label>
+          <Label htmlFor="manualInput">{t('checkIn.manualLabel')}</Label>
           <div className="flex gap-2">
             <Input
               id="manualInput"
               value={manualInput}
-              placeholder={sessionIdFromPath ? 'Check-in link or code' : 'https://…/attend/…?token=…'}
+              placeholder={
+                sessionIdFromPath ? t('checkIn.manualPlaceholderWithSession') : t('checkIn.manualPlaceholder')
+              }
               onChange={(event) => setManualInput(event.target.value)}
             />
             <Button disabled={!pasted || checkIn.isPending} onClick={() => submit(pasted)}>
-              Check in
+              {t('checkIn.submit')}
             </Button>
           </div>
           {manualInput.trim() && !pasted && (
             <p className="text-xs text-muted-foreground">
               {sessionIdFromPath
-                ? 'That isn’t a check-in link or code.'
-                : 'Paste the whole check-in link — a code on its own doesn’t say which session it’s for.'}
+                ? t('checkIn.invalidWithSession')
+                : t('checkIn.invalid')}
             </p>
           )}
         </div>

@@ -1,0 +1,951 @@
+{
+  "common": {
+    "appName": "Training Center Management",
+    "language": {
+      "label": "Language",
+      "en": "English",
+      "fr": "Français"
+    },
+    "actions": {
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirm": "Confirm",
+      "back": "Back",
+      "search": "Search",
+      "retry": "Retry",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "states": {
+      "loading": "Loading…",
+      "error": "Something went wrong",
+      "empty": "Nothing to show yet"
+    },
+    "pagination": {
+      "pageOf": "Page {{page, number}} of {{total, number}}"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again."
+    },
+    "enums": {
+      "role": {
+        "ADMIN": "Admin",
+        "TRAINER": "Trainer",
+        "STUDENT": "Student"
+      },
+      "accountStatus": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "courseStatus": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived"
+      },
+      "enrollmentStatus": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled",
+        "COMPLETED": "Completed"
+      },
+      "sessionStatus": {
+        "SCHEDULED": "Scheduled",
+        "CANCELLED": "Cancelled",
+        "COMPLETED": "Completed"
+      },
+      "attendanceStatus": {
+        "PRESENT": "Present",
+        "LATE": "Late",
+        "ABSENT": "Absent"
+      },
+      "paymentStatus": {
+        "PENDING": "Pending",
+        "PARTIAL": "Partial",
+        "PAID": "Paid",
+        "OVERDUE": "Overdue"
+      },
+      "assessmentType": {
+        "EXAM": "Exam",
+        "ASSIGNMENT": "Assignment",
+        "QUIZ": "Quiz",
+        "PROJECT": "Project"
+      },
+      "all": "All"
+    }
+  },
+  "ui": {
+    "close": "Close"
+  },
+  "layout": {
+    "roles": {
+      "admin": "Admin",
+      "trainer": "Trainer",
+      "student": "Student"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "courses": "Courses",
+      "students": "Students",
+      "enrollments": "Enrollments",
+      "schedule": "Schedule",
+      "payments": "Payments",
+      "myCourses": "My Courses",
+      "courseCatalog": "Course Catalog",
+      "myEnrollments": "My Enrollments",
+      "myPayments": "My Payments",
+      "checkIn": "Check In",
+      "myAttendance": "My Attendance",
+      "myGrades": "My Grades",
+      "myCertificates": "My Certificates"
+    },
+    "comingSoon": "Coming soon",
+    "logOut": "Log out"
+  },
+  "auth": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "invalidCredentials": "Invalid email or password",
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Enter a valid email",
+      "passwordRequired": "Password is required"
+    }
+  },
+  "attendance": {
+    "columns": {
+      "student": "Student",
+      "email": "Email",
+      "course": "Course",
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent",
+      "marked": "Marked",
+      "rate": "Rate",
+      "attendance": "Attendance",
+      "recorded": "Recorded",
+      "date": "Date",
+      "time": "Time",
+      "status": "Status",
+      "method": "Method"
+    },
+    "markedOfSessions": "{{marked}} / {{total}}",
+    "method": {
+      "QR": "QR",
+      "MANUAL": "Manual"
+    },
+    "reportPage": {
+      "title": "Attendance",
+      "courseLabel": "{{name}} ({{code}})",
+      "fallbackDescription": "Course attendance report"
+    },
+    "courseReport": {
+      "forbidden": "Attendance reporting is open to administrators and the course’s own trainers.",
+      "loadError": "This report could not be loaded.",
+      "sessionCount_one": "{{count, number}} session",
+      "sessionCount_other": "{{count, number}} sessions",
+      "explanation": "Rates count late arrivals as attended and are measured against the sessions each student was actually marked for.",
+      "empty": "Nobody is approved on this course yet."
+    },
+    "markPage": {
+      "forbidden": "You can only take attendance for sessions you are assigned to.",
+      "loadError": "This session could not be loaded.",
+      "showQr": "Show QR",
+      "markAllPresent": "Mark all present",
+      "empty": "Nobody is approved on this course yet, so there is no roster to mark.",
+      "rowLabel": "Attendance for {{name}}",
+      "notRecorded": "Not recorded",
+      "markedCount": "{{marked}} of {{total}} marked",
+      "markedCountUnsaved": "{{marked}} of {{total}} marked · unsaved changes"
+    },
+    "myPage": {
+      "title": "My Attendance",
+      "description": "Every session you’ve been marked for. Late arrivals count as attended.",
+      "loadError": "Your attendance couldn’t be loaded.",
+      "empty": "No attendance has been recorded for you yet.",
+      "byCourse": "By course",
+      "sessions": "Sessions"
+    },
+    "checkIn": {
+      "notStudentTitle": "Check-in is for students",
+      "notStudentDescription": "Attendance for your own sessions is marked from the schedule, where you can also show the QR code.",
+      "goToSchedule": "Go to schedule",
+      "successTitle": "You’re marked present",
+      "summaryWithDetails": "Marked present for {{details}}",
+      "summary": "Marked present",
+      "recordedAt": "Recorded at {{time}}. Nothing else to do — your trainer sees this straight away.",
+      "backToSchedule": "Back to my schedule",
+      "title": "Check in",
+      "pending": "Checking you in…",
+      "instructions": "Scan the code your trainer has on screen.",
+      "manualLabel": "Can’t scan? Paste the check-in link",
+      "manualPlaceholderWithSession": "Check-in link or code",
+      "manualPlaceholder": "https://…/attend/…?token=…",
+      "submit": "Check in",
+      "invalidWithSession": "That isn’t a check-in link or code.",
+      "invalid": "Paste the whole check-in link — a code on its own doesn’t say which session it’s for."
+    },
+    "failure": {
+      "expiredTitle": "That code is no longer valid",
+      "expiredDetail": "Ask your trainer to show a fresh one.",
+      "forbiddenTitle": "You’re not on this course",
+      "forbiddenDetail": "Check-in is for students enrolled on it.",
+      "wrongSessionTitle": "That code doesn’t belong to this session",
+      "wrongSessionDetail": "Scan the code on screen again.",
+      "genericTitle": "Check-in failed",
+      "genericDetail": "Try again in a moment."
+    },
+    "scanner": {
+      "cameraUnavailable": "This device’s camera isn’t available. Open the link from your camera app, or paste the code below."
+    },
+    "qrDialog": {
+      "title": "Scan to check in",
+      "producing": "Producing a code…",
+      "imageAlt": "QR code for {{course}}",
+      "expiresIn": "Expires in <countdown>{{countdown}}</countdown>",
+      "expired": "This code has expired — show a new one.",
+      "newCode": "New code"
+    },
+    "studentTab": {
+      "empty": "This student isn’t approved on any course yet, so there is nothing to attend.",
+      "overall": "Overall attendance: <rate>{{rate}}</rate> — late arrivals count as attended, and only sessions the student was marked for are counted.",
+      "forbidden": "Only this course’s trainers and administrators can see its attendance",
+      "unavailable": "Unavailable",
+      "completedNotInReport": "Course completed — not in its attendance report",
+      "notOnRoster": "Not on this course’s roster"
+    },
+    "toasts": {
+      "saved": "Attendance saved",
+      "saveFailed": "Failed to save attendance",
+      "qrFailed": "Failed to produce a QR code"
+    }
+  },
+  "certificates": {
+    "blockingReason": "This enrollment is {{status}}. It must be marked completed before a certificate can be issued.",
+    "table": {
+      "course": "Course",
+      "number": "Certificate No.",
+      "issued": "Issued",
+      "download": "Download PDF"
+    },
+    "mine": {
+      "title": "My Certificates",
+      "description": "Courses you’ve completed, and the certificates awarded for them.",
+      "empty": "You haven’t been awarded a certificate yet."
+    },
+    "studentTab": {
+      "issued": "Issued",
+      "issuedEmpty": "No certificates have been issued to this student yet.",
+      "eligible": "Eligible for certification",
+      "allCertified": "Every course this student is enrolled in has been certified.",
+      "course": "Course",
+      "enrollment": "Enrollment",
+      "notTheirs": "Only this course’s trainer or an administrator can issue its certificate.",
+      "generate": "Generate certificate",
+      "issueFailed": "This certificate could not be issued"
+    },
+    "toasts": {
+      "issued": "Certificate {{number}} issued",
+      "downloadFailed": "Failed to download the certificate"
+    }
+  },
+  "courses": {
+    "shared": {
+      "noDescription": "No description provided.",
+      "unassigned": "Unassigned",
+      "hours": "{{count, number}}h",
+      "gradebook": "Gradebook",
+      "count_one": "{{count, number}} course",
+      "count_other": "{{count, number}} courses"
+    },
+    "list": {
+      "title": "Courses",
+      "newCourse": "New Course",
+      "searchPlaceholder": "Search by name or code…",
+      "categoryPlaceholder": "Category…",
+      "allStatuses": "All statuses",
+      "empty": "No courses found.",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "trainer": "Trainer",
+        "capacity": "Capacity",
+        "price": "Price",
+        "status": "Status"
+      }
+    },
+    "catalog": {
+      "title": "Course Catalog",
+      "searchPlaceholder": "Search courses…",
+      "empty": "No published courses found.",
+      "enrolled": "{{approved}}/{{capacity}} enrolled"
+    },
+    "mine": {
+      "title": "My Courses",
+      "description": "Every course you’re the trainer of, whatever its status.",
+      "empty": "You haven’t been assigned any courses yet.",
+      "columns": {
+        "code": "Code",
+        "name": "Name",
+        "category": "Category",
+        "enrolled": "Enrolled",
+        "status": "Status"
+      }
+    },
+    "detail": {
+      "notFound": "Course not found.",
+      "fields": {
+        "trainer": "Trainer",
+        "category": "Category",
+        "duration": "Duration",
+        "capacity": "Capacity",
+        "price": "Price",
+        "created": "Created"
+      },
+      "tabs": {
+        "schedule": "Schedule",
+        "enrollments": "Enrollments",
+        "attendance": "Attendance"
+      }
+    },
+    "form": {
+      "createTitle": "New course",
+      "editTitle": "Edit course",
+      "createDescription": "Create a new course, then publish it when it's ready.",
+      "editDescription": "Update {{name}}.",
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "description": "Description",
+        "durationHours": "Duration (hours)",
+        "capacity": "Capacity",
+        "category": "Category",
+        "price": "Price",
+        "trainer": "Trainer"
+      },
+      "trainerPlaceholder": "Select a trainer",
+      "noTrainer": "No trainer assigned",
+      "errors": {
+        "codeRequired": "Code is required",
+        "nameRequired": "Name is required",
+        "durationRequired": "Duration is required",
+        "capacityRequired": "Capacity is required",
+        "priceRequired": "Price is required",
+        "wholeNumber": "Must be a whole number",
+        "positive": "Must be positive",
+        "nonNegative": "Must be zero or more"
+      }
+    },
+    "rowActions": {
+      "menuLabel": "Actions for {{name}}",
+      "viewDetails": "View details",
+      "publishDescription": "{{name}} will become visible in the shared catalog.",
+      "unpublishDescription": "{{name}} will no longer appear in the shared catalog."
+    },
+    "transitions": {
+      "publish": "Publish",
+      "archive": "Archive",
+      "republish": "Republish",
+      "publishConfirm": "Publish course?",
+      "archiveConfirm": "Archive course?",
+      "republishConfirm": "Republish course?"
+    },
+    "toasts": {
+      "created": "Course created",
+      "createFailed": "Failed to create course",
+      "updated": "Course updated",
+      "updateFailed": "Failed to update course",
+      "published": "Course published",
+      "archived": "Course archived",
+      "movedToDraft": "Course moved to draft",
+      "statusFailed": "Failed to update status"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "admin": {
+      "description": "What’s happening across the centre right now.",
+      "sections": {
+        "people": "People and courses",
+        "teaching": "Teaching",
+        "money": "Money"
+      },
+      "activeStudents": "Active students",
+      "activeTrainers": "Active trainers",
+      "publishedCourses": "Published courses",
+      "pendingEnrollments": "Pending enrollments",
+      "pendingWaiting": "Waiting on a decision",
+      "pendingNone": "Nothing waiting",
+      "upcomingSessions": "Upcoming sessions",
+      "next7Days": "Next 7 days",
+      "averageAttendance": "Average attendance",
+      "acrossMarkedSessions": "Across every marked session",
+      "certificatesIssued": "Certificates issued",
+      "thisMonth": "This month",
+      "outstandingBalance": "Outstanding balance",
+      "owedAcrossInvoices": "Owed across all invoices",
+      "overdueInvoices": "Overdue invoices",
+      "overduePast": "Past their due date",
+      "overdueNone": "None past due"
+    },
+    "trainer": {
+      "description": "Your courses, and what’s waiting on you.",
+      "myCourses": "My courses",
+      "upcomingSessions": "Upcoming sessions",
+      "next7Days": "Next 7 days",
+      "sessionsToMark": "Sessions to mark",
+      "sessionsToMarkPending": "Delivered with no attendance recorded",
+      "sessionsToMarkNone": "Attendance is up to date",
+      "studentsToGrade": "Students to grade",
+      "studentsToGradePending": "Nothing recorded for them yet",
+      "studentsToGradeNone": "Everyone has a grade"
+    },
+    "student": {
+      "description": "Where you stand across your courses.",
+      "activeEnrollments": "Active enrollments",
+      "totalEnrollments": "{{total}} in total",
+      "attendance": "Attendance",
+      "acrossMarkedSessions": "Across every marked session",
+      "overallGrade": "Overall grade",
+      "balanceOwed": "Balance owed",
+      "stillToPay": "Still to pay",
+      "nothingOutstanding": "Nothing outstanding",
+      "certificates": "Certificates"
+    }
+  },
+  "enrollments": {
+    "shared": {
+      "count_one": "{{count, number}} enrollment",
+      "count_other": "{{count, number}} enrollments"
+    },
+    "enroll": {
+      "button": "Enroll",
+      "blocked": {
+        "pending": "Pending approval",
+        "approved": "Already enrolled",
+        "completed": "Completed",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled",
+        "full": "Full"
+      }
+    },
+    "complete": {
+      "button": "Mark completed",
+      "title": "Mark enrollment completed?",
+      "description": "{{student}} has finished {{course}}. Once completed, the enrollment can’t be reopened, and a certificate can be issued if their attendance qualifies.",
+      "thisStudent": "This student"
+    },
+    "decisions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveTitle": "Approve enrollment?",
+      "rejectTitle": "Reject enrollment?",
+      "approveDescription": "{{student}} takes a seat in {{course}}.",
+      "rejectDescription": "{{student}} won't be enrolled in {{course}}, and can't request it again."
+    },
+    "courseTab": {
+      "requestedOn": "Requested on {{date}}",
+      "notEnrolled": "You aren't enrolled in this course.",
+      "rosterRestricted": "Only this course's trainer and administrators can see who's enrolled.",
+      "empty": "No one has enrolled in this course yet.",
+      "columns": {
+        "student": "Student",
+        "status": "Status",
+        "requested": "Requested"
+      }
+    },
+    "approvals": {
+      "title": "Enrollments",
+      "allStatuses": "All statuses",
+      "emptyPending": "No enrollment requests waiting for a decision.",
+      "empty": "No enrollments found.",
+      "columns": {
+        "student": "Student",
+        "course": "Course",
+        "status": "Status",
+        "requested": "Requested",
+        "decidedBy": "Decided By"
+      }
+    },
+    "toasts": {
+      "requested": "Enrollment requested",
+      "requestFailed": "Failed to request enrollment",
+      "approved": "Enrollment approved",
+      "rejected": "Enrollment rejected",
+      "decideFailed": "Failed to update enrollment",
+      "completed": "Enrollment marked completed",
+      "completeFailed": "Failed to mark the enrollment completed",
+      "cancelled": "Enrollment cancelled",
+      "cancelFailed": "Failed to cancel enrollment"
+    }
+  },
+  "grades": {
+    "courseList": {
+      "overall": "Overall: <strong>{{average}}</strong> — each assessment weighted by its share of the final mark.",
+      "empty": "Nothing recorded yet."
+    },
+    "table": {
+      "assessment": "Assessment",
+      "type": "Type",
+      "score": "Score",
+      "weight": "Weight",
+      "result": "Result",
+      "gradedBy": "Graded by",
+      "scoreOutOf": "{{score}} / {{max}}"
+    },
+    "form": {
+      "addTitle": "Add assessment",
+      "editTitle": "Edit assessment",
+      "saveChanges": "Save changes",
+      "saveFailed": "Failed to save assessment",
+      "type": "Type",
+      "title": "Title",
+      "titlePlaceholder": "Midterm exam",
+      "score": "Score",
+      "maxScore": "Out of",
+      "weight": "Weight",
+      "weightHint": "Weights are each assessment’s share of the final mark. They needn’t add up to 100 — the average divides by the weights recorded so far, so a course can be graded before every assessment is set.",
+      "comments": "Comments",
+      "errors": {
+        "titleRequired": "Title is required",
+        "scoreRequired": "Score is required",
+        "scoreNegative": "Score must not be negative",
+        "maxScoreRequired": "Maximum is required",
+        "maxScorePositive": "Maximum must be greater than zero",
+        "weightRequired": "Weight is required",
+        "weightPositive": "Weight must be greater than zero",
+        "scoreExceedsMax": "Score must not exceed the maximum",
+        "titleTooLong": "Title must be 200 characters or fewer"
+      }
+    },
+    "gradebook": {
+      "title": "Gradebook",
+      "course": "{{name}} ({{code}})",
+      "forbidden": "The gradebook is open to administrators and the course’s own trainer.",
+      "loadFailed": "This gradebook could not be loaded.",
+      "noStudents": "Nobody is approved on this course yet.",
+      "expand": "Expand {{name}}",
+      "collapse": "Collapse {{name}}",
+      "assessmentCount_one": "{{count, number}} assessment",
+      "assessmentCount_other": "{{count, number}} assessments",
+      "studentEmpty": "Nothing recorded for this student yet.",
+      "delete": {
+        "title": "Remove this assessment?",
+        "description": "{{title}} for {{name}} will be deleted, and their average recomputed without it. This can’t be undone.",
+        "cancel": "Keep it",
+        "confirm": "Remove"
+      }
+    },
+    "myGrades": {
+      "title": "My Grades",
+      "description": "Every assessment recorded for you, course by course.",
+      "empty": "Nothing has been graded for you yet."
+    },
+    "toasts": {
+      "created": "Assessment recorded",
+      "updated": "Assessment updated",
+      "deleted": "Assessment removed",
+      "deleteFailed": "Failed to remove assessment"
+    }
+  },
+  "payments": {
+    "myPayments": {
+      "title": "My Payments",
+      "description": "What you owe, and what you’ve paid, course by course.",
+      "outstandingBalance": "Outstanding balance",
+      "overdue": "Payment overdue",
+      "empty": "You have no invoices - nothing is owed."
+    },
+    "list": {
+      "title": "Payments",
+      "filters": {
+        "status": "Status",
+        "allStatuses": "All statuses",
+        "course": "Course",
+        "allCourses": "All courses",
+        "courseOption": "{{name}} ({{code}})",
+        "student": "Student",
+        "allStudents": "All students"
+      },
+      "empty": "No invoices match these filters.",
+      "summary_one": "{{count, number}} invoice · {{amount}} outstanding on this page",
+      "summary_other": "{{count, number}} invoices · {{amount}} outstanding on this page"
+    },
+    "table": {
+      "student": "Student",
+      "course": "Course",
+      "amountDue": "Due",
+      "amountPaid": "Paid",
+      "outstanding": "Outstanding",
+      "dueDate": "Due date",
+      "status": "Status",
+      "recordPayment": "Record payment"
+    },
+    "dialog": {
+      "title": "Record payment",
+      "description": "{{student}} · {{course}} · {{outstanding}} outstanding of {{due}}",
+      "amount": "Amount",
+      "method": "Method",
+      "methodPlaceholder": "Cash, card, transfer…",
+      "notes": "Notes",
+      "submit": "Record payment",
+      "submitting": "Recording…",
+      "failed": "Failed to record payment",
+      "errors": {
+        "amountRequired": "Amount is required",
+        "amountPositive": "Amount must be greater than zero",
+        "amountTooHigh": "Only {{amount}} is still owed on this invoice",
+        "methodTooLong": "Method must be 50 characters or fewer"
+      }
+    },
+    "studentTab": {
+      "adminOnly": "Only administrators can see a student’s invoices.",
+      "outstanding": "Outstanding balance: <strong>{{amount}}</strong>",
+      "empty": "This student has no invoices."
+    },
+    "toasts": {
+      "settled": "Invoice settled",
+      "recorded": "Payment recorded"
+    }
+  },
+  "schedule": {
+    "newSession": "New Session",
+    "columns": {
+      "date": "Date",
+      "time": "Time",
+      "course": "Course",
+      "classroom": "Classroom",
+      "trainer": "Trainer",
+      "status": "Status"
+    },
+    "courseTab": {
+      "empty": "No sessions scheduled for this course yet."
+    },
+    "studentTab": {
+      "notApproved": "This student isn’t approved on any course yet, so there is nothing scheduled for them.",
+      "trainerScope": "Only the sessions you teach are listed.",
+      "loadFailed": "Some of this student’s courses couldn’t be loaded.",
+      "upcoming": "Upcoming",
+      "upcomingEmpty": "Nothing scheduled from today on.",
+      "past": "Past",
+      "pastEmpty": "No sessions have taken place yet."
+    },
+    "list": {
+      "title": "Schedule",
+      "from": "From",
+      "to": "To",
+      "course": "Course",
+      "trainer": "Trainer",
+      "allCourses": "All courses",
+      "allTrainers": "All trainers",
+      "empty": "No sessions scheduled for this period.",
+      "count_one": "{{count, number}} session",
+      "count_other": "{{count, number}} sessions"
+    },
+    "actions": {
+      "when": "{{date}}, {{time}}",
+      "menuLabel": "Actions for {{course}} on {{when}}",
+      "takeAttendance": "Take attendance",
+      "markCompleted": "Mark completed",
+      "cancelSession": "Cancel session",
+      "completeConfirm": {
+        "title": "Mark session completed?",
+        "description": "{{course}} on {{when}} will be recorded as delivered. This can’t be undone."
+      },
+      "cancelConfirm": {
+        "title": "Cancel session?",
+        "description": "{{course}} on {{when}} will be called off, freeing {{classroom}} and its trainer for other bookings. A cancelled session can’t be reopened.",
+        "keep": "Keep it"
+      }
+    },
+    "form": {
+      "createTitle": "New session",
+      "editTitle": "Edit session",
+      "createDescription": "Schedule a sitting of a course with a trainer and a classroom.",
+      "editDescription": "Reschedule {{course}}.",
+      "course": "Course",
+      "coursePlaceholder": "Select a course",
+      "trainer": "Trainer",
+      "trainerPlaceholder": "Select a trainer",
+      "classroom": "Classroom",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "saveFailed": "Failed to save the session",
+      "errors": {
+        "courseRequired": "Course is required",
+        "trainerRequired": "Trainer is required",
+        "classroomRequired": "Classroom is required",
+        "dateRequired": "Date is required",
+        "startTimeRequired": "Start time is required",
+        "endTimeRequired": "End time is required",
+        "endAfterStart": "End time must be after start time"
+      }
+    },
+    "toasts": {
+      "created": "Session scheduled",
+      "updated": "Session updated",
+      "cancelled": "Session cancelled",
+      "completed": "Session marked completed",
+      "statusFailed": "Failed to update session"
+    }
+  },
+  "students": {
+    "list": {
+      "title": "Students",
+      "searchPlaceholder": "Search by name…",
+      "allStatuses": "All statuses",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "activeEnrollments": "Active enrollments",
+        "status": "Status"
+      },
+      "empty": "No students found.",
+      "count_one": "{{count, number}} student",
+      "count_other": "{{count, number}} students"
+    },
+    "summary": {
+      "notFound": "Student not found.",
+      "tabs": {
+        "overview": "Overview",
+        "enrollments": "Enrollments",
+        "schedule": "Schedule",
+        "attendance": "Attendance",
+        "grades": "Grades",
+        "payments": "Payments",
+        "certificates": "Certificates"
+      },
+      "fields": {
+        "phone": "Phone",
+        "memberSince": "Member since"
+      },
+      "stats": {
+        "totalEnrollments": "Total Enrollments",
+        "activeEnrollments": "Active Enrollments",
+        "attendanceRate": "Attendance Rate",
+        "overallGrade": "Overall Grade",
+        "paymentBalance": "Payment Balance"
+      },
+      "enrollments": {
+        "empty": "No enrollments yet.",
+        "columns": {
+          "course": "Course",
+          "status": "Status",
+          "enrolled": "Enrolled",
+          "decided": "Decided",
+          "decidedBy": "Decided by"
+        }
+      },
+      "grades": {
+        "empty": "Nothing has been graded for this student yet."
+      }
+    },
+    "myEnrollments": {
+      "title": "My enrollments",
+      "columns": {
+        "course": "Course",
+        "status": "Status",
+        "requested": "Requested",
+        "decided": "Decided"
+      },
+      "empty": "You haven't enrolled in any course yet - browse the catalog to get started.",
+      "count_one": "{{count, number}} enrollment",
+      "count_other": "{{count, number}} enrollments",
+      "cancelConfirm": {
+        "title": "Cancel enrollment?",
+        "description": "Your registration for {{course}} will be withdrawn, and you won't be able to request this course again.",
+        "keep": "Keep it",
+        "confirm": "Cancel enrollment"
+      }
+    }
+  },
+  "users": {
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "status": "Status",
+      "created": "Created"
+    },
+    "list": {
+      "title": "Users",
+      "newUser": "New User",
+      "searchPlaceholder": "Search by name…",
+      "allRoles": "All roles",
+      "allStatuses": "All statuses",
+      "columns": {
+        "name": "Name"
+      },
+      "empty": "No users found.",
+      "count_one": "{{count, number}} user",
+      "count_other": "{{count, number}} users"
+    },
+    "detail": {
+      "title": "User details",
+      "description": "Account information"
+    },
+    "form": {
+      "createTitle": "New user",
+      "editTitle": "Edit user",
+      "createDescription": "Create a new Admin, Trainer, or Student account.",
+      "editDescription": "Update {{name}}'s account.",
+      "temporaryPassword": "Temporary password",
+      "rolePlaceholder": "Select a role",
+      "statusHint": "Inactive users can't sign in.",
+      "errors": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Enter a valid email",
+        "roleRequired": "Role is required",
+        "passwordRequired": "Password is required"
+      }
+    },
+    "actions": {
+      "menuLabel": "Actions for {{name}}",
+      "view": "View details",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "resetPassword": "Reset password"
+    },
+    "statusConfirm": {
+      "activateTitle": "Activate user?",
+      "deactivateTitle": "Deactivate user?",
+      "activateDescription": "{{name}} will be able to sign in again.",
+      "deactivateDescription": "{{name}} will no longer be able to sign in."
+    },
+    "resetConfirm": {
+      "title": "Reset password?",
+      "description": "This generates a new temporary password for {{name}} and invalidates their current one."
+    },
+    "tempPassword": {
+      "title": "Temporary password",
+      "description": "Share this with {{name}} out of band - it won't be shown again.",
+      "done": "Done"
+    },
+    "toasts": {
+      "created": "User created",
+      "createFailed": "Failed to create user",
+      "updated": "User updated",
+      "updateFailed": "Failed to update user",
+      "activated": "User activated",
+      "deactivated": "User deactivated",
+      "statusFailed": "Failed to update status",
+      "resetPasswordFailed": "Failed to reset password"
+    }
+  },
+  "serverErrors": {
+    "validationFailed": "Validation failed",
+    "malformedRequest": "Request body is missing or malformed",
+    "invalidValue": "'{{field}}' is not a valid value",
+    "invalidCredentials": "Invalid email or password",
+    "forbidden": "You do not have permission to perform this action",
+    "unexpected": "An unexpected error occurred",
+    "authenticationRequired": "Authentication is required to access this resource",
+    "notFound": "The requested item could not be found",
+    "noCourse": "No course with id {{id}}",
+    "noUser": "No user with id {{id}}",
+    "noSession": "No session with id {{id}}",
+    "noPayment": "No payment with id {{id}}",
+    "noGrade": "No grade with id {{id}}",
+    "noEnrollment": "No enrollment with id {{id}}",
+    "noCertificate": "No certificate with id {{id}}",
+    "emailTaken": "A user with this email already exists",
+    "passwordRequired": "Password is required",
+    "notAStudent": "User {{id}} is not a student",
+    "courseCodeTaken": "A course with this code already exists",
+    "courseHasEnrollments": "Cannot delete a course that has enrollments",
+    "primaryTrainerNotTrainer": "The primary trainer must be a user with the Trainer role",
+    "courseNotOpen": "Course is not open for enrollment",
+    "courseFull": "Course has reached its capacity",
+    "alreadyEnrolled": "Student is already enrolled in this course",
+    "studentIdRequired": "A student is required when an administrator registers a student",
+    "studentNotStudent": "The student must be a user with the Student role",
+    "invalidDecision": "The decision must be Approved or Rejected",
+    "onlyPendingDecided": "Only pending enrollments can be approved or rejected",
+    "onlyApprovedCompleted": "Only approved enrollments can be marked completed",
+    "onlyPendingOrApprovedCancelled": "Only pending or approved enrollments can be cancelled",
+    "trainerNotTrainer": "The trainer must be a user with the Trainer role",
+    "endBeforeStart": "End time must be after start time",
+    "invalidSessionStatus": "The status must be Cancelled or Completed",
+    "onlyScheduledRescheduled": "Only scheduled sessions can be rescheduled",
+    "onlyScheduledCompleted": "Only scheduled sessions can be marked completed",
+    "onlyScheduledCancelled": "Only scheduled sessions can be cancelled",
+    "trainerAndClassroomBooked": "That trainer and classroom are both already booked for an overlapping session",
+    "trainerBooked": "That trainer is already booked for an overlapping session",
+    "classroomBooked": "That classroom is already booked for an overlapping session",
+    "attendanceCancelledSession": "Attendance cannot be marked for a cancelled session",
+    "noEnrollmentForSession": "Student {{id}} has no approved or completed enrollment in this session's course",
+    "checkInCancelledSession": "This session was cancelled, so there is nothing to check in to",
+    "qrInvalid": "That QR code is not valid for this session",
+    "qrExpired": "That QR code has expired - ask the trainer to show a fresh one",
+    "qrReplaced": "That QR code has been replaced by a newer one - ask for the current code",
+    "paymentExceedsOutstanding": "That payment exceeds the {{amount}} still owed on this invoice",
+    "scoreExceedsMax": "The score must not exceed the maximum score",
+    "noApprovedEnrollment": "Student {{id}} has no approved enrollment in this course",
+    "certificateAlreadyIssued": "Certificate {{number}} has already been issued to this student for this course",
+    "certificateNotEnrolled": "This student is not enrolled in this course",
+    "certificateNotCompleted": "This student's enrollment must be marked completed before a certificate can be issued (it is currently {{status}})",
+    "certificateNoAttendance": "No attendance has been recorded for this student on this course, so the {{required}} requirement can't be shown to be met",
+    "certificateAttendanceTooLow": "Attendance on this course is {{rate}}, below the {{required}} required for a certificate",
+    "validation": {
+      "item": "{{field}}: {{message}}",
+      "separator": "; ",
+      "notBlank": "must not be blank",
+      "notNull": "is required",
+      "email": "must be a well-formed email address",
+      "size": "must be between {{min}} and {{max}} characters",
+      "positive": "must be greater than zero",
+      "nonNegative": "must not be negative",
+      "min": "must be at least {{min}}",
+      "max": "must be at most {{max}}",
+      "sizeMax": "must be at most {{max}} characters"
+    },
+    "fields": {
+      "amount": "Amount",
+      "amountDue": "Amount due",
+      "assessmentType": "Type",
+      "capacity": "Capacity",
+      "classroom": "Classroom",
+      "code": "Code",
+      "courseId": "Course",
+      "dueDate": "Due date",
+      "durationHours": "Duration",
+      "email": "Email",
+      "endTime": "End time",
+      "entries": "Attendance entries",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "maxScore": "Max score",
+      "name": "Name",
+      "password": "Password",
+      "paymentMethod": "Payment method",
+      "price": "Price",
+      "role": "Role",
+      "score": "Score",
+      "sessionDate": "Date",
+      "sessionId": "Session",
+      "startTime": "Start time",
+      "status": "Status",
+      "studentId": "Student",
+      "title": "Title",
+      "token": "QR code",
+      "trainerId": "Trainer",
+      "weight": "Weight",
+      "decision": "Decision",
+      "primaryTrainerId": "Primary trainer",
+      "phone": "Phone"
+    }
+  }
+}

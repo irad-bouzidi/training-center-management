@@ -1,5 +1,6 @@
 import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   AlertDialog,
@@ -30,6 +31,7 @@ import { useCourseGradebookQuery, useDeleteGradeMutation } from './hooks'
  * dialog rather than being predicted here.
  */
 export function GradebookPage() {
+  const { t } = useTranslation('grades')
   const { courseId } = useParams()
   const navigate = useNavigate()
   const { data: gradebook, isLoading, isError, error } = useCourseGradebookQuery(courseId)
@@ -40,15 +42,15 @@ export function GradebookPage() {
   const [deleting, setDeleting] = useState(null)
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   if (isError) {
     return (
       <p className="text-sm text-muted-foreground">
         {error.response?.status === 403
-          ? 'The gradebook is open to administrators and the course’s own trainer.'
-          : 'This gradebook could not be loaded.'}
+          ? t('gradebook.forbidden')
+          : t('gradebook.loadFailed')}
       </p>
     )
   }
@@ -69,20 +71,20 @@ export function GradebookPage() {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
         <ArrowLeft />
-        Back
+        {t('common:actions.back')}
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Gradebook</CardTitle>
+          <CardTitle>{t('gradebook.title')}</CardTitle>
           <CardDescription>
-            {gradebook.courseName} ({gradebook.courseCode})
+            {t('gradebook.course', { name: gradebook.courseName, code: gradebook.courseCode })}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-2">
           {gradebook.students.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nobody is approved on this course yet.</p>
+            <p className="text-sm text-muted-foreground">{t('gradebook.noStudents')}</p>
           )}
 
           {gradebook.students.map((student) => {
@@ -94,7 +96,11 @@ export function GradebookPage() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${student.studentName}`}
+                    aria-label={
+                      isOpen
+                        ? t('gradebook.collapse', { name: student.studentName })
+                        : t('gradebook.expand', { name: student.studentName })
+                    }
                     onClick={() => toggle(student.studentId)}
                   >
                     {isOpen ? <ChevronDown /> : <ChevronRight />}
@@ -104,13 +110,13 @@ export function GradebookPage() {
                     <p className="truncate text-xs text-muted-foreground">{student.email}</p>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {student.grades.length} assessment{student.grades.length === 1 ? '' : 's'}
+                    {t('gradebook.assessmentCount', { count: student.grades.length })}
                   </span>
                   <Badge variant={scoreBadgeVariant(student.weightedAverage)}>
                     {formatPercent(student.weightedAverage)}
                   </Badge>
                   <Button size="sm" onClick={() => setEditing({ student, grade: null })}>
-                    Add assessment
+                    {t('form.addTitle')}
                   </Button>
                 </div>
 
@@ -120,7 +126,7 @@ export function GradebookPage() {
                       grades={student.grades}
                       onEdit={(grade) => setEditing({ student, grade })}
                       onDelete={(grade) => setDeleting({ student, grade })}
-                      emptyMessage="Nothing recorded for this student yet."
+                      emptyMessage={t('gradebook.studentEmpty')}
                     />
                   </div>
                 )}
@@ -142,14 +148,16 @@ export function GradebookPage() {
       <AlertDialog open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove this assessment?</AlertDialogTitle>
+            <AlertDialogTitle>{t('gradebook.delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleting?.grade.title} for {deleting?.student.studentName} will be deleted, and their average
-              recomputed without it. This can’t be undone.
+              {t('gradebook.delete.description', {
+                title: deleting?.grade.title,
+                name: deleting?.student.studentName,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogCancel>{t('gradebook.delete.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={deleteGrade.isPending}
@@ -158,7 +166,7 @@ export function GradebookPage() {
                 deleteGrade.mutate(deleting.grade.id, { onSuccess: () => setDeleting(null) })
               }}
             >
-              Remove
+              {t('gradebook.delete.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

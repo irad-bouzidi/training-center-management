@@ -1,4 +1,5 @@
 import { Download } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatIssuedAt } from './certificateDisplay'
@@ -9,10 +10,11 @@ import { useDownloadCertificateMutation } from './hooks'
  * summary's Certificates tab and the student's own page.
  */
 export function CertificatesTable({ certificates, isLoading, emptyMessage }) {
+  const { t } = useTranslation('certificates')
   const download = useDownloadCertificateMutation()
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   if (certificates.length === 0) {
@@ -23,9 +25,9 @@ export function CertificatesTable({ certificates, isLoading, emptyMessage }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Course</TableHead>
-          <TableHead>Certificate No.</TableHead>
-          <TableHead>Issued</TableHead>
+          <TableHead>{t('table.course')}</TableHead>
+          <TableHead>{t('table.number')}</TableHead>
+          <TableHead>{t('table.issued')}</TableHead>
           <TableHead className="w-36" />
         </TableRow>
       </TableHeader>
@@ -48,7 +50,7 @@ export function CertificatesTable({ certificates, isLoading, emptyMessage }) {
                 }
               >
                 <Download />
-                Download PDF
+                {t('table.download')}
               </Button>
             </TableCell>
           </TableRow>

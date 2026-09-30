@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatPercent, scoreBadgeVariant, titleCase } from './gradeDisplay'
+import { formatNumber } from '@/lib/format'
+import { formatPercent, scoreBadgeVariant } from './gradeDisplay'
 
 /**
  * One student's assessment entries. Shared by the gradebook's drill-in, the
@@ -10,6 +12,8 @@ import { formatPercent, scoreBadgeVariant, titleCase } from './gradeDisplay'
  * grade gets the actions, everyone else reads.
  */
 export function GradeEntriesTable({ grades, onEdit, onDelete, emptyMessage }) {
+  const { t } = useTranslation('grades')
+
   if (grades.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyMessage}</p>
   }
@@ -18,12 +22,12 @@ export function GradeEntriesTable({ grades, onEdit, onDelete, emptyMessage }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Assessment</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead className="text-right">Score</TableHead>
-          <TableHead className="text-right">Weight</TableHead>
-          <TableHead className="text-right">Result</TableHead>
-          <TableHead>Graded by</TableHead>
+          <TableHead>{t('table.assessment')}</TableHead>
+          <TableHead>{t('table.type')}</TableHead>
+          <TableHead className="text-right">{t('table.score')}</TableHead>
+          <TableHead className="text-right">{t('table.weight')}</TableHead>
+          <TableHead className="text-right">{t('table.result')}</TableHead>
+          <TableHead>{t('table.gradedBy')}</TableHead>
           {onEdit && <TableHead className="w-32" />}
         </TableRow>
       </TableHeader>
@@ -34,11 +38,11 @@ export function GradeEntriesTable({ grades, onEdit, onDelete, emptyMessage }) {
               <p className="font-medium">{grade.title}</p>
               {grade.comments && <p className="text-xs text-muted-foreground">{grade.comments}</p>}
             </TableCell>
-            <TableCell>{titleCase(grade.assessmentType)}</TableCell>
+            <TableCell>{t(`common:enums.assessmentType.${grade.assessmentType}`)}</TableCell>
             <TableCell className="text-right tabular-nums">
-              {grade.score} / {grade.maxScore}
+              {t('table.scoreOutOf', { score: formatNumber(grade.score), max: formatNumber(grade.maxScore) })}
             </TableCell>
-            <TableCell className="text-right tabular-nums">{grade.weight}</TableCell>
+            <TableCell className="text-right tabular-nums">{formatNumber(grade.weight)}</TableCell>
             <TableCell className="text-right">
               <Badge variant={scoreBadgeVariant(grade.percentage)}>{formatPercent(grade.percentage)}</Badge>
             </TableCell>
@@ -47,10 +51,10 @@ export function GradeEntriesTable({ grades, onEdit, onDelete, emptyMessage }) {
               <TableCell>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => onEdit(grade)}>
-                    Edit
+                    {t('common:actions.edit')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => onDelete(grade)}>
-                    Delete
+                    {t('common:actions.delete')}
                   </Button>
                 </div>
               </TableCell>

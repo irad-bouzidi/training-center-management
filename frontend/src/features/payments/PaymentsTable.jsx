@@ -1,7 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatAmount, formatDueDate, statusBadgeVariant, titleCase } from './paymentDisplay'
+import { formatAmount, formatDueDate, statusBadgeVariant } from './paymentDisplay'
 
 /**
  * The invoice table, shared by the admin listing, the student summary's
@@ -13,19 +14,20 @@ import { formatAmount, formatDueDate, statusBadgeVariant, titleCase } from './pa
  * of one repeated name tells the reader nothing.
  */
 export function PaymentsTable({ payments, isLoading, showStudent = true, onRecordPayment, emptyMessage }) {
+  const { t } = useTranslation('payments')
   const columnCount = showStudent ? 7 : 6
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          {showStudent && <TableHead>Student</TableHead>}
-          <TableHead>Course</TableHead>
-          <TableHead className="text-right">Due</TableHead>
-          <TableHead className="text-right">Paid</TableHead>
-          <TableHead className="text-right">Outstanding</TableHead>
-          <TableHead>Due date</TableHead>
-          <TableHead>Status</TableHead>
+          {showStudent && <TableHead>{t('table.student')}</TableHead>}
+          <TableHead>{t('table.course')}</TableHead>
+          <TableHead className="text-right">{t('table.amountDue')}</TableHead>
+          <TableHead className="text-right">{t('table.amountPaid')}</TableHead>
+          <TableHead className="text-right">{t('table.outstanding')}</TableHead>
+          <TableHead>{t('table.dueDate')}</TableHead>
+          <TableHead>{t('table.status')}</TableHead>
           {onRecordPayment && <TableHead className="w-36" />}
         </TableRow>
       </TableHeader>
@@ -33,7 +35,7 @@ export function PaymentsTable({ payments, isLoading, showStudent = true, onRecor
         {isLoading && (
           <TableRow>
             <TableCell colSpan={columnCount + (onRecordPayment ? 1 : 0)} className="text-center text-muted-foreground">
-              Loading…
+              {t('common:states.loading')}
             </TableCell>
           </TableRow>
         )}
@@ -62,13 +64,13 @@ export function PaymentsTable({ payments, isLoading, showStudent = true, onRecor
             <TableCell className="text-right font-medium tabular-nums">{formatAmount(payment.outstanding)}</TableCell>
             <TableCell>{formatDueDate(payment.dueDate)}</TableCell>
             <TableCell>
-              <Badge variant={statusBadgeVariant(payment.status)}>{titleCase(payment.status)}</Badge>
+              <Badge variant={statusBadgeVariant(payment.status)}>{t(`common:enums.paymentStatus.${payment.status}`)}</Badge>
             </TableCell>
             {onRecordPayment && (
               <TableCell>
                 {payment.status !== 'PAID' && (
                   <Button variant="outline" size="sm" onClick={() => onRecordPayment(payment)}>
-                    Record payment
+                    {t('table.recordPayment')}
                   </Button>
                 )}
               </TableCell>

@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,13 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CourseFormDialog } from './CourseFormDialog'
 import { CourseRowActions } from './CourseRowActions'
-import { formatPrice, STATUS_OPTIONS, statusBadgeVariant, titleCase } from './courseDisplay'
+import { formatPrice, STATUS_OPTIONS, statusBadgeVariant } from './courseDisplay'
 import { useCoursesQuery } from './hooks'
 
 const PAGE_SIZE = 20
 const ALL = 'ALL'
 
 export function CoursesListPage() {
+  const { t } = useTranslation('courses')
   const navigate = useNavigate()
 
   const [status, setStatus] = useState(ALL)
@@ -66,24 +68,24 @@ export function CoursesListPage() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>Courses</CardTitle>
+        <CardTitle>{t('list.title')}</CardTitle>
         <Button onClick={() => setFormDialog({ course: null })}>
           <Plus />
-          New Course
+          {t('list.newCourse')}
         </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Input
-            placeholder="Search by name or code…"
+            placeholder={t('list.searchPlaceholder')}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             className="max-w-56"
           />
 
           <Input
-            placeholder="Category…"
+            placeholder={t('list.categoryPlaceholder')}
             value={categoryInput}
             onChange={(event) => setCategoryInput(event.target.value)}
             className="max-w-40"
@@ -94,10 +96,10 @@ export function CoursesListPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>All statuses</SelectItem>
+              <SelectItem value={ALL}>{t('list.allStatuses')}</SelectItem>
               {STATUS_OPTIONS.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {titleCase(option)}
+                  {t(`common:enums.courseStatus.${option}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -107,12 +109,12 @@ export function CoursesListPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Trainer</TableHead>
-              <TableHead>Capacity</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t('list.columns.code')}</TableHead>
+              <TableHead>{t('list.columns.name')}</TableHead>
+              <TableHead>{t('list.columns.trainer')}</TableHead>
+              <TableHead>{t('list.columns.capacity')}</TableHead>
+              <TableHead>{t('list.columns.price')}</TableHead>
+              <TableHead>{t('list.columns.status')}</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -120,7 +122,7 @@ export function CoursesListPage() {
             {isLoading && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  Loading…
+                  {t('common:states.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -128,7 +130,7 @@ export function CoursesListPage() {
             {!isLoading && courses.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  No courses found.
+                  {t('list.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -141,7 +143,7 @@ export function CoursesListPage() {
                 <TableCell>{course.capacity}</TableCell>
                 <TableCell>{formatPrice(course.price)}</TableCell>
                 <TableCell>
-                  <Badge variant={statusBadgeVariant(course.status)}>{titleCase(course.status)}</Badge>
+                  <Badge variant={statusBadgeVariant(course.status)}>{t(`common:enums.courseStatus.${course.status}`)}</Badge>
                 </TableCell>
                 <TableCell>
                   <CourseRowActions
@@ -156,7 +158,7 @@ export function CoursesListPage() {
         </Table>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>{totalElements} course{totalElements === 1 ? '' : 's'}</p>
+          <p>{t('shared.count', { count: totalElements })}</p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -164,18 +166,16 @@ export function CoursesListPage() {
               disabled={page === 0}
               onClick={() => setPage((current) => current - 1)}
             >
-              Previous
+              {t('common:actions.previous')}
             </Button>
-            <span>
-              Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-            </span>
+            <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
             <Button
               variant="outline"
               size="sm"
               disabled={page + 1 >= totalPages}
               onClick={() => setPage((current) => current + 1)}
             >
-              Next
+              {t('common:actions.next')}
             </Button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,18 +14,17 @@ import { Button } from '@/components/ui/button'
 import { CompleteEnrollmentButton } from './CompleteEnrollmentButton'
 import { useDecideEnrollmentMutation } from './hooks'
 
+// `enrollments:` i18n keys; the description interpolates {{student}} / {{course}}.
 const DECISIONS = {
   APPROVED: {
-    label: 'Approve',
-    title: 'Approve enrollment?',
-    description: (enrollment) =>
-      `${enrollment.student.name} takes a seat in ${enrollment.course.name}.`,
+    labelKey: 'decisions.approve',
+    titleKey: 'decisions.approveTitle',
+    descriptionKey: 'decisions.approveDescription',
   },
   REJECTED: {
-    label: 'Reject',
-    title: 'Reject enrollment?',
-    description: (enrollment) =>
-      `${enrollment.student.name} won't be enrolled in ${enrollment.course.name}, and can't request it again.`,
+    labelKey: 'decisions.reject',
+    titleKey: 'decisions.rejectTitle',
+    descriptionKey: 'decisions.rejectDescription',
   },
 }
 
@@ -39,6 +39,7 @@ const DECISIONS = {
  * lets a certificate be issued - and any other status renders nothing.
  */
 export function EnrollmentRowActions({ enrollment }) {
+  const { t } = useTranslation('enrollments')
   const [pendingDecision, setPendingDecision] = useState(null)
   const decide = useDecideEnrollmentMutation()
 
@@ -64,21 +65,24 @@ export function EnrollmentRowActions({ enrollment }) {
     <>
       <div className="flex justify-end gap-2">
         <Button size="sm" onClick={() => setPendingDecision('APPROVED')}>
-          Approve
+          {t('decisions.approve')}
         </Button>
         <Button size="sm" variant="outline" onClick={() => setPendingDecision('REJECTED')}>
-          Reject
+          {t('decisions.reject')}
         </Button>
       </div>
 
       <AlertDialog open={Boolean(pendingDecision)} onOpenChange={(next) => !next && setPendingDecision(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{decision?.title}</AlertDialogTitle>
-            <AlertDialogDescription>{decision?.description(enrollment)}</AlertDialogDescription>
+            <AlertDialogTitle>{decision && t(decision.titleKey)}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {decision &&
+                t(decision.descriptionKey, { student: enrollment.student.name, course: enrollment.course.name })}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               variant={pendingDecision === 'REJECTED' ? 'destructive' : 'default'}
               disabled={decide.isPending}
@@ -87,7 +91,7 @@ export function EnrollmentRowActions({ enrollment }) {
                 confirmDecision()
               }}
             >
-              {decision?.label}
+              {decision && t(decision.labelKey)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +18,6 @@ import {
   formatDate,
   isCancellable,
   statusBadgeVariant,
-  titleCase,
 } from '@/features/enrollments/enrollmentDisplay'
 import { useCancelEnrollmentMutation, useMyEnrollmentsQuery } from '@/features/enrollments/hooks'
 
@@ -30,6 +30,7 @@ const PAGE_SIZE = 20
  * it and lets the student withdraw a request that's still live.
  */
 export function MyEnrollmentsPage() {
+  const { t } = useTranslation('students')
   const [page, setPage] = useState(0)
   const [cancelTarget, setCancelTarget] = useState(null)
 
@@ -48,17 +49,17 @@ export function MyEnrollmentsPage() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>My Enrollments</CardTitle>
+          <CardTitle>{t('myEnrollments.title')}</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Course</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Requested</TableHead>
-                <TableHead>Decided</TableHead>
+                <TableHead>{t('myEnrollments.columns.course')}</TableHead>
+                <TableHead>{t('myEnrollments.columns.status')}</TableHead>
+                <TableHead>{t('myEnrollments.columns.requested')}</TableHead>
+                <TableHead>{t('myEnrollments.columns.decided')}</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -66,7 +67,7 @@ export function MyEnrollmentsPage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Loading…
+                    {t('common:states.loading')}
                   </TableCell>
                 </TableRow>
               )}
@@ -74,7 +75,7 @@ export function MyEnrollmentsPage() {
               {!isLoading && enrollments.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    You haven't enrolled in any course yet - browse the catalog to get started.
+                    {t('myEnrollments.empty')}
                   </TableCell>
                 </TableRow>
               )}
@@ -86,14 +87,14 @@ export function MyEnrollmentsPage() {
                     <span className="text-xs text-muted-foreground">{enrollment.course.code}</span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusBadgeVariant(enrollment.status)}>{titleCase(enrollment.status)}</Badge>
+                    <Badge variant={statusBadgeVariant(enrollment.status)}>{t(`common:enums.enrollmentStatus.${enrollment.status}`)}</Badge>
                   </TableCell>
                   <TableCell>{formatDate(enrollment.enrolledAt)}</TableCell>
                   <TableCell>{enrollment.decidedAt ? formatDate(enrollment.decidedAt) : '—'}</TableCell>
                   <TableCell>
                     {isCancellable(enrollment.status) && (
                       <Button variant="outline" size="sm" onClick={() => setCancelTarget(enrollment)}>
-                        Cancel
+                        {t('common:actions.cancel')}
                       </Button>
                     )}
                   </TableCell>
@@ -103,7 +104,7 @@ export function MyEnrollmentsPage() {
           </Table>
 
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <p>{totalElements} enrollment{totalElements === 1 ? '' : 's'}</p>
+            <p>{t('myEnrollments.count', { count: totalElements })}</p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -111,18 +112,16 @@ export function MyEnrollmentsPage() {
                 disabled={page === 0}
                 onClick={() => setPage((current) => current - 1)}
               >
-                Previous
+                {t('common:actions.previous')}
               </Button>
-              <span>
-                Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-              </span>
+              <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
               >
-                Next
+                {t('common:actions.next')}
               </Button>
             </div>
           </div>
@@ -132,14 +131,13 @@ export function MyEnrollmentsPage() {
       <AlertDialog open={Boolean(cancelTarget)} onOpenChange={(next) => !next && setCancelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel enrollment?</AlertDialogTitle>
+            <AlertDialogTitle>{t('myEnrollments.cancelConfirm.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Your registration for {cancelTarget?.course.name} will be withdrawn, and you won't be able to
-              request this course again.
+              {t('myEnrollments.cancelConfirm.description', { course: cancelTarget?.course.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogCancel>{t('myEnrollments.cancelConfirm.keep')}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={cancelEnrollment.isPending}
@@ -148,7 +146,7 @@ export function MyEnrollmentsPage() {
                 confirmCancel()
               }}
             >
-              Cancel enrollment
+              {t('myEnrollments.cancelConfirm.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

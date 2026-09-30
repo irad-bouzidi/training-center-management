@@ -1,5 +1,7 @@
 import { LogOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,11 +27,14 @@ function initials(name) {
  * Shared shell every role layout (AdminLayout/TrainerLayout/StudentLayout)
  * renders: sidebar nav + top bar with a user menu/logout.
  *
- * `navItems`: [{ label, to?, enabled }] - items for features later tasks
+ * `titleKey` / `navItems[].labelKey` are `layout:` i18n keys (TCM-32).
+ *
+ * `navItems`: [{ labelKey, to?, enabled }] - items for features later tasks
  * build (enabled: false) render greyed out and unlinked instead of routing
  * anywhere, per docs/tasks/TCM-9-frontend-auth.md.
  */
-export function AppShell({ title, navItems }) {
+export function AppShell({ titleKey, navItems }) {
+  const { t } = useTranslation('layout')
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -41,7 +46,7 @@ export function AppShell({ title, navItems }) {
   return (
     <div className="flex min-h-svh">
       <aside className="w-56 shrink-0 border-r bg-sidebar p-4">
-        <p className="mb-4 px-2 text-sm font-semibold text-sidebar-foreground">{title}</p>
+        <p className="mb-4 px-2 text-sm font-semibold text-sidebar-foreground">{t(titleKey)}</p>
         <nav className="space-y-1">
           {navItems.map((item) =>
             item.enabled ? (
@@ -50,15 +55,15 @@ export function AppShell({ title, navItems }) {
                 to={item.to}
                 className="block rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             ) : (
               <span
-                key={item.label}
-                title="Coming soon"
+                key={item.labelKey}
+                title={t('comingSoon')}
                 className="block cursor-not-allowed rounded-md px-2 py-1.5 text-sm text-muted-foreground"
               >
-                {item.label}
+                {t(item.labelKey)}
               </span>
             ),
           )}
@@ -66,7 +71,8 @@ export function AppShell({ title, navItems }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-end border-b px-6 py-3">
+        <header className="flex items-center justify-end gap-2 border-b px-6 py-3">
+          <LanguageSwitcher />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 px-2">
@@ -81,7 +87,7 @@ export function AppShell({ title, navItems }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleLogout}>
                 <LogOut />
-                Log out
+                {t('logOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/context/AuthContext'
 import { ScheduleFormDialog } from './ScheduleFormDialog'
 import { SessionRowActions } from './SessionRowActions'
-import { formatSessionDate, formatTimeRange, statusBadgeVariant, titleCase } from './scheduleDisplay'
+import { formatSessionDate, formatTimeRange, statusBadgeVariant } from './scheduleDisplay'
 import { useSessionsQuery } from './hooks'
 
 // A course's own timetable is short enough to show whole.
@@ -19,6 +20,7 @@ const COURSE_SCHEDULE_SIZE = 100
  * and an empty tab before then.
  */
 export function CourseScheduleTab({ course }) {
+  const { t } = useTranslation('schedule')
   const { user } = useAuth()
   const isAdmin = user.role === 'ADMIN'
   const [formOpen, setFormOpen] = useState(false)
@@ -46,7 +48,7 @@ export function CourseScheduleTab({ course }) {
       {isAdmin && (
         <div className="flex justify-end">
           <Button size="sm" onClick={openCreate}>
-            New Session
+            {t('newSession')}
           </Button>
         </div>
       )}
@@ -54,11 +56,11 @@ export function CourseScheduleTab({ course }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Classroom</TableHead>
-            <TableHead>Trainer</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t('columns.date')}</TableHead>
+            <TableHead>{t('columns.time')}</TableHead>
+            <TableHead>{t('columns.classroom')}</TableHead>
+            <TableHead>{t('columns.trainer')}</TableHead>
+            <TableHead>{t('columns.status')}</TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
@@ -66,7 +68,7 @@ export function CourseScheduleTab({ course }) {
           {isLoading && (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground">
-                Loading…
+                {t('common:states.loading')}
               </TableCell>
             </TableRow>
           )}
@@ -74,7 +76,7 @@ export function CourseScheduleTab({ course }) {
           {!isLoading && sessions.length === 0 && (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground">
-                No sessions scheduled for this course yet.
+                {t('courseTab.empty')}
               </TableCell>
             </TableRow>
           )}
@@ -88,7 +90,7 @@ export function CourseScheduleTab({ course }) {
               <TableCell>{session.classroom}</TableCell>
               <TableCell>{session.trainer.name}</TableCell>
               <TableCell>
-                <Badge variant={statusBadgeVariant(session.status)}>{titleCase(session.status)}</Badge>
+                <Badge variant={statusBadgeVariant(session.status)}>{t(`common:enums.sessionStatus.${session.status}`)}</Badge>
               </TableCell>
               <TableCell>
                 <SessionRowActions session={session} onEdit={openEdit} />

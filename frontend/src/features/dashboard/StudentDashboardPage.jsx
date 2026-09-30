@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
 import { formatRate } from '@/features/attendance/attendanceDisplay'
@@ -14,6 +15,7 @@ import { formatCount } from './dashboardDisplay'
  * there.
  */
 export function StudentDashboardPage() {
+  const { t } = useTranslation('dashboard')
   const { user } = useAuth()
   const { data: summary, isLoading } = useStudentSummaryQuery(user.id)
 
@@ -22,36 +24,40 @@ export function StudentDashboardPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome, {user.name}</CardTitle>
-        <CardDescription>Where you stand across your courses.</CardDescription>
+        <CardTitle>{t('welcome', { name: user.name })}</CardTitle>
+        <CardDescription>{t('student.description')}</CardDescription>
       </CardHeader>
 
       <CardContent>
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>}
 
         {summary && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatTile
-              label="Active enrollments"
+              label={t('student.activeEnrollments')}
               value={formatCount(approved)}
-              note={`${summary.enrollments.length} in total`}
+              note={t('student.totalEnrollments', { total: formatCount(summary.enrollments.length) })}
               to="/student/enrollments"
             />
             <StatTile
-              label="Attendance"
+              label={t('student.attendance')}
               value={formatRate(summary.attendanceRate)}
-              note="Across every marked session"
+              note={t('student.acrossMarkedSessions')}
             />
-            <StatTile label="Overall grade" value={formatPercent(summary.overallGrade)} to="/student/grades" />
             <StatTile
-              label="Balance owed"
+              label={t('student.overallGrade')}
+              value={formatPercent(summary.overallGrade)}
+              to="/student/grades"
+            />
+            <StatTile
+              label={t('student.balanceOwed')}
               value={formatAmount(summary.paymentBalance ?? 0)}
-              note={Number(summary.paymentBalance) > 0 ? 'Still to pay' : 'Nothing outstanding'}
+              note={Number(summary.paymentBalance) > 0 ? t('student.stillToPay') : t('student.nothingOutstanding')}
               tone={Number(summary.paymentBalance) > 0 ? 'attention' : 'default'}
               to="/student/payments"
             />
             <StatTile
-              label="Certificates"
+              label={t('student.certificates')}
               value={formatCount(summary.certificates.length)}
               to="/student/certificates"
             />

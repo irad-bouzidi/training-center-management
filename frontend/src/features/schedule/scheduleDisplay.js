@@ -1,14 +1,11 @@
+import { formatLocalDate } from '@/lib/format'
+
 /**
  * Class session lifecycle, mirroring com.tcm.schedule.model.SessionStatus
  * (TCM-17): SCHEDULED on creation, an ADMIN may CANCELLED it, and an ADMIN or
  * the assigned trainer marks it COMPLETED. There is no way back to SCHEDULED.
  */
 export const STATUS_OPTIONS = ['SCHEDULED', 'CANCELLED', 'COMPLETED']
-
-/** SCHEDULED -> "Scheduled", CANCELLED -> "Cancelled". */
-export function titleCase(value) {
-  return value.charAt(0) + value.slice(1).toLowerCase()
-}
 
 export function statusBadgeVariant(status) {
   switch (status) {
@@ -31,9 +28,10 @@ export function formatTimeRange(startTime, endTime) {
   return `${toTimeInputValue(startTime)} – ${toTimeInputValue(endTime)}`
 }
 
-/** "Mon, 2 Mar 2026" - the heading each agenda day is grouped under. */
+/** "Mon, 2 Mar 2026" / "lun. 2 mars 2026" - the heading each agenda day is
+ * grouped under, in the UI's current language. */
 export function formatSessionDate(isoDate) {
-  return new Date(`${isoDate}T00:00:00`).toLocaleDateString(undefined, {
+  return formatLocalDate(isoDate, {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
