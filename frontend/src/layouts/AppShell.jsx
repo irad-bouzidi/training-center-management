@@ -2,6 +2,7 @@ import { LogOut } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -72,6 +73,7 @@ export function AppShell({ titleKey, navItems }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-end gap-2 border-b px-6 py-3">
+          <ThemeSwitcher />
           <LanguageSwitcher />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

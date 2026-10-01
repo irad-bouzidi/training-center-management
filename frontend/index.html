@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Training Center Management</title>
+    <script>
+      // Apply the saved theme (see ThemeSwitcher / next-themes) before the
+      // bundle loads, so a dark-mode user doesn't get a white flash.
+      try {
+        var theme = localStorage.getItem('tcm_theme') || 'system'
+        var dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

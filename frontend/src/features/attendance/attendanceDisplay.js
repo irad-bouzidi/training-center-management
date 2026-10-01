@@ -73,7 +73,7 @@ export function summarizeByCourse(records) {
 /** Green above 75%, amber above 50%, red below - the bar in the report table. */
 export function rateBarClass(rate) {
   if (rate >= 75) {
-    return 'bg-primary'
+    return 'bg-success'
   }
-  return rate >= 50 ? 'bg-secondary-foreground/60' : 'bg-destructive'
+  return rate >= 50 ? 'bg-warning' : 'bg-destructive'
 }
