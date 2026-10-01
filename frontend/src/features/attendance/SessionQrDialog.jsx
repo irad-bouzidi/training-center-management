@@ -59,9 +59,9 @@ export function SessionQrDialog({ onOpenChange, session }) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* min-w-0 is what keeps the check-in URL from pushing the dialog
-            open: an unbroken string is a single long word, and without it
-            the flex column grows to fit rather than letting it truncate. */}
+        {/* min-w-0 is what keeps the link from pushing the dialog open: an
+            unbroken string is a single long word, and without it the flex
+            column grows to fit rather than letting it wrap. */}
         <div className="flex min-w-0 flex-col items-center gap-3">
           {generate.isPending && <p className="text-sm text-muted-foreground">{t('qrDialog.producing')}</p>}
 
@@ -84,8 +84,10 @@ export function SessionQrDialog({ onOpenChange, session }) {
                   t('qrDialog.expired')
                 )}
               </p>
-              <p className="w-full truncate text-center text-xs text-muted-foreground" title={code.checkInUrl}>
-                {code.checkInUrl}
+              {/* The short link, in full - what the image encodes, and short
+                  enough to read off the screen and type in. */}
+              <p className="w-full break-all text-center font-mono text-sm text-foreground select-all">
+                {code.shortUrl}
               </p>
             </>
           )}

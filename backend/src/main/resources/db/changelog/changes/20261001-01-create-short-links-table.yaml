@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261001-01-create-short-links-table
+      author: irad
+      comment: >
+        short_links table (TCM-35): the link shortener behind QR check-in
+        codes. The code is the primary key, so a resolve is one index
+        lookup; expires_at is indexed for the housekeeping delete that runs
+        each time a link is created.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE TABLE short_links (
+                  code       VARCHAR(16)   PRIMARY KEY,
+                  target_url VARCHAR(2048) NOT NULL,
+                  created_at TIMESTAMP     NOT NULL DEFAULT NOW(),
+                  expires_at TIMESTAMP     NOT NULL
+              );
+
+              CREATE INDEX ix_short_links_expires_at ON short_links (expires_at);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: |
+              DROP TABLE IF EXISTS short_links;

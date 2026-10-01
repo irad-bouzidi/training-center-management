@@ -6,7 +6,7 @@ import { apiClient } from './client'
  * alongside its expiry, so the screen showing it can count down without a
  * second call.
  *
- * @returns {Promise<{token: string, expiresAt: string, checkInUrl: string, imageBase64: string}>}
+ * @returns {Promise<{token: string, expiresAt: string, checkInUrl: string, shortUrl: string, imageBase64: string}>}
  */
 export async function generateSessionQr(sessionId) {
   const { data } = await apiClient.post(`/sessions/${sessionId}/qr`)

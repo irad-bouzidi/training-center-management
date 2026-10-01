@@ -67,10 +67,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Only /login is public - /me (and everything else
-                        // under /api/v1/auth/) requires authentication.
+                        // under /api/v1/auth/) requires authentication. Short
+                        // links (/s/<code>) are opened from a phone's camera,
+                        // with no token to send.
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/health",
+                                "/s/*",
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                         .permitAll()
                         .anyRequest().authenticated())

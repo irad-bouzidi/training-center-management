@@ -193,12 +193,12 @@
       "title": "Pointer",
       "pending": "Pointage en cours…",
       "instructions": "Scannez le code affiché par votre formateur.",
-      "manualLabel": "Impossible de scanner ? Collez le lien de pointage",
-      "manualPlaceholderWithSession": "Lien ou code de pointage",
-      "manualPlaceholder": "https://…/attend/…?token=…",
+      "manualLabel": "Impossible de scanner ? Saisissez le lien affiché sous le code",
+      "manualPlaceholderWithSession": "Lien ou code",
+      "manualPlaceholder": "https://…/s/…",
       "submit": "Pointer",
       "invalidWithSession": "Ce n’est pas un lien ou un code de pointage.",
-      "invalid": "Collez le lien de pointage complet : un code seul n’indique pas la séance concernée."
+      "invalid": "Saisissez le lien complet affiché sous le code : un code seul n’indique pas la séance concernée."
     },
     "failure": {
       "expiredTitle": "Ce code n’est plus valide",

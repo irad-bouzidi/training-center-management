@@ -26,11 +26,31 @@ export function parseCheckInUrl(text) {
 }
 
 /**
+ * A short link (`/s/{code}`, TCM-35) on this app's own origin - what the
+ * trainer's QR image actually encodes. Only recognized, never resolved: the
+ * backend does that, by redirecting whoever opens it to the full check-in
+ * link. Other origins are left alone, so a poster can't send anyone off-site.
+ *
+ * @returns {string|null} the link to open
+ */
+export function parseShortLinkUrl(text) {
+  try {
+    const url = new URL(text, window.location.origin)
+    return url.origin === window.location.origin && /^\/s\/[A-Za-z0-9]{4,16}$/.test(url.pathname) ? url.href : null
+  } catch {
+    return null
+  }
+}
+
+/**
  * The camera half of the student check-in page. The scanner is an external
  * system with its own lifecycle - it's started when this mounts and stopped
  * when it unmounts, which is exactly what an effect is for.
+ *
+ * A full check-in link goes to `onScan`; a short link to `onShortLink`, to
+ * be opened.
  */
-export function QrScanner({ onScan }) {
+export function QrScanner({ onScan, onShortLink }) {
   const { t } = useTranslation('attendance')
   const elementId = useId().replace(/:/g, '')
   // Holds whether the camera failed, not the message, so the text follows
@@ -46,6 +66,11 @@ export function QrScanner({ onScan }) {
         const scanned = parseCheckInUrl(text)
         if (scanned) {
           onScan(scanned)
+          return
+        }
+        const shortLink = parseShortLinkUrl(text)
+        if (shortLink) {
+          onShortLink(shortLink)
         }
       })
       // Decode failures fire constantly while the camera hunts for a code;
@@ -62,7 +87,7 @@ export function QrScanner({ onScan }) {
         })
       }
     }
-  }, [elementId, onScan])
+  }, [elementId, onScan, onShortLink])
 
   return (
     <div className="space-y-2">

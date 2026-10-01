@@ -34,6 +34,10 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
         },
+        // Short links (TCM-35) - the backend redirects them; see nginx.conf.
+        '/s/': {
+          target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
+        },
       },
     },
   }
