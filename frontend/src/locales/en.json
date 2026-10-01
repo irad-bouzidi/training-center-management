@@ -6,6 +6,12 @@
       "en": "English",
       "fr": "Français"
     },
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
     "actions": {
       "save": "Save",
       "saving": "Saving…",

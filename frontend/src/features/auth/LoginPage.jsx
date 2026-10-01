@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -49,7 +50,8 @@ export function LoginPage() {
 
   return (
     <div className="relative flex min-h-svh items-center justify-center p-6">
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-3 right-3 flex items-center gap-1">
+        <ThemeSwitcher />
         <LanguageSwitcher />
       </div>
       <Card className="w-full max-w-sm">
