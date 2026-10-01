@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next'
 import { PaymentsTable } from './PaymentsTable'
 import { formatAmount, totalOutstanding } from './paymentDisplay'
 import { usePaymentsQuery } from './hooks'
@@ -12,13 +13,14 @@ const ALL_FOR_ONE_STUDENT = 100
  * viewing the same page is told so rather than shown an error.
  */
 export function StudentPaymentsTab({ studentId, isAdmin }) {
+  const { t } = useTranslation('payments')
   const { data, isLoading } = usePaymentsQuery(
     { studentId, size: ALL_FOR_ONE_STUDENT, sort: 'dueDate,desc' },
     { enabled: isAdmin },
   )
 
   if (!isAdmin) {
-    return <p className="text-sm text-muted-foreground">Only administrators can see a student’s invoices.</p>
+    return <p className="text-sm text-muted-foreground">{t('studentTab.adminOnly')}</p>
   }
 
   const payments = data?.content ?? []
@@ -26,15 +28,19 @@ export function StudentPaymentsTab({ studentId, isAdmin }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Outstanding balance:{' '}
-        <span className="font-medium text-foreground tabular-nums">{formatAmount(totalOutstanding(payments))}</span>
+        <Trans
+          t={t}
+          i18nKey="studentTab.outstanding"
+          values={{ amount: formatAmount(totalOutstanding(payments)) }}
+          components={{ strong: <span className="font-medium text-foreground tabular-nums" /> }}
+        />
       </p>
 
       <PaymentsTable
         payments={payments}
         isLoading={isLoading}
         showStudent={false}
-        emptyMessage="This student has no invoices."
+        emptyMessage={t('studentTab.empty')}
       />
     </div>
   )

@@ -1,19 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { downloadCertificate, generateCertificate, listCertificates } from '@/api/certificateApi'
 import { studentsKeys } from '@/features/students/hooks'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 export const certificatesKeys = {
   all: ['certificates'],
   lists: () => [...certificatesKeys.all, 'list'],
   list: (studentId) => [...certificatesKeys.lists(), studentId ?? 'mine'],
-}
-
-// The backend never has a message body it can't produce (see
-// GlobalExceptionHandler) - falling back to a generic string only covers a
-// network-level failure (no response at all).
-export function errorMessage(error, fallback) {
-  return error.response?.data?.message ?? fallback
 }
 
 export function useCertificatesQuery(studentId, options) {
@@ -31,6 +26,7 @@ export function useCertificatesQuery(studentId, options) {
  * (see StudentCertificatesTab).
  */
 export function useGenerateCertificateMutation() {
+  const { t } = useTranslation('certificates')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -38,7 +34,7 @@ export function useGenerateCertificateMutation() {
     onSuccess: (certificate) => {
       queryClient.invalidateQueries({ queryKey: certificatesKeys.all })
       queryClient.invalidateQueries({ queryKey: studentsKeys.all })
-      toast.success(`Certificate ${certificate.certificateNumber} issued`)
+      toast.success(t('toasts.issued', { number: certificate.certificateNumber }))
     },
   })
 }
@@ -49,6 +45,8 @@ export function useGenerateCertificateMutation() {
  * is revoked straight after the click - it only has to survive one.
  */
 export function useDownloadCertificateMutation() {
+  const { t } = useTranslation('certificates')
+
   return useMutation({
     mutationFn: ({ id, certificateNumber }) => downloadCertificate(id, `${certificateNumber}.pdf`),
     onSuccess: ({ blob, filename }) => {
@@ -61,6 +59,6 @@ export function useDownloadCertificateMutation() {
       link.remove()
       URL.revokeObjectURL(url)
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to download the certificate')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.downloadFailed'))),
   })
 }

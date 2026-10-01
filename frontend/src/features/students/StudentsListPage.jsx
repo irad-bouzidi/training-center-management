@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAuth } from '@/context/AuthContext'
 import { studentDetailPathForRole } from '@/lib/roleHomePaths'
 import { useStudentsQuery } from './hooks'
-import { fullName, STATUS_OPTIONS, statusBadgeVariant, titleCase } from './studentDisplay'
+import { fullName, STATUS_OPTIONS, statusBadgeVariant } from './studentDisplay'
 
 const PAGE_SIZE = 20
 const ALL = 'ALL'
@@ -23,6 +24,7 @@ const ALL = 'ALL'
  * a summary directory only, no create/edit here.
  */
 export function StudentsListPage() {
+  const { t } = useTranslation('students')
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -61,13 +63,13 @@ export function StudentsListPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Students</CardTitle>
+        <CardTitle>{t('list.title')}</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Input
-            placeholder="Search by name…"
+            placeholder={t('list.searchPlaceholder')}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             className="max-w-56"
@@ -78,10 +80,10 @@ export function StudentsListPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>All statuses</SelectItem>
+              <SelectItem value={ALL}>{t('list.allStatuses')}</SelectItem>
               {STATUS_OPTIONS.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {titleCase(option)}
+                  {t(`common:enums.accountStatus.${option}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -91,17 +93,17 @@ export function StudentsListPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Active Enrollments</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t('list.columns.name')}</TableHead>
+              <TableHead>{t('list.columns.email')}</TableHead>
+              <TableHead>{t('list.columns.activeEnrollments')}</TableHead>
+              <TableHead>{t('list.columns.status')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  Loading…
+                  {t('common:states.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -109,7 +111,7 @@ export function StudentsListPage() {
             {!isLoading && students.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No students found.
+                  {t('list.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -124,7 +126,7 @@ export function StudentsListPage() {
                 <TableCell>{profile.email}</TableCell>
                 <TableCell>{activeEnrollments}</TableCell>
                 <TableCell>
-                  <Badge variant={statusBadgeVariant(profile.status)}>{titleCase(profile.status)}</Badge>
+                  <Badge variant={statusBadgeVariant(profile.status)}>{t(`common:enums.accountStatus.${profile.status}`)}</Badge>
                 </TableCell>
               </TableRow>
             ))}
@@ -132,7 +134,7 @@ export function StudentsListPage() {
         </Table>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>{totalElements} student{totalElements === 1 ? '' : 's'}</p>
+          <p>{t('list.count', { count: totalElements })}</p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -140,18 +142,16 @@ export function StudentsListPage() {
               disabled={page === 0}
               onClick={() => setPage((current) => current - 1)}
             >
-              Previous
+              {t('common:actions.previous')}
             </Button>
-            <span>
-              Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-            </span>
+            <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
             <Button
               variant="outline"
               size="sm"
               disabled={page + 1 >= totalPages}
               onClick={() => setPage((current) => current + 1)}
             >
-              Next
+              {t('common:actions.next')}
             </Button>
           </div>
         </div>

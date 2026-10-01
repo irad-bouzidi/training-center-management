@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,21 +16,24 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { formatAmount } from './paymentDisplay'
-import { errorMessage, useRecordPaymentMutation } from './hooks'
+import { useRecordPaymentMutation } from './hooks'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 /**
  * Mirrors backend/src/main/java/com/tcm/payment/dto/PaymentTransactionRequest.java.
  * The "not more than is outstanding" rule is checked here as well as
  * server-side so the admin finds out before a round trip - the server has the
- * last word, and says so inline below.
+ * last word, and says so inline below. Messages are i18n keys in the
+ * `payments` namespace, translated where they render (the "too much" one
+ * takes the outstanding amount as {{amount}}).
  */
 function schema(outstanding) {
   return z.object({
     amount: z.coerce
-      .number({ message: 'Amount is required' })
-      .positive('Amount must be greater than zero')
-      .max(outstanding, `Only ${formatAmount(outstanding)} is still owed on this invoice`),
-    paymentMethod: z.string().max(50).optional(),
+      .number({ message: 'dialog.errors.amountRequired' })
+      .positive('dialog.errors.amountPositive')
+      .max(outstanding, 'dialog.errors.amountTooHigh'),
+    paymentMethod: z.string().max(50, 'dialog.errors.methodTooLong').optional(),
     notes: z.string().optional(),
   })
 }
@@ -43,6 +47,7 @@ function schema(outstanding) {
  * form and its error start empty every time rather than being reset.
  */
 export function RecordPaymentDialog({ onOpenChange, payment }) {
+  const { t } = useTranslation('payments')
   const [serverError, setServerError] = useState(null)
   const recordPayment = useRecordPaymentMutation()
   const outstanding = Number(payment.outstanding)
@@ -67,7 +72,8 @@ export function RecordPaymentDialog({ onOpenChange, payment }) {
       },
       {
         onSuccess: () => onOpenChange(false),
-        onError: (error) => setServerError(errorMessage(error, 'Failed to record payment')),
+        // The error is kept and translated at render, so it follows a language switch.
+        onError: setServerError,
       },
     )
   }
@@ -77,38 +83,42 @@ export function RecordPaymentDialog({ onOpenChange, payment }) {
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Record payment</DialogTitle>
+            <DialogTitle>{t('dialog.title')}</DialogTitle>
             <DialogDescription>
-              {payment.student.name} · {payment.course.name} · {formatAmount(outstanding)} outstanding of{' '}
-              {formatAmount(payment.amountDue)}
+              {t('dialog.description', {
+                student: payment.student.name,
+                course: payment.course.name,
+                outstanding: formatAmount(outstanding),
+                due: formatAmount(payment.amountDue),
+              })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">{t('dialog.amount')}</Label>
             <Input id="amount" type="number" step="0.01" min="0.01" max={outstanding} {...register('amount')} />
-            {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+            {errors.amount && <p className="text-sm text-destructive">{t(errors.amount.message, { amount: formatAmount(outstanding) })}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Method</Label>
-            <Input id="paymentMethod" placeholder="Cash, card, transfer…" {...register('paymentMethod')} />
-            {errors.paymentMethod && <p className="text-sm text-destructive">{errors.paymentMethod.message}</p>}
+            <Label htmlFor="paymentMethod">{t('dialog.method')}</Label>
+            <Input id="paymentMethod" maxLength={50} placeholder={t('dialog.methodPlaceholder')} {...register('paymentMethod')} />
+            {errors.paymentMethod && <p className="text-sm text-destructive">{t(errors.paymentMethod.message)}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t('dialog.notes')}</Label>
             <Textarea id="notes" rows={3} {...register('notes')} />
           </div>
 
-          {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+          {serverError && <p className="text-sm text-destructive">{apiErrorMessage(serverError, t('dialog.failed'))}</p>}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting || recordPayment.isPending}>
-              {recordPayment.isPending ? 'Recording…' : 'Record payment'}
+              {recordPayment.isPending ? t('dialog.submitting') : t('dialog.submit')}
             </Button>
           </DialogFooter>
         </form>

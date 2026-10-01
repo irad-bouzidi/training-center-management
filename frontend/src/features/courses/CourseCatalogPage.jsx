@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ const PAGE_SIZE = 12
  * step 2; a Trainer sees the same grid read-only.
  */
 export function CourseCatalogPage() {
+  const { t } = useTranslation('courses')
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -48,18 +50,18 @@ export function CourseCatalogPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Course Catalog</h1>
+        <h1 className="text-lg font-semibold">{t('catalog.title')}</h1>
         <Input
-          placeholder="Search courses…"
+          placeholder={t('catalog.searchPlaceholder')}
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
           className="max-w-64"
         />
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>}
       {!isLoading && courses.length === 0 && (
-        <p className="text-sm text-muted-foreground">No published courses found.</p>
+        <p className="text-sm text-muted-foreground">{t('catalog.empty')}</p>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -80,18 +82,18 @@ export function CourseCatalogPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="line-clamp-2 text-sm text-muted-foreground">
-                {course.description || 'No description provided.'}
+                {course.description || t('shared.noDescription')}
               </p>
               <div className="flex flex-wrap gap-2">
                 {course.category && <Badge variant="outline">{course.category}</Badge>}
-                <Badge variant="outline">{course.durationHours}h</Badge>
+                <Badge variant="outline">{t('shared.hours', { count: course.durationHours })}</Badge>
                 <Badge variant="outline">
-                  {course.approvedCount}/{course.capacity} enrolled
+                  {t('catalog.enrolled', { approved: course.approvedCount, capacity: course.capacity })}
                 </Badge>
               </div>
             </CardContent>
             <CardFooter className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-              <span className="truncate">{course.primaryTrainer?.name ?? 'Unassigned'}</span>
+              <span className="truncate">{course.primaryTrainer?.name ?? t('shared.unassigned')}</span>
               <div className="flex shrink-0 items-center gap-3">
                 <span className="font-medium text-foreground">{formatPrice(course.price)}</span>
                 {isStudent && <EnrollButton course={course} enrollment={myEnrollments?.get(course.id)} />}
@@ -102,21 +104,19 @@ export function CourseCatalogPage() {
       </div>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>{totalElements} course{totalElements === 1 ? '' : 's'}</p>
+        <p>{t('shared.count', { count: totalElements })}</p>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((current) => current - 1)}>
-            Previous
+            {t('common:actions.previous')}
           </Button>
-          <span>
-            Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-          </span>
+          <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
           <Button
             variant="outline"
             size="sm"
             disabled={page + 1 >= totalPages}
             onClick={() => setPage((current) => current + 1)}
           >
-            Next
+            {t('common:actions.next')}
           </Button>
         </div>
       </div>

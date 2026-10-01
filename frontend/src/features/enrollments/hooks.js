@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   cancelEnrollment,
@@ -11,19 +12,13 @@ import {
 import { certificatesKeys } from '@/features/certificates/hooks'
 import { coursesKeys } from '@/features/courses/hooks'
 import { studentsKeys } from '@/features/students/hooks'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 export const enrollmentsKeys = {
   all: ['enrollments'],
   lists: () => [...enrollmentsKeys.all, 'list'],
   list: (params) => [...enrollmentsKeys.lists(), params],
   mine: (params) => [...enrollmentsKeys.all, 'mine', params],
-}
-
-// The backend never has a message body it can't produce (see
-// GlobalExceptionHandler) - falling back to a generic string only covers a
-// network-level failure (no response at all).
-function errorMessage(error, fallback) {
-  return error.response?.data?.message ?? fallback
 }
 
 export function useEnrollmentsQuery(params, options) {
@@ -77,19 +72,21 @@ function invalidateAffected(queryClient) {
 }
 
 export function useRegisterMutation() {
+  const { t } = useTranslation('enrollments')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: registerEnrollment,
     onSuccess: () => {
       invalidateAffected(queryClient)
-      toast.success('Enrollment requested')
+      toast.success(t('toasts.requested'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to request enrollment')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.requestFailed'))),
   })
 }
 
 export function useDecideEnrollmentMutation() {
+  const { t } = useTranslation('enrollments')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -116,9 +113,9 @@ export function useDecideEnrollmentMutation() {
     },
     onError: (error, _variables, context) => {
       context?.previous?.forEach(([queryKey, page]) => queryClient.setQueryData(queryKey, page))
-      toast.error(errorMessage(error, 'Failed to update enrollment'))
+      toast.error(apiErrorMessage(error, t('toasts.decideFailed')))
     },
-    onSuccess: (data) => toast.success(data.status === 'APPROVED' ? 'Enrollment approved' : 'Enrollment rejected'),
+    onSuccess: (data) => toast.success(data.status === 'APPROVED' ? t('toasts.approved') : t('toasts.rejected')),
     onSettled: () => invalidateAffected(queryClient),
   })
 }
@@ -129,6 +126,7 @@ export function useDecideEnrollmentMutation() {
  * stale along with everything an enrollment change touches.
  */
 export function useCompleteEnrollmentMutation() {
+  const { t } = useTranslation('enrollments')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -136,21 +134,22 @@ export function useCompleteEnrollmentMutation() {
     onSuccess: () => {
       invalidateAffected(queryClient)
       queryClient.invalidateQueries({ queryKey: certificatesKeys.all })
-      toast.success('Enrollment marked completed')
+      toast.success(t('toasts.completed'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to mark the enrollment completed')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.completeFailed'))),
   })
 }
 
 export function useCancelEnrollmentMutation() {
+  const { t } = useTranslation('enrollments')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: cancelEnrollment,
     onSuccess: () => {
       invalidateAffected(queryClient)
-      toast.success('Enrollment cancelled')
+      toast.success(t('toasts.cancelled'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to cancel enrollment')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.cancelFailed'))),
   })
 }

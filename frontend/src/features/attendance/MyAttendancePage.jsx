@@ -1,8 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatSessionDate, formatTimeRange } from '@/features/schedule/scheduleDisplay'
-import { formatRate, statusBadgeVariant, summarizeByCourse, titleCase } from './attendanceDisplay'
+import { formatRate, statusBadgeVariant, summarizeByCourse } from './attendanceDisplay'
 import { useMyAttendanceQuery } from './hooks'
 
 /**
@@ -12,37 +13,36 @@ import { useMyAttendanceQuery } from './hooks'
  * - an unmarked session is not an absence.
  */
 export function MyAttendancePage() {
+  const { t } = useTranslation('attendance')
   const { data: records = [], isLoading, isError } = useMyAttendanceQuery()
   const courses = summarizeByCourse(records)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My Attendance</CardTitle>
-        <CardDescription>
-          Every session you’ve been marked for. Late arrivals count as attended.
-        </CardDescription>
+        <CardTitle>{t('myPage.title')}</CardTitle>
+        <CardDescription>{t('myPage.description')}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {isError && <p className="text-sm text-destructive">Your attendance couldn’t be loaded.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>}
+        {isError && <p className="text-sm text-destructive">{t('myPage.loadError')}</p>}
         {!isLoading && !isError && records.length === 0 && (
-          <p className="text-sm text-muted-foreground">No attendance has been recorded for you yet.</p>
+          <p className="text-sm text-muted-foreground">{t('myPage.empty')}</p>
         )}
 
         {courses.length > 0 && (
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold">By course</h2>
+            <h2 className="text-sm font-semibold">{t('myPage.byCourse')}</h2>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Course</TableHead>
-                  <TableHead className="text-right">Present</TableHead>
-                  <TableHead className="text-right">Late</TableHead>
-                  <TableHead className="text-right">Absent</TableHead>
-                  <TableHead className="text-right">Marked</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
+                  <TableHead>{t('columns.course')}</TableHead>
+                  <TableHead className="text-right">{t('columns.present')}</TableHead>
+                  <TableHead className="text-right">{t('columns.late')}</TableHead>
+                  <TableHead className="text-right">{t('columns.absent')}</TableHead>
+                  <TableHead className="text-right">{t('columns.marked')}</TableHead>
+                  <TableHead className="text-right">{t('columns.rate')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -66,15 +66,15 @@ export function MyAttendancePage() {
 
         {records.length > 0 && (
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold">Sessions</h2>
+            <h2 className="text-sm font-semibold">{t('myPage.sessions')}</h2>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Method</TableHead>
+                  <TableHead>{t('columns.date')}</TableHead>
+                  <TableHead>{t('columns.time')}</TableHead>
+                  <TableHead>{t('columns.course')}</TableHead>
+                  <TableHead>{t('columns.status')}</TableHead>
+                  <TableHead>{t('columns.method')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -89,10 +89,12 @@ export function MyAttendancePage() {
                       <span className="text-xs text-muted-foreground">{record.courseCode}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusBadgeVariant(record.status)}>{titleCase(record.status)}</Badge>
+                      <Badge variant={statusBadgeVariant(record.status)}>
+                        {t(`common:enums.attendanceStatus.${record.status}`)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{record.method === 'QR' ? 'QR' : 'Manual'}</Badge>
+                      <Badge variant="outline">{record.method === 'QR' ? t('method.QR') : t('method.MANUAL')}</Badge>
                     </TableCell>
                   </TableRow>
                 ))}

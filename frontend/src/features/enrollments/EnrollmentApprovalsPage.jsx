@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EnrollmentRowActions } from './EnrollmentRowActions'
-import { formatDate, STATUS_OPTIONS, statusBadgeVariant, titleCase } from './enrollmentDisplay'
+import { formatDate, STATUS_OPTIONS, statusBadgeVariant } from './enrollmentDisplay'
 import { useEnrollmentsQuery } from './hooks'
 
 const PAGE_SIZE = 20
@@ -18,6 +19,7 @@ const ALL = 'ALL'
  * other statuses (and "All") available for looking back at what was decided.
  */
 export function EnrollmentApprovalsPage() {
+  const { t } = useTranslation('enrollments')
   const [status, setStatus] = useState('PENDING')
   const [page, setPage] = useState(0)
 
@@ -40,7 +42,7 @@ export function EnrollmentApprovalsPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Enrollments</CardTitle>
+        <CardTitle>{t('approvals.title')}</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -49,10 +51,10 @@ export function EnrollmentApprovalsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>All statuses</SelectItem>
+            <SelectItem value={ALL}>{t('approvals.allStatuses')}</SelectItem>
             {STATUS_OPTIONS.map((option) => (
               <SelectItem key={option} value={option}>
-                {titleCase(option)}
+                {t(`common:enums.enrollmentStatus.${option}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -61,11 +63,11 @@ export function EnrollmentApprovalsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Requested</TableHead>
-              <TableHead>Decided By</TableHead>
+              <TableHead>{t('approvals.columns.student')}</TableHead>
+              <TableHead>{t('approvals.columns.course')}</TableHead>
+              <TableHead>{t('approvals.columns.status')}</TableHead>
+              <TableHead>{t('approvals.columns.requested')}</TableHead>
+              <TableHead>{t('approvals.columns.decidedBy')}</TableHead>
               <TableHead className="w-44" />
             </TableRow>
           </TableHeader>
@@ -73,7 +75,7 @@ export function EnrollmentApprovalsPage() {
             {isLoading && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Loading…
+                  {t('common:states.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -81,7 +83,7 @@ export function EnrollmentApprovalsPage() {
             {!isLoading && enrollments.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  {status === 'PENDING' ? 'No enrollment requests waiting for a decision.' : 'No enrollments found.'}
+                  {status === 'PENDING' ? t('approvals.emptyPending') : t('approvals.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -97,7 +99,9 @@ export function EnrollmentApprovalsPage() {
                   <span className="text-xs text-muted-foreground">{enrollment.course.code}</span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusBadgeVariant(enrollment.status)}>{titleCase(enrollment.status)}</Badge>
+                  <Badge variant={statusBadgeVariant(enrollment.status)}>
+                    {t(`common:enums.enrollmentStatus.${enrollment.status}`)}
+                  </Badge>
                 </TableCell>
                 <TableCell>{formatDate(enrollment.enrolledAt)}</TableCell>
                 <TableCell>{enrollment.decidedBy?.name ?? '—'}</TableCell>
@@ -110,7 +114,7 @@ export function EnrollmentApprovalsPage() {
         </Table>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>{totalElements} enrollment{totalElements === 1 ? '' : 's'}</p>
+          <p>{t('shared.count', { count: totalElements })}</p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -118,18 +122,16 @@ export function EnrollmentApprovalsPage() {
               disabled={page === 0}
               onClick={() => setPage((current) => current - 1)}
             >
-              Previous
+              {t('common:actions.previous')}
             </Button>
-            <span>
-              Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-            </span>
+            <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
             <Button
               variant="outline"
               size="sm"
               disabled={page + 1 >= totalPages}
               onClick={() => setPage((current) => current + 1)}
             >
-              Next
+              {t('common:actions.next')}
             </Button>
           </div>
         </div>

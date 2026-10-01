@@ -1,18 +1,13 @@
 import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { createSession, listSessions, setSessionStatus, updateSession } from '@/api/scheduleApi'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 export const sessionsKeys = {
   all: ['sessions'],
   lists: () => [...sessionsKeys.all, 'list'],
   list: (params) => [...sessionsKeys.lists(), params],
-}
-
-// The backend never has a message body it can't produce (see
-// GlobalExceptionHandler) - falling back to a generic string only covers a
-// network-level failure (no response at all).
-export function errorMessage(error, fallback) {
-  return error.response?.data?.message ?? fallback
 }
 
 export function useSessionsQuery(params, options) {
@@ -52,38 +47,41 @@ export function useSessionsForCoursesQueries(courseIds, params) {
  * toast that outlives the dialog.
  */
 export function useCreateSessionMutation() {
+  const { t } = useTranslation('schedule')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: createSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionsKeys.all })
-      toast.success('Session scheduled')
+      toast.success(t('toasts.created'))
     },
   })
 }
 
 export function useUpdateSessionMutation() {
+  const { t } = useTranslation('schedule')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({ id, ...payload }) => updateSession(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionsKeys.all })
-      toast.success('Session updated')
+      toast.success(t('toasts.updated'))
     },
   })
 }
 
 export function useSetSessionStatusMutation() {
+  const { t } = useTranslation('schedule')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({ id, status }) => setSessionStatus(id, status),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: sessionsKeys.all })
-      toast.success(data.status === 'CANCELLED' ? 'Session cancelled' : 'Session marked completed')
+      toast.success(data.status === 'CANCELLED' ? t('toasts.cancelled') : t('toasts.completed'))
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to update session')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.statusFailed'))),
   })
 }

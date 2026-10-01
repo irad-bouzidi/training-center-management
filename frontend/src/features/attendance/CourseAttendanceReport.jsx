@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatRate, rateBarClass } from './attendanceDisplay'
@@ -5,7 +6,7 @@ import { useCourseAttendanceReportQuery } from './hooks'
 
 function RateBar({ rate }) {
   if (rate === null || rate === undefined) {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">{formatRate(rate)}</span>
   }
 
   return (
@@ -27,18 +28,19 @@ function RateBar({ rate }) {
  * reads here as a plain explanation rather than an error.
  */
 export function CourseAttendanceReport({ courseId }) {
+  const { t } = useTranslation('attendance')
   const { data: report, isLoading, isError, error } = useCourseAttendanceReportQuery(courseId)
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   if (isError) {
     return (
       <p className="text-sm text-muted-foreground">
         {error.response?.status === 403
-          ? 'Attendance reporting is open to administrators and the course’s own trainers.'
-          : 'This report could not be loaded.'}
+          ? t('courseReport.forbidden')
+          : t('courseReport.loadError')}
       </p>
     )
   }
@@ -46,29 +48,26 @@ export function CourseAttendanceReport({ courseId }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Badge variant="outline">{report.sessionCount} session{report.sessionCount === 1 ? '' : 's'}</Badge>
-        <span>
-          Rates count late arrivals as attended and are measured against the sessions each student was actually
-          marked for.
-        </span>
+        <Badge variant="outline">{t('courseReport.sessionCount', { count: report.sessionCount })}</Badge>
+        <span>{t('courseReport.explanation')}</span>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Student</TableHead>
-            <TableHead className="text-right">Present</TableHead>
-            <TableHead className="text-right">Late</TableHead>
-            <TableHead className="text-right">Absent</TableHead>
-            <TableHead className="text-right">Marked</TableHead>
-            <TableHead className="w-44">Attendance</TableHead>
+            <TableHead>{t('columns.student')}</TableHead>
+            <TableHead className="text-right">{t('columns.present')}</TableHead>
+            <TableHead className="text-right">{t('columns.late')}</TableHead>
+            <TableHead className="text-right">{t('columns.absent')}</TableHead>
+            <TableHead className="text-right">{t('columns.marked')}</TableHead>
+            <TableHead className="w-44">{t('columns.attendance')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {report.students.length === 0 && (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground">
-                Nobody is approved on this course yet.
+                {t('courseReport.empty')}
               </TableCell>
             </TableRow>
           )}
@@ -83,7 +82,7 @@ export function CourseAttendanceReport({ courseId }) {
               <TableCell className="text-right tabular-nums">{student.late}</TableCell>
               <TableCell className="text-right tabular-nums">{student.absent}</TableCell>
               <TableCell className="text-right tabular-nums">
-                {student.marked} / {report.sessionCount}
+                {t('markedOfSessions', { marked: student.marked, total: report.sessionCount })}
               </TableCell>
               <TableCell>
                 <RateBar rate={student.attendanceRate} />

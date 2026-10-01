@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,6 +13,7 @@ import { CourseAttendanceReport } from './CourseAttendanceReport'
  * CourseAttendanceReport.
  */
 export function AttendanceReportPage() {
+  const { t } = useTranslation('attendance')
   const { courseId } = useParams()
   const navigate = useNavigate()
   const { data: course } = useCourseQuery(courseId)
@@ -20,13 +22,15 @@ export function AttendanceReportPage() {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
         <ArrowLeft />
-        Back
+        {t('common:actions.back')}
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Attendance</CardTitle>
-          <CardDescription>{course ? `${course.name} (${course.code})` : 'Course attendance report'}</CardDescription>
+          <CardTitle>{t('reportPage.title')}</CardTitle>
+          <CardDescription>{course
+              ? t('reportPage.courseLabel', { name: course.name, code: course.code })
+              : t('reportPage.fallbackDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <CourseAttendanceReport courseId={courseId} />

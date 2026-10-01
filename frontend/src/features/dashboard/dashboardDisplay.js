@@ -1,4 +1,6 @@
-/** 1284 -> "1,284". Dashboard counts are small; no compacting needed yet. */
+import { formatNumber } from '@/lib/format'
+
+/** 1284 -> "1,284" / "1 284" in the UI language. Dashboard counts are small; no compacting needed yet. */
 export function formatCount(value) {
-  return Number(value ?? 0).toLocaleString()
+  return formatNumber(Number(value ?? 0))
 }

@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,7 +18,7 @@ import { StudentPaymentsTab } from '@/features/payments/StudentPaymentsTab'
 import { formatAmount } from '@/features/payments/paymentDisplay'
 import { StudentScheduleTab } from '@/features/schedule/StudentScheduleTab'
 import { useStudentSummaryQuery } from './hooks'
-import { formatDate, fullName, statusBadgeVariant, titleCase } from './studentDisplay'
+import { formatDate, fullName, statusBadgeVariant } from './studentDisplay'
 
 function Field({ label, value }) {
   return (
@@ -51,6 +52,7 @@ function Stat({ label, value }) {
  * tab, which is the step that makes the Certificates tab's button live.
  */
 export function StudentSummaryPage() {
+  const { t } = useTranslation('students')
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -58,11 +60,11 @@ export function StudentSummaryPage() {
   const isAdmin = user.role === 'ADMIN'
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   if (!summary) {
-    return <p className="text-sm text-muted-foreground">Student not found.</p>
+    return <p className="text-sm text-muted-foreground">{t('summary.notFound')}</p>
   }
 
   const { profile, enrollments } = summary
@@ -72,56 +74,56 @@ export function StudentSummaryPage() {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
         <ArrowLeft />
-        Back
+        {t('common:actions.back')}
       </Button>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {fullName(profile)}
-            <Badge variant={statusBadgeVariant(profile.status)}>{titleCase(profile.status)}</Badge>
+            <Badge variant={statusBadgeVariant(profile.status)}>{t(`common:enums.accountStatus.${profile.status}`)}</Badge>
           </CardTitle>
           <CardDescription>{profile.email}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview">
             <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-              <TabsTrigger value="schedule">Schedule</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="grades">Grades</TabsTrigger>
-              <TabsTrigger value="payments">Payments</TabsTrigger>
-              <TabsTrigger value="certificates">Certificates</TabsTrigger>
+              <TabsTrigger value="overview">{t('summary.tabs.overview')}</TabsTrigger>
+              <TabsTrigger value="enrollments">{t('summary.tabs.enrollments')}</TabsTrigger>
+              <TabsTrigger value="schedule">{t('summary.tabs.schedule')}</TabsTrigger>
+              <TabsTrigger value="attendance">{t('summary.tabs.attendance')}</TabsTrigger>
+              <TabsTrigger value="grades">{t('summary.tabs.grades')}</TabsTrigger>
+              <TabsTrigger value="payments">{t('summary.tabs.payments')}</TabsTrigger>
+              <TabsTrigger value="certificates">{t('summary.tabs.certificates')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Field label="Phone" value={profile.phone || '—'} />
-                <Field label="Member since" value={formatDate(profile.createdAt)} />
+                <Field label={t('summary.fields.phone')} value={profile.phone || '—'} />
+                <Field label={t('summary.fields.memberSince')} value={formatDate(profile.createdAt)} />
               </div>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Stat label="Total Enrollments" value={enrollments.length} />
-                <Stat label="Active Enrollments" value={activeEnrollments} />
-                <Stat label="Attendance Rate" value={formatRate(summary.attendanceRate)} />
-                <Stat label="Overall Grade" value={formatPercent(summary.overallGrade)} />
-                <Stat label="Payment Balance" value={formatAmount(summary.paymentBalance ?? 0)} />
+                <Stat label={t('summary.stats.totalEnrollments')} value={enrollments.length} />
+                <Stat label={t('summary.stats.activeEnrollments')} value={activeEnrollments} />
+                <Stat label={t('summary.stats.attendanceRate')} value={formatRate(summary.attendanceRate)} />
+                <Stat label={t('summary.stats.overallGrade')} value={formatPercent(summary.overallGrade)} />
+                <Stat label={t('summary.stats.paymentBalance')} value={formatAmount(summary.paymentBalance ?? 0)} />
               </div>
             </TabsContent>
 
             <TabsContent value="enrollments">
               {enrollments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No enrollments yet.</p>
+                <p className="text-sm text-muted-foreground">{t('summary.enrollments.empty')}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Enrolled</TableHead>
-                      <TableHead>Decided</TableHead>
-                      <TableHead>Decided By</TableHead>
+                      <TableHead>{t('summary.enrollments.columns.course')}</TableHead>
+                      <TableHead>{t('summary.enrollments.columns.status')}</TableHead>
+                      <TableHead>{t('summary.enrollments.columns.enrolled')}</TableHead>
+                      <TableHead>{t('summary.enrollments.columns.decided')}</TableHead>
+                      <TableHead>{t('summary.enrollments.columns.decidedBy')}</TableHead>
                       {isAdmin && <TableHead className="w-36" />}
                     </TableRow>
                   </TableHeader>
@@ -134,7 +136,7 @@ export function StudentSummaryPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={enrollmentStatusBadgeVariant(enrollment.status)}>
-                            {titleCase(enrollment.status)}
+                            {t(`common:enums.enrollmentStatus.${enrollment.status}`)}
                           </Badge>
                         </TableCell>
                         <TableCell>{formatDate(enrollment.enrolledAt)}</TableCell>
@@ -166,7 +168,7 @@ export function StudentSummaryPage() {
               <CourseGradesList
                 grades={summary.grades}
                 overall={summary.overallGrade}
-                emptyMessage="Nothing has been graded for this student yet."
+                emptyMessage={t('summary.grades.empty')}
               />
             </TabsContent>
             <TabsContent value="payments">

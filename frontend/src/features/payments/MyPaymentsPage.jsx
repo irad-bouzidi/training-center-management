@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PaymentsTable } from './PaymentsTable'
@@ -10,6 +11,7 @@ import { useMyPaymentsQuery } from './hooks'
  * recorded by the office, and this is fee tracking rather than collection.
  */
 export function MyPaymentsPage() {
+  const { t } = useTranslation('payments')
   const { data: payments = [], isLoading } = useMyPaymentsQuery()
 
   const outstanding = totalOutstanding(payments)
@@ -19,15 +21,15 @@ export function MyPaymentsPage() {
     <Card>
       <CardHeader className="flex-row items-start justify-between">
         <div>
-          <CardTitle>My Payments</CardTitle>
-          <CardDescription>What you owe, and what you’ve paid, course by course.</CardDescription>
+          <CardTitle>{t('myPayments.title')}</CardTitle>
+          <CardDescription>{t('myPayments.description')}</CardDescription>
         </div>
         <div className="text-right">
-          <p className="text-xs text-muted-foreground">Outstanding balance</p>
+          <p className="text-xs text-muted-foreground">{t('myPayments.outstandingBalance')}</p>
           <p className="text-2xl font-semibold tabular-nums">{formatAmount(outstanding)}</p>
           {hasOverdue && (
             <Badge variant="destructive" className="mt-1">
-              Payment overdue
+              {t('myPayments.overdue')}
             </Badge>
           )}
         </div>
@@ -38,7 +40,7 @@ export function MyPaymentsPage() {
           payments={payments}
           isLoading={isLoading}
           showStudent={false}
-          emptyMessage="You have no invoices - nothing is owed."
+          emptyMessage={t('myPayments.empty')}
         />
       </CardContent>
     </Card>

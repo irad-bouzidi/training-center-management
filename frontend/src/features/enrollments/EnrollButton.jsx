@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { enrollBlockedReason } from './enrollmentDisplay'
 import { useRegisterMutation } from './hooks'
@@ -13,6 +14,7 @@ import { useRegisterMutation } from './hooks'
  * undefined if they have none.
  */
 export function EnrollButton({ course, enrollment, size = 'sm' }) {
+  const { t } = useTranslation('enrollments')
   const register = useRegisterMutation()
   const blockedReason = enrollBlockedReason(course, enrollment)
 
@@ -27,7 +29,7 @@ export function EnrollButton({ course, enrollment, size = 'sm' }) {
         register.mutate({ courseId: course.id })
       }}
     >
-      {blockedReason ?? 'Enroll'}
+      {blockedReason ? t(blockedReason) : t('enroll.button')}
     </Button>
   )
 }

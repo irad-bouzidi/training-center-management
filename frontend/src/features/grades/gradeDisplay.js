@@ -1,17 +1,17 @@
+import { formatNumber } from '@/lib/format'
+
 /**
  * Assessment kinds, mirroring com.tcm.grade.model.AssessmentType (TCM-23).
  */
 export const ASSESSMENT_TYPES = ['EXAM', 'ASSIGNMENT', 'QUIZ', 'PROJECT']
 
-/** EXAM -> "Exam". */
-export function titleCase(value) {
-  return value.charAt(0) + value.slice(1).toLowerCase()
-}
-
 /** A percentage, or "—" while nothing is graded - an ungraded student is not
- * a 0% student, which is why the backend sends null rather than 0. */
+ * a 0% student, which is why the backend sends null rather than 0. Formatted
+ * in the UI language ("85.5%" / "85,5 %"). */
 export function formatPercent(value) {
-  return value === null || value === undefined ? '—' : `${value}%`
+  return value === null || value === undefined
+    ? '—'
+    : formatNumber(Number(value) / 100, { style: 'percent', maximumFractionDigits: 1 })
 }
 
 /** Pass marks read as neutral, a strong result as primary, a fail as destructive. */

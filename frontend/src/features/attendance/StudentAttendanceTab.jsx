@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatRate } from './attendanceDisplay'
 import { useCourseAttendanceReportQueries } from './hooks'
@@ -14,6 +15,7 @@ import { useCourseAttendanceReportQueries } from './hooks'
  * don't teach; those rows say so instead of failing the whole tab.
  */
 export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
+  const { t } = useTranslation('attendance')
   const attended = enrollments.filter(
     (enrollment) => enrollment.status === 'APPROVED' || enrollment.status === 'COMPLETED',
   )
@@ -22,7 +24,7 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
   if (attended.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        This student isn’t approved on any course yet, so there is nothing to attend.
+        {t('studentTab.empty')}
       </p>
     )
   }
@@ -30,19 +32,23 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Overall attendance: <span className="font-medium text-foreground">{formatRate(overallRate)}</span> — late
-        arrivals count as attended, and only sessions the student was marked for are counted.
+        <Trans
+          t={t}
+          i18nKey="studentTab.overall"
+          values={{ rate: formatRate(overallRate) }}
+          components={{ rate: <span className="font-medium text-foreground" /> }}
+        />
       </p>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Course</TableHead>
-            <TableHead className="text-right">Present</TableHead>
-            <TableHead className="text-right">Late</TableHead>
-            <TableHead className="text-right">Absent</TableHead>
-            <TableHead className="text-right">Marked</TableHead>
-            <TableHead className="text-right">Rate</TableHead>
+            <TableHead>{t('columns.course')}</TableHead>
+            <TableHead className="text-right">{t('columns.present')}</TableHead>
+            <TableHead className="text-right">{t('columns.late')}</TableHead>
+            <TableHead className="text-right">{t('columns.absent')}</TableHead>
+            <TableHead className="text-right">{t('columns.marked')}</TableHead>
+            <TableHead className="text-right">{t('columns.rate')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,11 +65,11 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
 
                 {isLoading || isError || !row ? (
                   <TableCell colSpan={5} className="text-right text-xs text-muted-foreground">
-                    {isLoading && 'Loading…'}
+                    {isLoading && t('common:states.loading')}
                     {isError &&
                       (error.response?.status === 403
-                        ? 'Only this course’s trainers and administrators can see its attendance'
-                        : 'Unavailable')}
+                        ? t('studentTab.forbidden')
+                        : t('studentTab.unavailable'))}
                     {/* The course report is built from its roster; a backend
                         that lists only APPROVED students there leaves a
                         completed one out, which is not the same as never
@@ -72,8 +78,8 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
                       !isError &&
                       !row &&
                       (enrollment.status === 'COMPLETED'
-                        ? 'Course completed — not in its attendance report'
-                        : 'Not on this course’s roster')}
+                        ? t('studentTab.completedNotInReport')
+                        : t('studentTab.notOnRoster'))}
                   </TableCell>
                 ) : (
                   <>
@@ -81,7 +87,7 @@ export function StudentAttendanceTab({ studentId, enrollments, overallRate }) {
                     <TableCell className="text-right tabular-nums">{row.late}</TableCell>
                     <TableCell className="text-right tabular-nums">{row.absent}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {row.marked} / {report.sessionCount}
+                      {t('markedOfSessions', { marked: row.marked, total: report.sessionCount })}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatRate(row.attendanceRate)}</TableCell>
                   </>

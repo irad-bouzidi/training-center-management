@@ -5,13 +5,13 @@ import { AppShell } from './AppShell'
 // rather than browsed on its own, so it hangs off Schedule (TCM-20), and a
 // gradebook is always one course's, so it hangs off the course (TCM-24).
 const NAV_ITEMS = [
-  { label: 'Dashboard', to: '/trainer', enabled: true },
-  { label: 'My Courses', to: '/trainer/my-courses', enabled: true },
-  { label: 'Course Catalog', to: '/trainer/courses', enabled: true },
-  { label: 'Students', to: '/trainer/students', enabled: true },
-  { label: 'Schedule', to: '/trainer/schedule', enabled: true },
+  { labelKey: 'nav.dashboard', to: '/trainer', enabled: true },
+  { labelKey: 'nav.myCourses', to: '/trainer/my-courses', enabled: true },
+  { labelKey: 'nav.courseCatalog', to: '/trainer/courses', enabled: true },
+  { labelKey: 'nav.students', to: '/trainer/students', enabled: true },
+  { labelKey: 'nav.schedule', to: '/trainer/schedule', enabled: true },
 ]
 
 export function TrainerLayout() {
-  return <AppShell title="Trainer" navItems={NAV_ITEMS} />
+  return <AppShell titleKey="roles.trainer" navItems={NAV_ITEMS} />
 }

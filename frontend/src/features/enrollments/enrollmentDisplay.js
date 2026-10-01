@@ -1,3 +1,5 @@
+import { formatDateTimeAsDate } from '@/lib/format'
+
 /**
  * Enrollment lifecycle, mirroring com.tcm.enrollment.model.EnrollmentStatus
  * (TCM-14): PENDING on creation, an ADMIN decides APPROVED/REJECTED,
@@ -5,11 +7,6 @@
  * logic.
  */
 export const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'COMPLETED']
-
-/** PENDING -> "Pending", APPROVED -> "Approved". */
-export function titleCase(value) {
-  return value.charAt(0) + value.slice(1).toLowerCase()
-}
 
 export function statusBadgeVariant(status) {
   switch (status) {
@@ -32,8 +29,9 @@ export function isCancellable(status) {
 }
 
 /**
- * Why the catalog's "Enroll" button is unavailable for a course, or null when
- * the student can enroll. `enrollment` is that student's existing enrollment
+ * Why the catalog's "Enroll" button is unavailable for a course - as an
+ * `enrollments:` i18n key, for the caller to translate - or null when the
+ * student can enroll. `enrollment` is that student's existing enrollment
  * for the course, if any.
  *
  * Any existing enrollment blocks re-registration, whatever its status -
@@ -45,24 +43,21 @@ export function enrollBlockedReason(course, enrollment) {
   if (enrollment) {
     switch (enrollment.status) {
       case 'PENDING':
-        return 'Pending approval'
+        return 'enroll.blocked.pending'
       case 'APPROVED':
-        return 'Already enrolled'
+        return 'enroll.blocked.approved'
       case 'COMPLETED':
-        return 'Completed'
+        return 'enroll.blocked.completed'
       case 'REJECTED':
-        return 'Rejected'
+        return 'enroll.blocked.rejected'
       default:
-        return 'Cancelled'
+        return 'enroll.blocked.cancelled'
     }
   }
-  return course.approvedCount >= course.capacity ? 'Full' : null
+  return course.approvedCount >= course.capacity ? 'enroll.blocked.full' : null
 }
 
+// Follows the UI language (see @/lib/format), not the browser's.
 export function formatDate(isoString) {
-  return new Date(isoString).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatDateTimeAsDate(isoString)
 }

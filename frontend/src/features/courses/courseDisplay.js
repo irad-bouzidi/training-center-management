@@ -1,11 +1,7 @@
 import { Archive, Send } from 'lucide-react'
+import { formatDateTimeAsDate, formatDecimal } from '@/lib/format'
 
 export const STATUS_OPTIONS = ['DRAFT', 'PUBLISHED', 'ARCHIVED']
-
-/** DRAFT -> "Draft", PUBLISHED -> "Published". */
-export function titleCase(value) {
-  return value.charAt(0) + value.slice(1).toLowerCase()
-}
 
 export function statusBadgeVariant(status) {
   switch (status) {
@@ -22,25 +18,35 @@ export function statusBadgeVariant(status) {
  * The status change available from each current status - see
  * docs/tasks/TCM-12-frontend-course-management.md step 6. ARCHIVED isn't a
  * dead end: it can be republished. Shared by CourseRowActions (list/detail
- * row menu) and CourseDetailPage (admin header actions).
+ * row menu) and CourseDetailPage (admin header actions). `labelKey` /
+ * `confirmTitleKey` are `courses:` i18n keys.
  */
 export const STATUS_TRANSITIONS = {
-  DRAFT: { label: 'Publish', next: 'PUBLISHED', icon: Send },
-  PUBLISHED: { label: 'Archive', next: 'ARCHIVED', icon: Archive },
-  ARCHIVED: { label: 'Republish', next: 'PUBLISHED', icon: Send },
+  DRAFT: {
+    labelKey: 'transitions.publish',
+    confirmTitleKey: 'transitions.publishConfirm',
+    next: 'PUBLISHED',
+    icon: Send,
+  },
+  PUBLISHED: {
+    labelKey: 'transitions.archive',
+    confirmTitleKey: 'transitions.archiveConfirm',
+    next: 'ARCHIVED',
+    icon: Archive,
+  },
+  ARCHIVED: {
+    labelKey: 'transitions.republish',
+    confirmTitleKey: 'transitions.republishConfirm',
+    next: 'PUBLISHED',
+    icon: Send,
+  },
 }
 
+// Both follow the UI language (see @/lib/format), not the browser's.
 export function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price)
+  return formatDecimal(price)
 }
 
 export function formatDate(isoString) {
-  return new Date(isoString).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+  return formatDateTimeAsDate(isoString)
 }

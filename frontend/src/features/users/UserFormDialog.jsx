@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,20 +17,21 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { useCreateUserMutation, useSetUserStatusMutation, useUpdateUserMutation } from './hooks'
-import { ROLE_OPTIONS, titleCase } from './userDisplay'
+import { ROLE_OPTIONS } from './userDisplay'
 
 // Mirrors backend/src/main/java/com/tcm/user/dto/UserRequest.java. Same
 // stub-shadcn-Form situation as LoginPage (see TCM-9) - react-hook-form is
-// composed directly against Label/Input/Select instead.
+// composed directly against Label/Input/Select instead. Messages are i18n
+// keys (users namespace), translated where they render.
 const editSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
+  firstName: z.string().min(1, 'form.errors.firstNameRequired'),
+  lastName: z.string().min(1, 'form.errors.lastNameRequired'),
+  email: z.string().min(1, 'form.errors.emailRequired').email('form.errors.emailInvalid'),
   phone: z.string().optional(),
-  role: z.enum(ROLE_OPTIONS, 'Role is required'),
+  role: z.enum(ROLE_OPTIONS, 'form.errors.roleRequired'),
 })
 const createSchema = editSchema.extend({
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, 'form.errors.passwordRequired'),
 })
 
 const EMPTY_VALUES = { firstName: '', lastName: '', email: '', phone: '', role: undefined, password: '' }
@@ -40,6 +42,7 @@ const EMPTY_VALUES = { firstName: '', lastName: '', email: '', phone: '', role: 
  * docs/tasks/TCM-10-frontend-user-management.md step 3).
  */
 export function UserFormDialog({ open, onOpenChange, user }) {
+  const { t } = useTranslation('users')
   const isEdit = Boolean(user)
   // The parent remounts this dialog (via a `key` keyed on the user) each
   // time it's opened for a different user or for create, so a plain
@@ -89,73 +92,75 @@ export function UserFormDialog({ open, onOpenChange, user }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit user' : 'New user'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('form.editTitle') : t('form.createTitle')}</DialogTitle>
           <DialogDescription>
-            {isEdit ? `Update ${user.firstName} ${user.lastName}'s account.` : 'Create a new Admin, Trainer, or Student account.'}
+            {isEdit
+              ? t('form.editDescription', { name: `${user.firstName} ${user.lastName}` })
+              : t('form.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName">{t('fields.firstName')}</Label>
               <Input id="firstName" aria-invalid={Boolean(errors.firstName)} {...register('firstName')} />
-              {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
+              {errors.firstName && <p className="text-sm text-destructive">{t(errors.firstName.message)}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last name</Label>
+              <Label htmlFor="lastName">{t('fields.lastName')}</Label>
               <Input id="lastName" aria-invalid={Boolean(errors.lastName)} {...register('lastName')} />
-              {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
+              {errors.lastName && <p className="text-sm text-destructive">{t(errors.lastName.message)}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('fields.email')}</Label>
             <Input id="email" type="email" aria-invalid={Boolean(errors.email)} {...register('email')} />
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            {errors.email && <p className="text-sm text-destructive">{t(errors.email.message)}</p>}
           </div>
 
           {!isEdit && (
             <div className="space-y-2">
-              <Label htmlFor="password">Temporary password</Label>
+              <Label htmlFor="password">{t('form.temporaryPassword')}</Label>
               <Input id="password" type="password" aria-invalid={Boolean(errors.password)} {...register('password')} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              {errors.password && <p className="text-sm text-destructive">{t(errors.password.message)}</p>}
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">{t('fields.phone')}</Label>
             <Input id="phone" type="tel" {...register('phone')} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">{t('fields.role')}</Label>
             <Controller
               name="role"
               control={control}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="role" className="w-full" aria-invalid={Boolean(errors.role)}>
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder={t('form.rolePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {ROLE_OPTIONS.map((role) => (
                       <SelectItem key={role} value={role}>
-                        {titleCase(role)}
+                        {t(`common:enums.role.${role}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
+            {errors.role && <p className="text-sm text-destructive">{t(errors.role.message)}</p>}
           </div>
 
           {isEdit && (
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label htmlFor="status-toggle">Active</Label>
-                <p className="text-sm text-muted-foreground">Inactive users can't sign in.</p>
+                <Label htmlFor="status-toggle">{t('common:enums.accountStatus.ACTIVE')}</Label>
+                <p className="text-sm text-muted-foreground">{t('form.statusHint')}</p>
               </div>
               <Switch id="status-toggle" checked={statusActive} onCheckedChange={setStatusActive} />
             </div>
@@ -163,10 +168,10 @@ export function UserFormDialog({ open, onOpenChange, user }) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save'}
+              {isSubmitting ? t('common:actions.saving') : t('common:actions.save')}
             </Button>
           </DialogFooter>
         </form>

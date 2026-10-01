@@ -1,5 +1,6 @@
 import { ArrowLeft, BookOpenCheck } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,7 +12,7 @@ import { CourseEnrollmentsTab } from '@/features/enrollments/CourseEnrollmentsTa
 import { CourseScheduleTab } from '@/features/schedule/CourseScheduleTab'
 import { CourseFormDialog } from './CourseFormDialog'
 import { CourseRowActions } from './CourseRowActions'
-import { formatDate, formatPrice, statusBadgeVariant, titleCase } from './courseDisplay'
+import { formatDate, formatPrice, statusBadgeVariant } from './courseDisplay'
 import { useCourseQuery } from './hooks'
 
 function Field({ label, value }) {
@@ -33,6 +34,7 @@ function Field({ label, value }) {
  * CourseAttendanceReport (TCM-20).
  */
 export function CourseDetailPage() {
+  const { t } = useTranslation('courses')
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -45,18 +47,18 @@ export function CourseDetailPage() {
   const isStaff = user.role !== 'STUDENT'
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   if (!course) {
-    return <p className="text-sm text-muted-foreground">Course not found.</p>
+    return <p className="text-sm text-muted-foreground">{t('detail.notFound')}</p>
   }
 
   return (
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
         <ArrowLeft />
-        Back
+        {t('common:actions.back')}
       </Button>
 
       <Card>
@@ -64,7 +66,7 @@ export function CourseDetailPage() {
           <div>
             <CardTitle className="flex items-center gap-2">
               {course.name}
-              <Badge variant={statusBadgeVariant(course.status)}>{titleCase(course.status)}</Badge>
+              <Badge variant={statusBadgeVariant(course.status)}>{t(`common:enums.courseStatus.${course.status}`)}</Badge>
             </CardTitle>
             <CardDescription>{course.code}</CardDescription>
           </div>
@@ -73,7 +75,7 @@ export function CourseDetailPage() {
               <Button variant="outline" size="sm" asChild>
                 <Link to={`/${user.role.toLowerCase()}/courses/${course.id}/grades`}>
                   <BookOpenCheck />
-                  Gradebook
+                  {t('shared.gradebook')}
                 </Link>
               </Button>
             )}
@@ -81,22 +83,22 @@ export function CourseDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <p className="text-sm text-muted-foreground">{course.description || 'No description provided.'}</p>
+          <p className="text-sm text-muted-foreground">{course.description || t('shared.noDescription')}</p>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field label="Trainer" value={course.primaryTrainer?.name ?? 'Unassigned'} />
-            <Field label="Category" value={course.category || '—'} />
-            <Field label="Duration" value={`${course.durationHours}h`} />
-            <Field label="Capacity" value={course.capacity} />
-            <Field label="Price" value={formatPrice(course.price)} />
-            <Field label="Created" value={formatDate(course.createdAt)} />
+            <Field label={t('detail.fields.trainer')} value={course.primaryTrainer?.name ?? t('shared.unassigned')} />
+            <Field label={t('detail.fields.category')} value={course.category || '—'} />
+            <Field label={t('detail.fields.duration')} value={t('shared.hours', { count: course.durationHours })} />
+            <Field label={t('detail.fields.capacity')} value={course.capacity} />
+            <Field label={t('detail.fields.price')} value={formatPrice(course.price)} />
+            <Field label={t('detail.fields.created')} value={formatDate(course.createdAt)} />
           </div>
 
           <Tabs defaultValue="schedule">
             <TabsList>
-              <TabsTrigger value="schedule">Schedule</TabsTrigger>
-              <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-              {isStaff && <TabsTrigger value="attendance">Attendance</TabsTrigger>}
+              <TabsTrigger value="schedule">{t('detail.tabs.schedule')}</TabsTrigger>
+              <TabsTrigger value="enrollments">{t('detail.tabs.enrollments')}</TabsTrigger>
+              {isStaff && <TabsTrigger value="attendance">{t('detail.tabs.attendance')}</TabsTrigger>}
             </TabsList>
             <TabsContent value="schedule">
               <CourseScheduleTab course={course} />

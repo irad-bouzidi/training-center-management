@@ -1,5 +1,6 @@
 import { Check, KeyRound, MoreHorizontal, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ import { fullName } from './userDisplay'
  * - see docs/tasks/TCM-10-frontend-user-management.md step 4.
  */
 export function UserRowActions({ user, onView, onEdit }) {
+  const { t } = useTranslation('users')
   const [statusConfirmOpen, setStatusConfirmOpen] = useState(false)
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const [tempPassword, setTempPassword] = useState(null)
@@ -38,6 +40,7 @@ export function UserRowActions({ user, onView, onEdit }) {
 
   const isActive = user.status === 'ACTIVE'
   const nextStatus = isActive ? 'INACTIVE' : 'ACTIVE'
+  const name = fullName(user)
 
   function confirmStatusChange() {
     setUserStatus.mutate(
@@ -59,24 +62,24 @@ export function UserRowActions({ user, onView, onEdit }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${fullName(user)}`}>
+          <Button variant="ghost" size="icon-sm" aria-label={t('actions.menuLabel', { name })}>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => onView(user)}>View details</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onView(user)}>{t('actions.view')}</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => onEdit(user)}>
             <Pencil />
-            Edit
+            {t('common:actions.edit')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setStatusConfirmOpen(true)} variant={isActive ? 'destructive' : 'default'}>
             {isActive ? <X /> : <Check />}
-            {isActive ? 'Deactivate' : 'Activate'}
+            {isActive ? t('actions.deactivate') : t('actions.activate')}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setResetConfirmOpen(true)}>
             <KeyRound />
-            Reset password
+            {t('actions.resetPassword')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -84,15 +87,15 @@ export function UserRowActions({ user, onView, onEdit }) {
       <AlertDialog open={statusConfirmOpen} onOpenChange={setStatusConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{isActive ? 'Deactivate user?' : 'Activate user?'}</AlertDialogTitle>
+            <AlertDialogTitle>{isActive ? t('statusConfirm.deactivateTitle') : t('statusConfirm.activateTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
               {isActive
-                ? `${fullName(user)} will no longer be able to sign in.`
-                : `${fullName(user)} will be able to sign in again.`}
+                ? t('statusConfirm.deactivateDescription', { name })
+                : t('statusConfirm.activateDescription', { name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               variant={isActive ? 'destructive' : 'default'}
               disabled={setUserStatus.isPending}
@@ -101,7 +104,7 @@ export function UserRowActions({ user, onView, onEdit }) {
                 confirmStatusChange()
               }}
             >
-              {isActive ? 'Deactivate' : 'Activate'}
+              {isActive ? t('actions.deactivate') : t('actions.activate')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -110,13 +113,13 @@ export function UserRowActions({ user, onView, onEdit }) {
       <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset password?</AlertDialogTitle>
+            <AlertDialogTitle>{t('resetConfirm.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This generates a new temporary password for {fullName(user)} and invalidates their current one.
+              {t('resetConfirm.description', { name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               disabled={resetPassword.isPending}
               onClick={(event) => {
@@ -124,7 +127,7 @@ export function UserRowActions({ user, onView, onEdit }) {
                 confirmResetPassword()
               }}
             >
-              Reset password
+              {t('actions.resetPassword')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -133,14 +136,14 @@ export function UserRowActions({ user, onView, onEdit }) {
       <Dialog open={Boolean(tempPassword)} onOpenChange={(next) => !next && setTempPassword(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Temporary password</DialogTitle>
+            <DialogTitle>{t('tempPassword.title')}</DialogTitle>
             <DialogDescription>
-              Share this with {fullName(user)} out of band - it won't be shown again.
+              {t('tempPassword.description', { name })}
             </DialogDescription>
           </DialogHeader>
           <Input readOnly value={tempPassword ?? ''} className="font-mono" onFocus={(e) => e.target.select()} />
           <DialogFooter>
-            <Button onClick={() => setTempPassword(null)}>Done</Button>
+            <Button onClick={() => setTempPassword(null)}>{t('tempPassword.done')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

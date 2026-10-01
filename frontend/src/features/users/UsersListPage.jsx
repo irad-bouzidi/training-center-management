@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,12 +11,13 @@ import { useUsersQuery } from './hooks'
 import { UserDetailSheet } from './UserDetailSheet'
 import { UserFormDialog } from './UserFormDialog'
 import { UserRowActions } from './UserRowActions'
-import { formatDate, fullName, ROLE_OPTIONS, STATUS_OPTIONS, titleCase } from './userDisplay'
+import { formatDate, fullName, ROLE_OPTIONS, STATUS_OPTIONS } from './userDisplay'
 
 const PAGE_SIZE = 20
 const ALL = 'ALL'
 
 export function UsersListPage() {
+  const { t } = useTranslation('users')
   const [role, setRole] = useState(ALL)
   const [status, setStatus] = useState(ALL)
   const [searchInput, setSearchInput] = useState('')
@@ -61,17 +63,17 @@ export function UsersListPage() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>Users</CardTitle>
+        <CardTitle>{t('list.title')}</CardTitle>
         <Button onClick={() => setFormDialog({ user: null })}>
           <Plus />
-          New User
+          {t('list.newUser')}
         </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Input
-            placeholder="Search by name…"
+            placeholder={t('list.searchPlaceholder')}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             className="max-w-56"
@@ -82,10 +84,10 @@ export function UsersListPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>All roles</SelectItem>
+              <SelectItem value={ALL}>{t('list.allRoles')}</SelectItem>
               {ROLE_OPTIONS.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {titleCase(option)}
+                  {t(`common:enums.role.${option}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -96,10 +98,10 @@ export function UsersListPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>All statuses</SelectItem>
+              <SelectItem value={ALL}>{t('list.allStatuses')}</SelectItem>
               {STATUS_OPTIONS.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {titleCase(option)}
+                  {t(`common:enums.accountStatus.${option}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -109,11 +111,11 @@ export function UsersListPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead>{t('list.columns.name')}</TableHead>
+              <TableHead>{t('fields.email')}</TableHead>
+              <TableHead>{t('fields.role')}</TableHead>
+              <TableHead>{t('fields.status')}</TableHead>
+              <TableHead>{t('fields.created')}</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -121,7 +123,7 @@ export function UsersListPage() {
             {isLoading && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Loading…
+                  {t('common:states.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -129,7 +131,7 @@ export function UsersListPage() {
             {!isLoading && users.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No users found.
+                  {t('list.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -139,11 +141,11 @@ export function UsersListPage() {
                 <TableCell>{fullName(user)}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{titleCase(user.role)}</Badge>
+                  <Badge variant="outline">{t(`common:enums.role.${user.role}`)}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant={user.status === 'ACTIVE' ? 'secondary' : 'destructive'}>
-                    {titleCase(user.status)}
+                    {t(`common:enums.accountStatus.${user.status}`)}
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(user.createdAt)}</TableCell>
@@ -160,7 +162,7 @@ export function UsersListPage() {
         </Table>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>{totalElements} user{totalElements === 1 ? '' : 's'}</p>
+          <p>{t('list.count', { count: totalElements })}</p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -168,18 +170,16 @@ export function UsersListPage() {
               disabled={page === 0}
               onClick={() => setPage((current) => current - 1)}
             >
-              Previous
+              {t('common:actions.previous')}
             </Button>
-            <span>
-              Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-            </span>
+            <span>{t('common:pagination.pageOf', { page: totalPages === 0 ? 0 : page + 1, total: totalPages })}</span>
             <Button
               variant="outline"
               size="sm"
               disabled={page + 1 >= totalPages}
               onClick={() => setPage((current) => current + 1)}
             >
-              Next
+              {t('common:actions.next')}
             </Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,6 +30,7 @@ function remaining(expiresAt, now) {
  * nobody is looking at.
  */
 export function SessionQrDialog({ onOpenChange, session }) {
+  const { t } = useTranslation('attendance')
   const generate = useGenerateSessionQrMutation(session.id)
   const { mutate } = generate
   const code = generate.data
@@ -51,7 +53,7 @@ export function SessionQrDialog({ onOpenChange, session }) {
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Scan to check in</DialogTitle>
+          <DialogTitle>{t('qrDialog.title')}</DialogTitle>
           <DialogDescription>
             {session.course.name} · {session.classroom}
           </DialogDescription>
@@ -61,22 +63,25 @@ export function SessionQrDialog({ onOpenChange, session }) {
             open: an unbroken string is a single long word, and without it
             the flex column grows to fit rather than letting it truncate. */}
         <div className="flex min-w-0 flex-col items-center gap-3">
-          {generate.isPending && <p className="text-sm text-muted-foreground">Producing a code…</p>}
+          {generate.isPending && <p className="text-sm text-muted-foreground">{t('qrDialog.producing')}</p>}
 
           {code && (
             <>
               <img
                 src={`data:image/png;base64,${code.imageBase64}`}
-                alt={`QR code for ${session.course.name}`}
+                alt={t('qrDialog.imageAlt', { course: session.course.name })}
                 className="size-64 rounded-md border bg-white p-2"
               />
               <p className="text-sm text-muted-foreground">
                 {countdown ? (
-                  <>
-                    Expires in <span className="font-medium tabular-nums text-foreground">{countdown}</span>
-                  </>
+                  <Trans
+                    t={t}
+                    i18nKey="qrDialog.expiresIn"
+                    values={{ countdown }}
+                    components={{ countdown: <span className="font-medium tabular-nums text-foreground" /> }}
+                  />
                 ) : (
-                  'This code has expired — show a new one.'
+                  t('qrDialog.expired')
                 )}
               </p>
               <p className="w-full truncate text-center text-xs text-muted-foreground" title={code.checkInUrl}>
@@ -88,11 +93,11 @@ export function SessionQrDialog({ onOpenChange, session }) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t('common:actions.close')}
           </Button>
           <Button disabled={generate.isPending} onClick={() => mutate()}>
             <RefreshCw />
-            New code
+            {t('qrDialog.newCode')}
           </Button>
         </DialogFooter>
       </DialogContent>

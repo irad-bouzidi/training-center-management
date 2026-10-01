@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { GradeEntriesTable } from './GradeEntriesTable'
 import { formatPercent, groupByCourse, scoreBadgeVariant, weightedAverage } from './gradeDisplay'
@@ -11,6 +12,7 @@ import { formatPercent, groupByCourse, scoreBadgeVariant, weightedAverage } from
  * gradeDisplay#weightedAverage) rather than fetched course by course.
  */
 export function CourseGradesList({ grades, overall, emptyMessage }) {
+  const { t } = useTranslation('grades')
   const courses = groupByCourse(grades)
 
   if (courses.length === 0) {
@@ -20,8 +22,12 @@ export function CourseGradesList({ grades, overall, emptyMessage }) {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Overall: <span className="font-medium text-foreground">{formatPercent(overall)}</span> — each assessment
-        weighted by its share of the final mark.
+        <Trans
+          t={t}
+          i18nKey="courseList.overall"
+          values={{ average: formatPercent(overall) }}
+          components={{ strong: <span className="font-medium text-foreground" /> }}
+        />
       </p>
 
       {courses.map(({ course, grades: courseGrades }) => {
@@ -35,7 +41,7 @@ export function CourseGradesList({ grades, overall, emptyMessage }) {
               </h2>
               <Badge variant={scoreBadgeVariant(average)}>{formatPercent(average)}</Badge>
             </div>
-            <GradeEntriesTable grades={courseGrades} emptyMessage="Nothing recorded yet." />
+            <GradeEntriesTable grades={courseGrades} emptyMessage={t('courseList.empty')} />
           </section>
         )
       })}

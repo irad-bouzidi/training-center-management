@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
 import { formatRate } from '@/features/attendance/attendanceDisplay'
@@ -14,6 +15,7 @@ import { useAdminSummaryQuery } from './hooks'
  * derived here, so what's on screen is what the database says.
  */
 export function AdminDashboardPage() {
+  const { t } = useTranslation('dashboard')
   const { user } = useAuth()
   const { data: summary, isLoading } = useAdminSummaryQuery()
 
@@ -21,29 +23,37 @@ export function AdminDashboardPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Welcome, {user.name}</CardTitle>
-          <CardDescription>What’s happening across the centre right now.</CardDescription>
+          <CardTitle>{t('welcome', { name: user.name })}</CardTitle>
+          <CardDescription>{t('admin.description')}</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {isLoading && <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>}
 
           {summary && (
             <>
               <section className="space-y-2">
-                <h2 className="text-sm font-semibold">People and courses</h2>
+                <h2 className="text-sm font-semibold">{t('admin.sections.people')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatTile label="Active students" value={formatCount(summary.activeStudents)} to="/admin/students" />
-                  <StatTile label="Active trainers" value={formatCount(summary.activeTrainers)} to="/admin/users" />
                   <StatTile
-                    label="Published courses"
+                    label={t('admin.activeStudents')}
+                    value={formatCount(summary.activeStudents)}
+                    to="/admin/students"
+                  />
+                  <StatTile
+                    label={t('admin.activeTrainers')}
+                    value={formatCount(summary.activeTrainers)}
+                    to="/admin/users"
+                  />
+                  <StatTile
+                    label={t('admin.publishedCourses')}
                     value={formatCount(summary.publishedCourses)}
                     to="/admin/courses"
                   />
                   <StatTile
-                    label="Pending enrollments"
+                    label={t('admin.pendingEnrollments')}
                     value={formatCount(summary.pendingEnrollments)}
-                    note={summary.pendingEnrollments > 0 ? 'Waiting on a decision' : 'Nothing waiting'}
+                    note={summary.pendingEnrollments > 0 ? t('admin.pendingWaiting') : t('admin.pendingNone')}
                     tone={summary.pendingEnrollments > 0 ? 'attention' : 'default'}
                     to="/admin/enrollments"
                   />
@@ -51,40 +61,40 @@ export function AdminDashboardPage() {
               </section>
 
               <section className="space-y-2">
-                <h2 className="text-sm font-semibold">Teaching</h2>
+                <h2 className="text-sm font-semibold">{t('admin.sections.teaching')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <StatTile
-                    label="Upcoming sessions"
+                    label={t('admin.upcomingSessions')}
                     value={formatCount(summary.upcomingSessions)}
-                    note="Next 7 days"
+                    note={t('admin.next7Days')}
                     to="/admin/schedule"
                   />
                   <StatTile
-                    label="Average attendance"
+                    label={t('admin.averageAttendance')}
                     value={formatRate(summary.averageAttendanceRate)}
-                    note="Across every marked session"
+                    note={t('admin.acrossMarkedSessions')}
                   />
                   <StatTile
-                    label="Certificates issued"
+                    label={t('admin.certificatesIssued')}
                     value={formatCount(summary.certificatesThisMonth)}
-                    note="This month"
+                    note={t('admin.thisMonth')}
                   />
                 </div>
               </section>
 
               <section className="space-y-2">
-                <h2 className="text-sm font-semibold">Money</h2>
+                <h2 className="text-sm font-semibold">{t('admin.sections.money')}</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <StatTile
-                    label="Outstanding balance"
+                    label={t('admin.outstandingBalance')}
                     value={formatAmount(summary.outstandingBalance)}
-                    note="Owed across all invoices"
+                    note={t('admin.owedAcrossInvoices')}
                     to="/admin/payments"
                   />
                   <StatTile
-                    label="Overdue invoices"
+                    label={t('admin.overdueInvoices')}
                     value={formatCount(summary.overdueInvoices)}
-                    note={summary.overdueInvoices > 0 ? 'Past their due date' : 'None past due'}
+                    note={summary.overdueInvoices > 0 ? t('admin.overduePast') : t('admin.overdueNone')}
                     tone={summary.overdueInvoices > 0 ? 'attention' : 'default'}
                     to="/admin/payments"
                   />

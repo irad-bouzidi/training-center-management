@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CertificatesTable } from './CertificatesTable'
 import { useCertificatesQuery } from './hooks'
@@ -8,19 +9,20 @@ import { useCertificatesQuery } from './hooks'
  * through the authorized client and lands as a real PDF file.
  */
 export function MyCertificatesPage() {
+  const { t } = useTranslation('certificates')
   const { data: certificates = [], isLoading } = useCertificatesQuery(undefined)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My Certificates</CardTitle>
-        <CardDescription>Courses you’ve completed, and the certificates awarded for them.</CardDescription>
+        <CardTitle>{t('mine.title')}</CardTitle>
+        <CardDescription>{t('mine.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <CertificatesTable
           certificates={certificates}
           isLoading={isLoading}
-          emptyMessage="You haven’t been awarded a certificate yet."
+          emptyMessage={t('mine.empty')}
         />
       </CardContent>
     </Card>

@@ -1,11 +1,8 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { getCourseAttendanceReport, getMyAttendance, getSessionRoster, markAttendance } from '@/api/attendanceApi'
-import { errorMessage } from '@/features/schedule/hooks'
-
-// Re-exported so the QR hooks alongside this file have one place to reach
-// for it, rather than two features importing the same helper from a third.
-export { errorMessage }
+import { apiErrorMessage } from '@/api/serverErrors'
 
 export const attendanceKeys = {
   all: ['attendance'],
@@ -64,18 +61,19 @@ export function useCourseAttendanceReportQueries(courseIds) {
  * feed.
  */
 export function useMarkAttendanceMutation(sessionId) {
+  const { t } = useTranslation('attendance')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (entries) => markAttendance(sessionId, entries),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] })
-      toast.success('Attendance saved')
+      toast.success(t('toasts.saved'))
       // Returned so the mutation settles only once the roster has refetched
       // - MarkAttendancePage drops its local marks then, and would otherwise
       // flash the pre-save roster in between.
       return queryClient.invalidateQueries({ queryKey: attendanceKeys.all })
     },
-    onError: (error) => toast.error(errorMessage(error, 'Failed to save attendance')),
+    onError: (error) => toast.error(apiErrorMessage(error, t('toasts.saveFailed'))),
   })
 }

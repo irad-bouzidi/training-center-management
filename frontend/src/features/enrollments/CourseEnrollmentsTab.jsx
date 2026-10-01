@@ -1,9 +1,10 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/context/AuthContext'
 import { EnrollButton } from './EnrollButton'
 import { EnrollmentRowActions } from './EnrollmentRowActions'
-import { formatDate, statusBadgeVariant, titleCase } from './enrollmentDisplay'
+import { formatDate, statusBadgeVariant } from './enrollmentDisplay'
 import { useEnrollmentsQuery, useMyEnrollmentsByCourseQuery } from './hooks'
 
 // A course roster fits one page - the capacity this app models is a
@@ -22,6 +23,7 @@ const ROSTER_SIZE = 100
  * would otherwise render as an empty course.
  */
 export function CourseEnrollmentsTab({ course }) {
+  const { t } = useTranslation('enrollments')
   const { user } = useAuth()
   const isStudent = user.role === 'STUDENT'
   const isAdmin = user.role === 'ADMIN'
@@ -40,14 +42,16 @@ export function CourseEnrollmentsTab({ course }) {
       <div className="flex items-center gap-3">
         {enrollment ? (
           <>
-            <Badge variant={statusBadgeVariant(enrollment.status)}>{titleCase(enrollment.status)}</Badge>
+            <Badge variant={statusBadgeVariant(enrollment.status)}>
+              {t(`common:enums.enrollmentStatus.${enrollment.status}`)}
+            </Badge>
             <span className="text-sm text-muted-foreground">
-              Requested on {formatDate(enrollment.enrolledAt)}
+              {t('courseTab.requestedOn', { date: formatDate(enrollment.enrolledAt) })}
             </span>
           </>
         ) : (
           <>
-            <span className="text-sm text-muted-foreground">You aren't enrolled in this course.</span>
+            <span className="text-sm text-muted-foreground">{t('courseTab.notEnrolled')}</span>
             <EnrollButton course={course} enrollment={enrollment} />
           </>
         )}
@@ -58,7 +62,7 @@ export function CourseEnrollmentsTab({ course }) {
   if (!canSeeRoster) {
     return (
       <p className="text-sm text-muted-foreground">
-        Only this course's trainer and administrators can see who's enrolled.
+        {t('courseTab.rosterRestricted')}
       </p>
     )
   }
@@ -69,9 +73,9 @@ export function CourseEnrollmentsTab({ course }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Student</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Requested</TableHead>
+          <TableHead>{t('courseTab.columns.student')}</TableHead>
+          <TableHead>{t('courseTab.columns.status')}</TableHead>
+          <TableHead>{t('courseTab.columns.requested')}</TableHead>
           {isAdmin && <TableHead className="w-44" />}
         </TableRow>
       </TableHeader>
@@ -79,7 +83,7 @@ export function CourseEnrollmentsTab({ course }) {
         {isLoading && (
           <TableRow>
             <TableCell colSpan={isAdmin ? 4 : 3} className="text-center text-muted-foreground">
-              Loading…
+              {t('common:states.loading')}
             </TableCell>
           </TableRow>
         )}
@@ -87,7 +91,7 @@ export function CourseEnrollmentsTab({ course }) {
         {!isLoading && enrollments.length === 0 && (
           <TableRow>
             <TableCell colSpan={isAdmin ? 4 : 3} className="text-center text-muted-foreground">
-              No one has enrolled in this course yet.
+              {t('courseTab.empty')}
             </TableCell>
           </TableRow>
         )}
@@ -99,7 +103,9 @@ export function CourseEnrollmentsTab({ course }) {
               <span className="text-xs text-muted-foreground">{enrollment.student.email}</span>
             </TableCell>
             <TableCell>
-              <Badge variant={statusBadgeVariant(enrollment.status)}>{titleCase(enrollment.status)}</Badge>
+              <Badge variant={statusBadgeVariant(enrollment.status)}>
+                {t(`common:enums.enrollmentStatus.${enrollment.status}`)}
+              </Badge>
             </TableCell>
             <TableCell>{formatDate(enrollment.enrolledAt)}</TableCell>
             {isAdmin && (

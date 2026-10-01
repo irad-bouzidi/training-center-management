@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { listMyPayments, listPayments, recordPayment } from '@/api/paymentApi'
 import { studentsKeys } from '@/features/students/hooks'
@@ -8,13 +9,6 @@ export const paymentsKeys = {
   lists: () => [...paymentsKeys.all, 'list'],
   list: (params) => [...paymentsKeys.lists(), params],
   mine: () => [...paymentsKeys.all, 'mine'],
-}
-
-// The backend never has a message body it can't produce (see
-// GlobalExceptionHandler) - falling back to a generic string only covers a
-// network-level failure (no response at all).
-export function errorMessage(error, fallback) {
-  return error.response?.data?.message ?? fallback
 }
 
 export function usePaymentsQuery(params, options) {
@@ -46,6 +40,7 @@ export function useMyPaymentsQuery(options) {
  * it's about.
  */
 export function useRecordPaymentMutation() {
+  const { t } = useTranslation('payments')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -53,7 +48,7 @@ export function useRecordPaymentMutation() {
     onSuccess: (payment) => {
       queryClient.invalidateQueries({ queryKey: paymentsKeys.all })
       queryClient.invalidateQueries({ queryKey: studentsKeys.all })
-      toast.success(payment.status === 'PAID' ? 'Invoice settled' : 'Payment recorded')
+      toast.success(payment.status === 'PAID' ? t('toasts.settled') : t('toasts.recorded'))
     },
   })
 }

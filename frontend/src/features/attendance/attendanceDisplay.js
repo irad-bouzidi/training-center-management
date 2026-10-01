@@ -1,3 +1,5 @@
+import { formatNumber } from '@/lib/format'
+
 /**
  * Attendance marks, mirroring com.tcm.attendance.model.AttendanceStatus
  * (TCM-19). A student with no record at all is none of these - the roster
@@ -5,11 +7,6 @@
  * rather than a fourth status.
  */
 export const STATUS_OPTIONS = ['PRESENT', 'LATE', 'ABSENT']
-
-/** PRESENT -> "Present". */
-export function titleCase(value) {
-  return value.charAt(0) + value.slice(1).toLowerCase()
-}
 
 export function statusBadgeVariant(status) {
   switch (status) {
@@ -27,9 +24,12 @@ export function statusBadgeVariant(status) {
 /**
  * The backend sends a percentage (66.7) or null while a student has no marks
  * at all - an unmarked student is not a 0% student, so they read as "—".
+ * Formatted in the UI language: "66.7%" in English, "66,7 %" in French.
  */
 export function formatRate(rate) {
-  return rate === null || rate === undefined ? '—' : `${rate}%`
+  return rate === null || rate === undefined
+    ? '—'
+    : formatNumber(Number(rate) / 100, { style: 'percent', maximumFractionDigits: 1 })
 }
 
 /**

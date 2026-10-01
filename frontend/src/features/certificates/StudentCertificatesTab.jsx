@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -7,7 +8,8 @@ import { useMyCoursesQuery } from '@/features/courses/hooks'
 import { CompleteEnrollmentButton } from '@/features/enrollments/CompleteEnrollmentButton'
 import { CertificatesTable } from './CertificatesTable'
 import { blockingReason } from './certificateDisplay'
-import { errorMessage, useCertificatesQuery, useGenerateCertificateMutation } from './hooks'
+import { useCertificatesQuery, useGenerateCertificateMutation } from './hooks'
+import { apiErrorMessage } from '@/api/serverErrors'
 
 /**
  * The "Certificates" tab of StudentSummaryPage - see
@@ -28,6 +30,7 @@ import { errorMessage, useCertificatesQuery, useGenerateCertificateMutation } fr
  * the button.
  */
 export function StudentCertificatesTab({ studentId, enrollments }) {
+  const { t } = useTranslation('certificates')
   const { user } = useAuth()
   const isAdmin = user.role === 'ADMIN'
   const isTrainer = user.role === 'TRAINER'
@@ -48,7 +51,8 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
       { studentId, courseId: enrollment.course.id },
       { onError: (error) => setRefusal({
           courseId: enrollment.course.id,
-          message: errorMessage(error, 'This certificate could not be issued'),
+          // Translated at render, so it follows a language switch.
+          error,
         }) },
     )
   }
@@ -56,26 +60,24 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Issued</h2>
+        <h2 className="text-sm font-semibold">{t('studentTab.issued')}</h2>
         <CertificatesTable
           certificates={certificates}
           isLoading={isLoading}
-          emptyMessage="No certificates have been issued to this student yet."
+          emptyMessage={t('studentTab.issuedEmpty')}
         />
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Eligible for certification</h2>
+        <h2 className="text-sm font-semibold">{t('studentTab.eligible')}</h2>
         {candidates.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Every course this student is enrolled in has been certified.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('studentTab.allCertified')}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Course</TableHead>
-                <TableHead>Enrollment</TableHead>
+                <TableHead>{t('studentTab.course')}</TableHead>
+                <TableHead>{t('studentTab.enrollment')}</TableHead>
                 <TableHead className="w-80" />
               </TableRow>
             </TableHeader>
@@ -87,7 +89,7 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
                 const waiting = isTrainer && !taughtCourseIds
                 const notTheirs =
                   isTrainer && taughtCourseIds && !taughtCourseIds.has(enrollment.course.id)
-                    ? 'Only this course’s trainer or an administrator can issue its certificate.'
+                    ? t('studentTab.notTheirs')
                     : null
                 const blocked = notTheirs ?? blockingReason(enrollment)
 
@@ -97,14 +99,14 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
                       {enrollment.course.name}{' '}
                       <span className="text-xs text-muted-foreground">{enrollment.course.code}</span>
                       {refusal?.courseId === enrollment.course.id ? (
-                        <p className="text-xs text-destructive">{refusal.message}</p>
+                        <p className="text-xs text-destructive">{apiErrorMessage(refusal.error, t('studentTab.issueFailed'))}</p>
                       ) : (
                         blocked && <p className="text-xs text-muted-foreground">{blocked}</p>
                       )}
                     </TableCell>
                     <TableCell>
                       <Badge variant={enrollment.status === 'COMPLETED' ? 'default' : 'outline'}>
-                        {enrollment.status.charAt(0) + enrollment.status.slice(1).toLowerCase()}
+                        {t(`common:enums.enrollmentStatus.${enrollment.status}`)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -116,7 +118,7 @@ export function StudentCertificatesTab({ studentId, enrollments }) {
                           title={blocked || undefined}
                           onClick={() => issue(enrollment)}
                         >
-                          Generate certificate
+                          {t('studentTab.generate')}
                         </Button>
                       </div>
                     </TableCell>

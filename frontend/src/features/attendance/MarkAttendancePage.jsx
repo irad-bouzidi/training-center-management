@@ -1,5 +1,6 @@
 import { ArrowLeft, QrCode } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { formatSessionDate, formatTimeRange } from '@/features/schedule/scheduleDisplay'
 import { SessionQrDialog } from './SessionQrDialog'
-import { STATUS_OPTIONS, titleCase } from './attendanceDisplay'
+import { STATUS_OPTIONS } from './attendanceDisplay'
 import { useMarkAttendanceMutation, useSessionRosterQuery } from './hooks'
 
 /**
@@ -29,6 +30,7 @@ import { useMarkAttendanceMutation, useSessionRosterQuery } from './hooks'
  * alone keep who (or which scan) recorded them.
  */
 export function MarkAttendancePage() {
+  const { t } = useTranslation('attendance')
   const { sessionId } = useParams()
   const navigate = useNavigate()
   const { data: roster, isLoading, isError, error } = useSessionRosterQuery(sessionId)
@@ -40,15 +42,15 @@ export function MarkAttendancePage() {
   const [qrOpen, setQrOpen] = useState(false)
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
   }
 
   if (isError) {
     return (
       <p className="text-sm text-muted-foreground">
         {error.response?.status === 403
-          ? 'You can only take attendance for sessions you are assigned to.'
-          : 'This session could not be loaded.'}
+          ? t('markPage.forbidden')
+          : t('markPage.loadError')}
       </p>
     )
   }
@@ -89,7 +91,7 @@ export function MarkAttendancePage() {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
         <ArrowLeft />
-        Back
+        {t('common:actions.back')}
       </Button>
 
       <Card>
@@ -104,13 +106,13 @@ export function MarkAttendancePage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setQrOpen(true)}>
               <QrCode />
-              Show QR
+              {t('markPage.showQr')}
             </Button>
             <Button variant="outline" size="sm" disabled={entries.length === 0} onClick={markAllPresent}>
-              Mark all present
+              {t('markPage.markAllPresent')}
             </Button>
             <Button size="sm" disabled={!isDirty || markAttendance.isPending} onClick={save}>
-              {markAttendance.isPending ? 'Saving…' : 'Save'}
+              {markAttendance.isPending ? t('common:actions.saving') : t('common:actions.save')}
             </Button>
           </div>
         </CardHeader>
@@ -119,17 +121,17 @@ export function MarkAttendancePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="w-64">Attendance</TableHead>
-                <TableHead>Recorded</TableHead>
+                <TableHead>{t('columns.student')}</TableHead>
+                <TableHead>{t('columns.email')}</TableHead>
+                <TableHead className="w-64">{t('columns.attendance')}</TableHead>
+                <TableHead>{t('columns.recorded')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {entries.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    Nobody is approved on this course yet, so there is no roster to mark.
+                    {t('markPage.empty')}
                   </TableCell>
                 </TableRow>
               )}
@@ -143,11 +145,11 @@ export function MarkAttendancePage() {
                       type="single"
                       value={markOf(entry) ?? ''}
                       onValueChange={(status) => setMark(entry.studentId, status)}
-                      aria-label={`Attendance for ${entry.studentName}`}
+                      aria-label={t('markPage.rowLabel', { name: entry.studentName })}
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <ToggleGroupItem key={status} value={status}>
-                          {titleCase(status)}
+                          {t(`common:enums.attendanceStatus.${status}`)}
                         </ToggleGroupItem>
                       ))}
                     </ToggleGroup>
@@ -155,15 +157,15 @@ export function MarkAttendancePage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {entry.status ? (
                       <>
-                        {titleCase(entry.status)}
+                        {t(`common:enums.attendanceStatus.${entry.status}`)}
                         {entry.method === 'QR' && (
                           <Badge variant="outline" className="ml-2">
-                            QR
+                            {t('method.QR')}
                           </Badge>
                         )}
                       </>
                     ) : (
-                      'Not recorded'
+                      t('markPage.notRecorded')
                     )}
                   </TableCell>
                 </TableRow>
@@ -172,8 +174,10 @@ export function MarkAttendancePage() {
           </Table>
 
           <p className="text-sm text-muted-foreground">
-            {marked.length} of {entries.length} marked
-            {isDirty ? ' · unsaved changes' : ''}
+            {t(isDirty ? 'markPage.markedCountUnsaved' : 'markPage.markedCount', {
+              marked: marked.length,
+              total: entries.length,
+            })}
           </p>
         </CardContent>
       </Card>
