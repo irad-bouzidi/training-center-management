@@ -9,16 +9,18 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
 import { formatSessionDate } from '@/features/schedule/scheduleDisplay'
 import { formatTime } from '@/lib/format'
-import { parseCheckInUrl, QrScanner } from './QrScanner'
+import { parseCheckInUrl, parseShortLinkUrl, QrScanner } from './QrScanner'
 import { checkInFailure, useQrCheckInMutation } from './qrHooks'
 
 /**
- * What the paste box holds, as a check-in: either the full link the QR code
- * encodes (which carries its own session - the only option at a bare
- * /attend), or just the token when the page was opened on the session's own
- * link. A path-only link (/attend/…?token=…) is accepted too.
+ * What the paste box holds, as a check-in: the short link shown under the QR
+ * code (`/s/…`, opened as-is - the backend redirects it back here with the
+ * full link), the full check-in link itself (which carries its own session -
+ * so either works at a bare /attend), or just the token when the page was
+ * opened on the session's own link. Path-only links (/s/…,
+ * /attend/…?token=…) are accepted too.
  *
- * @returns {{sessionId: string, token: string}|null}
+ * @returns {{shortLink: string}|{sessionId: string, token: string}|null}
  */
 function parsePasted(text, sessionIdFromPath) {
   const trimmed = text.trim()
@@ -26,8 +28,12 @@ function parsePasted(text, sessionIdFromPath) {
     return null
   }
 
-  const fromLink =
-    parseCheckInUrl(trimmed) ?? (trimmed.startsWith('/') ? parseCheckInUrl(`${window.location.origin}${trimmed}`) : null)
+  const asUrl = trimmed.startsWith('/') ? `${window.location.origin}${trimmed}` : trimmed
+  const shortLink = parseShortLinkUrl(asUrl)
+  if (shortLink) {
+    return { shortLink }
+  }
+  const fromLink = parseCheckInUrl(asUrl)
   if (fromLink) {
     return fromLink
   }
@@ -74,6 +80,9 @@ export function QrCheckinPage() {
   const isStudent = user.role === 'STUDENT'
 
   const submit = useCallback((scanned) => mutate(scanned), [mutate])
+  // A short link is opened rather than posted: the backend redirects it back
+  // here on the full link, which checks in on arrival.
+  const followShortLink = useCallback((link) => window.location.assign(link), [])
   const pasted = parsePasted(manualInput, sessionIdFromPath)
 
   // A code in the URL is a scan that has already happened.
@@ -145,7 +154,7 @@ export function QrCheckinPage() {
           </div>
         )}
 
-        {!checkIn.isPending && <QrScanner onScan={submit} />}
+        {!checkIn.isPending && <QrScanner onScan={submit} onShortLink={followShortLink} />}
 
         <div className="space-y-2">
           <Label htmlFor="manualInput">{t('checkIn.manualLabel')}</Label>
@@ -158,7 +167,7 @@ export function QrCheckinPage() {
               }
               onChange={(event) => setManualInput(event.target.value)}
             />
-            <Button disabled={!pasted || checkIn.isPending} onClick={() => submit(pasted)}>
+            <Button disabled={!pasted || checkIn.isPending} onClick={() => (pasted.shortLink ? followShortLink(pasted.shortLink) : submit(pasted))}>
               {t('checkIn.submit')}
             </Button>
           </div>

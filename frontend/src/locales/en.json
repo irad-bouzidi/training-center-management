@@ -192,12 +192,12 @@
       "title": "Check in",
       "pending": "Checking you in…",
       "instructions": "Scan the code your trainer has on screen.",
-      "manualLabel": "Can’t scan? Paste the check-in link",
-      "manualPlaceholderWithSession": "Check-in link or code",
-      "manualPlaceholder": "https://…/attend/…?token=…",
+      "manualLabel": "Can’t scan? Type in the link under the code",
+      "manualPlaceholderWithSession": "Link or code",
+      "manualPlaceholder": "https://…/s/…",
       "submit": "Check in",
       "invalidWithSession": "That isn’t a check-in link or code.",
-      "invalid": "Paste the whole check-in link — a code on its own doesn’t say which session it’s for."
+      "invalid": "Type in the whole link shown under the code — a code on its own doesn’t say which session it’s for."
     },
     "failure": {
       "expiredTitle": "That code is no longer valid",

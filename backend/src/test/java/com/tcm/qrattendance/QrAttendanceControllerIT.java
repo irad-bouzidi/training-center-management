@@ -2,6 +2,7 @@ package com.tcm.qrattendance;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -89,8 +90,18 @@ class QrAttendanceControllerIT {
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.expiresAt").isNotEmpty())
                 .andExpect(jsonPath("$.checkInUrl").value(org.hamcrest.Matchers.containsString("/attend/" + sessionId)))
+                .andExpect(jsonPath("$.shortUrl").value(org.hamcrest.Matchers.matchesPattern(".*/s/[A-Za-z0-9]{7}")))
                 .andReturn().getResponse().getContentAsString();
         String token = objectMapper.readTree(response).get("token").asText();
+
+        // The short link redirects - with no sign-in, as a camera app opens
+        // it - to the full check-in URL.
+        String shortUrl = objectMapper.readTree(response).get("shortUrl").asText();
+        mockMvc.perform(get("/s/" + shortUrl.substring(shortUrl.lastIndexOf('/') + 1)))
+                .andExpect(status().isFound())
+                .andExpect(header().string(HttpHeaders.LOCATION,
+                        objectMapper.readTree(response).get("checkInUrl").asText()));
+        String studentToken = login(studentEmail, PASSWORD);
 
         // The image really is a PNG: the magic number is the first 8 bytes.
         byte[] png = Base64.getDecoder().decode(objectMapper.readTree(response).get("imageBase64").asText());
@@ -98,7 +109,6 @@ class QrAttendanceControllerIT {
         org.assertj.core.api.Assertions.assertThat(new String(png, 1, 3, java.nio.charset.StandardCharsets.US_ASCII))
                 .isEqualTo("PNG");
 
-        String studentToken = login(studentEmail, PASSWORD);
         checkIn(sessionId, token, studentToken)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PRESENT"))
@@ -217,6 +227,13 @@ class QrAttendanceControllerIT {
         createUser(trainer(strangerEmail));
 
         issue(sessionId, login(strangerEmail, PASSWORD)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anUnknownShortLink_landsOnTheCheckInPage() throws Exception {
+        mockMvc.perform(get("/s/nope234"))
+                .andExpect(status().isFound())
+                .andExpect(header().string(HttpHeaders.LOCATION, org.hamcrest.Matchers.endsWith("/attend")));
     }
 
     @Test

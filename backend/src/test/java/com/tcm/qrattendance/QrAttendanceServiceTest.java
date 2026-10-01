@@ -22,6 +22,7 @@ import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.qrattendance.dto.QrCodeResponse;
 import com.tcm.schedule.model.ClassSession;
 import com.tcm.schedule.model.SessionStatus;
+import com.tcm.shortlink.ShortLinkService;
 import com.tcm.user.model.Role;
 import com.tcm.user.model.User;
 import java.net.URLEncoder;
@@ -67,32 +68,39 @@ class QrAttendanceServiceTest {
     @Mock
     private EnrollmentRepository enrollmentRepository;
 
+    @Mock
+    private ShortLinkService shortLinkService;
+
     private QrAttendanceService qrAttendanceService;
 
     @BeforeEach
     void setUp() {
         qrAttendanceService = new QrAttendanceService(
-                qrTokenService, qrCodeImageService, attendanceService, enrollmentRepository);
+                qrTokenService, qrCodeImageService, attendanceService, enrollmentRepository, shortLinkService);
         ReflectionTestUtils.setField(qrAttendanceService, "frontendBaseUrl", FRONTEND);
     }
 
     @Test
-    void issue_returnsTheTokenAndACheckInUrlRenderedAsAQrImage() {
+    void issue_returnsTheTokenAndAShortLinkToTheCheckInUrlRenderedAsAQrImage() {
         Instant expiresAt = Instant.now().plusSeconds(300);
         when(qrTokenService.issue(SESSION_ID, TRAINER_ID, false))
                 .thenReturn(new QrTokenService.IssuedToken(TOKEN, expiresAt));
         byte[] png = {1, 2, 3};
         when(qrCodeImageService.render(anyString())).thenReturn(png);
+        String expectedUrl = FRONTEND + "/attend/" + SESSION_ID + "?token="
+                + URLEncoder.encode(TOKEN, StandardCharsets.UTF_8);
+        String shortUrl = FRONTEND + "/s/abc2345";
+        when(shortLinkService.shorten(expectedUrl, expiresAt)).thenReturn(shortUrl);
 
         QrCodeResponse response = qrAttendanceService.issue(SESSION_ID, TRAINER_ID, false);
 
-        String expectedUrl = FRONTEND + "/attend/" + SESSION_ID + "?token="
-                + URLEncoder.encode(TOKEN, StandardCharsets.UTF_8);
         assertThat(response.token()).isEqualTo(TOKEN);
         assertThat(response.expiresAt()).isEqualTo(expiresAt);
         assertThat(response.checkInUrl()).isEqualTo(expectedUrl);
+        assertThat(response.shortUrl()).isEqualTo(shortUrl);
         assertThat(response.imageBase64()).isEqualTo(Base64.getEncoder().encodeToString(png));
-        verify(qrCodeImageService).render(expectedUrl);
+        // The image carries the short link, which expires with the token.
+        verify(qrCodeImageService).render(shortUrl);
     }
 
     @Test

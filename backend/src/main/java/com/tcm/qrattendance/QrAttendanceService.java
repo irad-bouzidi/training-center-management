@@ -8,6 +8,7 @@ import com.tcm.enrollment.model.Enrollment;
 import com.tcm.enrollment.model.EnrollmentStatus;
 import com.tcm.qrattendance.dto.QrCodeResponse;
 import com.tcm.schedule.model.ClassSession;
+import com.tcm.shortlink.ShortLinkService;
 import java.util.Base64;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class QrAttendanceService {
     private final QrCodeImageService qrCodeImageService;
     private final AttendanceService attendanceService;
     private final EnrollmentRepository enrollmentRepository;
+    private final ShortLinkService shortLinkService;
 
     @Value("${app.frontend-base-url}")
     private String frontendBaseUrl;
@@ -38,12 +40,18 @@ public class QrAttendanceService {
     public QrCodeResponse issue(UUID sessionId, UUID requesterId, boolean requesterIsAdmin) {
         QrTokenService.IssuedToken issued = qrTokenService.issue(sessionId, requesterId, requesterIsAdmin);
         String checkInUrl = checkInUrl(sessionId, issued.token());
+        // The image encodes the short link, not the check-in URL itself: a
+        // shorter payload is a less dense code that scans more easily, and
+        // it is short enough to show in full beside the image. It lives
+        // exactly as long as the token it leads to.
+        String shortUrl = shortLinkService.shorten(checkInUrl, issued.expiresAt());
 
         return new QrCodeResponse(
                 issued.token(),
                 issued.expiresAt(),
                 checkInUrl,
-                Base64.getEncoder().encodeToString(qrCodeImageService.render(checkInUrl)));
+                shortUrl,
+                Base64.getEncoder().encodeToString(qrCodeImageService.render(shortUrl)));
     }
 
     /**
@@ -72,7 +80,7 @@ public class QrAttendanceService {
         return attendanceService.markViaQr(sessionId, studentId, AttendanceStatus.PRESENT);
     }
 
-    /** What the QR image encodes: the frontend page that posts the check-in. */
+    /** Where the short link leads: the frontend page that posts the check-in. */
     private String checkInUrl(UUID sessionId, String token) {
         return "%s/attend/%s?token=%s".formatted(
                 frontendBaseUrl, sessionId, java.net.URLEncoder.encode(token, java.nio.charset.StandardCharsets.UTF_8));
