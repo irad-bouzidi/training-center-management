@@ -8,6 +8,7 @@ import { MyAttendancePage } from '@/features/attendance/MyAttendancePage'
 import { QrCheckinPage } from '@/features/attendance/QrCheckinPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MyCertificatesPage } from '@/features/certificates/MyCertificatesPage'
+import { TrainerCertificatesPage } from '@/features/certificates/TrainerCertificatesPage'
 import { AdminDashboardPage } from '@/features/dashboard/AdminDashboardPage'
 import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
 import { TrainerDashboardPage } from '@/features/dashboard/TrainerDashboardPage'
@@ -80,6 +81,7 @@ function App() {
                   <Route path="schedule" element={<ScheduleListPage />} />
                   <Route path="sessions/:sessionId/attendance" element={<MarkAttendancePage />} />
                   <Route path="courses/:courseId/grades" element={<GradebookPage />} />
+                  <Route path="certificates" element={<TrainerCertificatesPage />} />
                 </Route>
               </Route>
 

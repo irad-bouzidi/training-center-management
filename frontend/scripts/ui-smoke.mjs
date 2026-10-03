@@ -12,7 +12,7 @@
  * browser itself is downloaded on demand, which is why it is found rather
  * than hardcoded. BASE_URL and CHROME_PATH override the defaults.
  */
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { chromium } from 'playwright-core'
@@ -165,6 +165,15 @@ async function signIn(email) {
   check('QR code renders on screen', qrVisible)
   check('QR dialog counts down', /Expires in/.test(await page.textContent('body')))
   await page.screenshot({ path: 'shot-trainer-qr.png' })
+  // The admin leg issued Sofia's Java certificate, on Tina's own course.
+  await page.goto(`${BASE}/trainer/certificates`, { waitUntil: 'networkidle' })
+  const issued = await page.textContent('body')
+  check('trainer reviews the certificates on their courses', /CERT-/.test(issued) && /Sofia/.test(issued))
+  await page.click('button:has-text("Preview")')
+  await page.waitForSelector('[role="dialog"] iframe', { timeout: 15000 })
+  check('trainer previews a certificate', true)
+  await page.keyboard.press('Escape')
+
   check('trainer pages raise no console errors', errors.length === 0, errors.slice(0, 2).join(' | '))
   await page.close()
 }
@@ -181,10 +190,22 @@ async function signIn(email) {
   await page.goto(`${BASE}/student/certificates`, { waitUntil: 'networkidle' })
   const certs = await page.textContent('body')
   check('the issued certificate is listed', /CERT-/.test(certs))
-  const download = page.waitForEvent('download', { timeout: 15000 })
-  await page.click('button:has-text("Download PDF")')
-  const file = await download
-  check('downloading gives a .pdf file', file.suggestedFilename().endsWith('.pdf'), file.suggestedFilename())
+  for (const lang of ['EN', 'FR']) {
+    const download = page.waitForEvent('download', { timeout: 15000 })
+    await page.click(`button:has-text("PDF (${lang})")`)
+    const file = await download
+    const name = file.suggestedFilename()
+    check(`downloading the ${lang} certificate gives its .pdf`, name.endsWith(`-${lang.toLowerCase()}.pdf`), name)
+    const head = readFileSync(await file.path()).subarray(0, 8).toString('latin1')
+    check(`the ${lang} download is a PDF 1.7 file`, head === '%PDF-1.7', head)
+  }
+  await page.click('button:has-text("Preview")')
+  await page.waitForSelector('[role="dialog"] iframe', { timeout: 15000 })
+  check('the certificate previews in the app', true)
+  await page.click('[role="dialog"] button:has-text("French")')
+  await page.waitForFunction(() => document.querySelector('[role="dialog"] iframe')?.src.startsWith('blob:'))
+  check('the preview switches to the French certificate', true)
+  await page.keyboard.press('Escape')
   await page.screenshot({ path: 'shot-student-certificates.png' })
 
   await page.goto(`${BASE}/attend`, { waitUntil: 'networkidle' })

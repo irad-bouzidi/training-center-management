@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261003-01-add-certificate-french-pdf
+      author: irad
+      comment: >
+        Every certificate is now drawn in English and French. file_path stays
+        the English PDF; file_path_fr is the French one. Nullable, because
+        certificates issued before this have no French PDF yet - the service
+        draws and records it the first time it is asked for. The index backs
+        a trainer's list of certificates on their courses.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE certificates ADD COLUMN file_path_fr VARCHAR(500);
+
+              CREATE INDEX ix_certificates_course ON certificates (course_id);
+      rollback:
+        - sql:
+            dbms: postgresql
+            sql: |
+              DROP INDEX IF EXISTS ix_certificates_course;
+              ALTER TABLE certificates DROP COLUMN IF EXISTS file_path_fr;

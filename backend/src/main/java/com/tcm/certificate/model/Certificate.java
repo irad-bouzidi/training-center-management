@@ -24,9 +24,11 @@ import lombok.Setter;
  * silently reissued, so a certificate number that has been handed out stays
  * the one on record.
  *
- * {@link #filePath} points at the generated PDF on disk (see
- * {@code certificates.storage-path}); the bytes deliberately don't live in
- * the database.
+ * {@link #filePath} and {@link #filePathFr} point at the generated English
+ * and French PDFs on disk (see {@code certificates.storage-path}); the bytes
+ * deliberately don't live in the database. Certificates issued before the
+ * French version existed have no {@code filePathFr} until it is first asked
+ * for.
  */
 @Entity
 @Table(name = "certificates")
@@ -56,8 +58,13 @@ public class Certificate {
     @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
 
+    /** The English PDF. */
     @Column(name = "file_path", nullable = false, length = 500)
     private String filePath;
+
+    /** The French PDF - {@code null} on certificates issued before it existed. */
+    @Column(name = "file_path_fr", length = 500)
+    private String filePathFr;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "generated_by", nullable = false)

@@ -100,6 +100,54 @@ class CertificateControllerIT {
 
         org.assertj.core.api.Assertions.assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII))
                 .isEqualTo("%PDF");
+
+        byte[] french = mockMvc.perform(get("/api/v1/certificates/" + certificateId + "/download")
+                        .param("lang", "fr")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(studentEmail, PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                        org.hamcrest.Matchers.containsString("-fr.pdf")))
+                .andReturn().getResponse().getContentAsByteArray();
+
+        org.assertj.core.api.Assertions.assertThat(new String(french, 0, 4, StandardCharsets.US_ASCII))
+                .isEqualTo("%PDF");
+        org.assertj.core.api.Assertions.assertThat(french).isNotEqualTo(pdf);
+    }
+
+    @Test
+    void anUnknownLanguage_isABadRequest() throws Exception {
+        String trainerId = createUser(trainer());
+        String courseId = createCourse(trainerId);
+        String studentId = certifiableStudent(courseId, trainerId, uniqueEmail(), AttendanceStatus.PRESENT);
+        String certificateId = idOf(generate(adminToken, studentId, courseId).andExpect(status().isCreated()));
+
+        mockMvc.perform(get("/api/v1/certificates/" + certificateId + "/download")
+                        .param("lang", "de")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void aTrainer_listsTheCertificatesOnTheirOwnCoursesOnly() throws Exception {
+        String trainerEmail = uniqueEmail();
+        String trainerId = createUser(trainer(trainerEmail));
+        String courseId = createCourse(trainerId);
+        String studentId = certifiableStudent(courseId, trainerId, uniqueEmail(), AttendanceStatus.PRESENT);
+        generate(adminToken, studentId, courseId).andExpect(status().isCreated());
+
+        String otherTrainerEmail = uniqueEmail();
+        createUser(trainer(otherTrainerEmail));
+
+        mockMvc.perform(get("/api/v1/certificates/taught")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(trainerEmail, PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].student.id").value(studentId));
+
+        mockMvc.perform(get("/api/v1/certificates/taught")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(otherTrainerEmail, PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

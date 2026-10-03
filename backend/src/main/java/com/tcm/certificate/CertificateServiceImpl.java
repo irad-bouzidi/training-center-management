@@ -69,24 +69,32 @@ public class CertificateServiceImpl implements CertificateService {
                 .generatedBy(issuer)
                 .build();
 
-        // The row carries where the PDF went, so the file is written first
-        // and its path recorded - a row pointing at nothing would be worse
-        // than a file nothing points at.
-        certificate.setFilePath(store(certificate).toString());
+        // The row carries where the PDFs went, so the files are written
+        // first and their paths recorded - a row pointing at nothing would
+        // be worse than a file nothing points at.
+        certificate.setFilePath(store(certificate, CertificateLanguage.EN).toString());
+        certificate.setFilePathFr(store(certificate, CertificateLanguage.FR).toString());
         return certificateMapper.toResponse(certificateRepository.save(certificate));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DownloadableCertificate download(UUID certificateId, UUID requesterId, boolean requesterIsAdmin) {
+    @Transactional
+    public DownloadableCertificate download(UUID certificateId, CertificateLanguage language,
+                                            UUID requesterId, boolean requesterIsAdmin) {
         Certificate certificate = certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new ResourceNotFoundException("No certificate with id " + certificateId));
         requireMayRead(certificate, requesterId, requesterIsAdmin);
 
+        if (certificate.getFilePathFr() == null) {
+            redrawLegacy(certificate);
+        }
+
+        String filePath = language == CertificateLanguage.FR ? certificate.getFilePathFr() : certificate.getFilePath();
+
         try {
             return new DownloadableCertificate(
-                    certificate.getCertificateNumber() + ".pdf",
-                    Files.readAllBytes(Path.of(certificate.getFilePath())));
+                    certificate.getCertificateNumber() + "-" + language.code() + ".pdf",
+                    Files.readAllBytes(Path.of(filePath)));
         } catch (IOException e) {
             throw new UncheckedIOException(
                     "Certificate " + certificate.getCertificateNumber() + " is recorded but its PDF is missing", e);
@@ -104,19 +112,52 @@ public class CertificateServiceImpl implements CertificateService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CertificateResponse> findForTrainer(UUID trainerId) {
+        return certificateRepository.findByCoursePrimaryTrainerIdOrderByIssuedAtDesc(trainerId).stream()
+                .map(certificateMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * A certificate issued before French versions existed has only an
+     * English PDF, written as PDF 2.0 - the file some readers refused to
+     * open. Both languages are drawn afresh from the same record (same
+     * number, same issue date), recorded, and the old file removed.
+     */
+    private void redrawLegacy(Certificate certificate) {
+        Path previous = Path.of(certificate.getFilePath());
+        Path english = store(certificate, CertificateLanguage.EN);
+        certificate.setFilePath(english.toString());
+        certificate.setFilePathFr(store(certificate, CertificateLanguage.FR).toString());
+        certificateRepository.save(certificate);
+
+        if (!previous.equals(english)) {
+            try {
+                Files.deleteIfExists(previous);
+            } catch (IOException e) {
+                // An orphaned old PDF is harmless; nothing points at it now.
+            }
+        }
+    }
+
     /** {@code CERT-<year>-<6 digits>}, the sequence coming from the database. */
     private String nextCertificateNumber(Instant issuedAt) {
         long sequence = certificateRepository.nextCertificateSequence();
         return "CERT-%d-%06d".formatted(issuedAt.atZone(ZoneId.systemDefault()).getYear(), sequence);
     }
 
-    /** Writes the PDF under {@code certificates.storage-path} and returns where it landed. */
-    private Path store(Certificate certificate) {
+    /**
+     * Writes one language's PDF under {@code certificates.storage-path} as
+     * {@code <number>-<lang>.pdf} and returns where it landed.
+     */
+    private Path store(Certificate certificate, CertificateLanguage language) {
         try {
             Path directory = Path.of(properties.getStoragePath());
             Files.createDirectories(directory);
-            Path file = directory.resolve(certificate.getCertificateNumber() + ".pdf");
-            Files.write(file, pdfGenerator.generate(certificate));
+            Path file = directory.resolve(certificate.getCertificateNumber() + "-" + language.code() + ".pdf");
+            Files.write(file, pdfGenerator.generate(certificate, language));
             return file;
         } catch (IOException e) {
             throw new UncheckedIOException("Could not store the certificate PDF", e);

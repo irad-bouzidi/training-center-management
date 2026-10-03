@@ -102,6 +102,7 @@ export const RULES = [
     'certificateAlreadyIssued',
     (m) => ({ number: m[1] }),
   ],
+  [/^Unsupported certificate language: (.*)$/, 'certificateUnsupportedLanguage', (m) => ({ lang: m[1] })],
   [/^This student is not enrolled in this course$/, 'certificateNotEnrolled'],
   [
     /^This student's enrollment must be marked COMPLETED before a certificate can be issued \(it is currently (\w+)\)$/,

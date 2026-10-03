@@ -108,7 +108,8 @@
       "checkIn": "Pointer",
       "myAttendance": "Mes présences",
       "myGrades": "Mes notes",
-      "myCertificates": "Mes certificats"
+      "myCertificates": "Mes certificats",
+      "certificates": "Certificats"
     },
     "comingSoon": "Bientôt disponible",
     "logOut": "Se déconnecter"
@@ -239,9 +240,11 @@
     "blockingReason": "Cette inscription est {{status}}. Elle doit être marquée comme terminée avant qu’un certificat puisse être délivré.",
     "table": {
       "course": "Formation",
+      "student": "Étudiant",
       "number": "N° de certificat",
       "issued": "Délivré le",
-      "download": "Télécharger le PDF"
+      "preview": "Aperçu",
+      "download": "PDF ({{language}})"
     },
     "mine": {
       "title": "Mes certificats",
@@ -262,6 +265,24 @@
     "toasts": {
       "issued": "Certificat {{number}} délivré",
       "downloadFailed": "Impossible de télécharger le certificat"
+    },
+    "languages": {
+      "en": "anglais",
+      "fr": "français"
+    },
+    "preview": {
+      "title": "Certificat {{number}}",
+      "description": "{{course}}, délivré à {{student}} le {{date}}.",
+      "language": "Langue du certificat",
+      "loading": "Chargement du certificat…",
+      "failed": "Le certificat n’a pas pu être chargé.",
+      "download": "Télécharger ce PDF",
+      "openInNewTab": "Ouvrir dans un nouvel onglet"
+    },
+    "taught": {
+      "title": "Certificats",
+      "description": "Les certificats délivrés aux étudiants de vos formations.",
+      "empty": "Aucun certificat n’a encore été délivré dans vos formations."
     }
   },
   "courses": {
@@ -961,6 +982,7 @@
       "decision": "Décision",
       "primaryTrainerId": "Formateur principal",
       "phone": "Téléphone"
-    }
+    },
+    "certificateUnsupportedLanguage": "Les certificats ne sont disponibles qu’en anglais et en français (pas « {{lang}} »)"
   }
 }
