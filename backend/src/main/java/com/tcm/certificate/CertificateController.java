@@ -46,17 +46,27 @@ public class CertificateController {
                 request.studentId(), request.courseId(), principal.getId(), isAdmin(principal));
     }
 
+    /** The PDF in {@code lang} - {@code en}, the default, or {@code fr}. */
     @GetMapping("/{id}/download")
     public ResponseEntity<byte[]> download(@PathVariable UUID id,
+                                            @RequestParam(required = false) String lang,
                                             @AuthenticationPrincipal UserPrincipal principal) {
-        CertificateService.DownloadableCertificate certificate =
-                certificateService.download(id, principal.getId(), isAdmin(principal));
+        CertificateService.DownloadableCertificate certificate = certificateService.download(
+                id, CertificateLanguage.fromCode(lang), principal.getId(), isAdmin(principal));
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(certificate.content().length)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(certificate.filename()).build().toString())
                 .body(certificate.content());
+    }
+
+    /** Certificates on the courses the calling trainer teaches. */
+    @GetMapping("/taught")
+    @PreAuthorize("hasRole('TRAINER')")
+    public List<CertificateResponse> taught(@AuthenticationPrincipal UserPrincipal principal) {
+        return certificateService.findForTrainer(principal.getId());
     }
 
     /** A student may omit {@code studentId} and get their own. */

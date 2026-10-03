@@ -51,6 +51,7 @@ function sample(expression) {
   if (/CertificateNumber\(\)/.test(e)) return 'TCM-2026-0001'
   if (/outstanding|[Rr]ate/.test(e)) return '62.5'
   if (/getName\(\)/.test(e)) return 'id'
+  if (/^code$/.test(e)) return 'de'
   return null
 }
 

@@ -53,6 +53,7 @@ class CertificateServiceImplTest {
     private static final UUID ADMIN_ID = UUID.randomUUID();
     private static final UUID CERTIFICATE_ID = UUID.randomUUID();
     private static final byte[] PDF = "%PDF-fake".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] PDF_FR = "%PDF-fake-fr".getBytes(StandardCharsets.UTF_8);
 
     @Mock
     private CertificateRepository certificateRepository;
@@ -91,7 +92,7 @@ class CertificateServiceImplTest {
         when(userRepository.findById(STUDENT_ID)).thenReturn(Optional.of(student()));
         when(userRepository.findById(TRAINER_ID)).thenReturn(Optional.of(trainer()));
         when(certificateRepository.nextCertificateSequence()).thenReturn(42L);
-        when(pdfGenerator.generate(any(Certificate.class))).thenReturn(PDF);
+        when(pdfGenerator.generate(any(Certificate.class), any(CertificateLanguage.class))).thenReturn(PDF);
         when(certificateRepository.save(any(Certificate.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CertificateResponse response = certificateService.generate(STUDENT_ID, COURSE_ID, TRAINER_ID, false);
@@ -106,9 +107,14 @@ class CertificateServiceImplTest {
         verify(certificateRepository).save(saved.capture());
         Certificate certificate = saved.getValue();
         assertThat(certificate.getGeneratedBy().getId()).isEqualTo(TRAINER_ID);
-        Path file = storage.resolve(expectedNumber + ".pdf");
-        assertThat(certificate.getFilePath()).isEqualTo(file.toString());
-        assertThat(Files.readAllBytes(file)).isEqualTo(PDF);
+        Path english = storage.resolve(expectedNumber + "-en.pdf");
+        Path french = storage.resolve(expectedNumber + "-fr.pdf");
+        assertThat(certificate.getFilePath()).isEqualTo(english.toString());
+        assertThat(certificate.getFilePathFr()).isEqualTo(french.toString());
+        assertThat(Files.readAllBytes(english)).isEqualTo(PDF);
+        assertThat(Files.readAllBytes(french)).isEqualTo(PDF);
+        verify(pdfGenerator).generate(certificate, CertificateLanguage.EN);
+        verify(pdfGenerator).generate(certificate, CertificateLanguage.FR);
     }
 
     @Test
@@ -120,7 +126,7 @@ class CertificateServiceImplTest {
         when(userRepository.findById(STUDENT_ID)).thenReturn(Optional.of(student()));
         when(userRepository.findById(ADMIN_ID)).thenReturn(Optional.of(admin()));
         when(certificateRepository.nextCertificateSequence()).thenReturn(1L);
-        when(pdfGenerator.generate(any(Certificate.class))).thenReturn(PDF);
+        when(pdfGenerator.generate(any(Certificate.class), any(CertificateLanguage.class))).thenReturn(PDF);
         when(certificateRepository.save(any(Certificate.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CertificateResponse response = certificateService.generate(STUDENT_ID, COURSE_ID, ADMIN_ID, true);
@@ -185,31 +191,70 @@ class CertificateServiceImplTest {
     void download_byTheStudentItBelongsTo_returnsTheStoredBytes() throws Exception {
         givenStoredCertificate();
 
-        DownloadableCertificate download = certificateService.download(CERTIFICATE_ID, STUDENT_ID, false);
+        DownloadableCertificate download =
+                certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, STUDENT_ID, false);
 
-        assertThat(download.filename()).isEqualTo("CERT-2026-000007.pdf");
+        assertThat(download.filename()).isEqualTo("CERT-2026-000007-en.pdf");
         assertThat(download.content()).isEqualTo(PDF);
+    }
+
+    @Test
+    void download_inFrench_returnsTheFrenchPdf() throws Exception {
+        givenStoredCertificate();
+
+        DownloadableCertificate download =
+                certificateService.download(CERTIFICATE_ID, CertificateLanguage.FR, STUDENT_ID, false);
+
+        assertThat(download.filename()).isEqualTo("CERT-2026-000007-fr.pdf");
+        assertThat(download.content()).isEqualTo(PDF_FR);
+        verifyNoInteractions(pdfGenerator);
+    }
+
+    @Test
+    void download_ofACertificateIssuedBeforeFrenchExisted_redrawsBothLanguagesOnce() throws Exception {
+        Certificate certificate = givenLegacyCertificate();
+        byte[] english = "%PDF-en".getBytes(StandardCharsets.UTF_8);
+        byte[] french = "%PDF-fr".getBytes(StandardCharsets.UTF_8);
+        when(pdfGenerator.generate(certificate, CertificateLanguage.EN)).thenReturn(english);
+        when(pdfGenerator.generate(certificate, CertificateLanguage.FR)).thenReturn(french);
+
+        DownloadableCertificate download =
+                certificateService.download(CERTIFICATE_ID, CertificateLanguage.FR, STUDENT_ID, false);
+
+        assertThat(download.content()).isEqualTo(french);
+        Path englishFile = storage.resolve("CERT-2026-000007-en.pdf");
+        Path frenchFile = storage.resolve("CERT-2026-000007-fr.pdf");
+        assertThat(certificate.getFilePath()).isEqualTo(englishFile.toString());
+        assertThat(certificate.getFilePathFr()).isEqualTo(frenchFile.toString());
+        assertThat(Files.readAllBytes(englishFile)).isEqualTo(english);
+        assertThat(storage.resolve("CERT-2026-000007.pdf")).doesNotExist();
+        verify(certificateRepository).save(certificate);
+
+        // Recorded now, so the next download just reads the file.
+        assertThat(certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, STUDENT_ID, false).content())
+                .isEqualTo(english);
+        verify(pdfGenerator).generate(certificate, CertificateLanguage.EN);
     }
 
     @Test
     void download_byTheCoursesTrainer_isAllowed() throws Exception {
         givenStoredCertificate();
 
-        assertThat(certificateService.download(CERTIFICATE_ID, TRAINER_ID, false).content()).isEqualTo(PDF);
+        assertThat(certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, TRAINER_ID, false).content()).isEqualTo(PDF);
     }
 
     @Test
     void download_byAnAdmin_isAllowed() throws Exception {
         givenStoredCertificate();
 
-        assertThat(certificateService.download(CERTIFICATE_ID, ADMIN_ID, true).content()).isEqualTo(PDF);
+        assertThat(certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, ADMIN_ID, true).content()).isEqualTo(PDF);
     }
 
     @Test
     void download_byAnotherStudent_isDenied() {
         when(certificateRepository.findById(CERTIFICATE_ID)).thenReturn(Optional.of(certificate(course(trainer()))));
 
-        assertThatThrownBy(() -> certificateService.download(CERTIFICATE_ID, UUID.randomUUID(), false))
+        assertThatThrownBy(() -> certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, UUID.randomUUID(), false))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
@@ -219,7 +264,7 @@ class CertificateServiceImplTest {
         otherTrainer.setId(UUID.randomUUID());
         when(certificateRepository.findById(CERTIFICATE_ID)).thenReturn(Optional.of(certificate(course(trainer()))));
 
-        assertThatThrownBy(() -> certificateService.download(CERTIFICATE_ID, otherTrainer.getId(), false))
+        assertThatThrownBy(() -> certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, otherTrainer.getId(), false))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
@@ -227,7 +272,7 @@ class CertificateServiceImplTest {
     void download_ofAnUnknownCertificate_isNotFound() {
         when(certificateRepository.findById(CERTIFICATE_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> certificateService.download(CERTIFICATE_ID, ADMIN_ID, true))
+        assertThatThrownBy(() -> certificateService.download(CERTIFICATE_ID, CertificateLanguage.EN, ADMIN_ID, true))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -272,18 +317,44 @@ class CertificateServiceImplTest {
         verify(certificateRepository, never()).findByStudentIdOrderByIssuedAtDesc(any());
     }
 
+    // --- findForTrainer -----------------------------------------------------
+
+    @Test
+    void findForTrainer_listsCertificatesOnTheirCourses() {
+        when(certificateRepository.findByCoursePrimaryTrainerIdOrderByIssuedAtDesc(TRAINER_ID))
+                .thenReturn(List.of(certificate(course(trainer()))));
+
+        assertThat(certificateService.findForTrainer(TRAINER_ID)).singleElement()
+                .satisfies(response -> assertThat(response.student().id()).isEqualTo(STUDENT_ID));
+    }
+
     // --- fixtures -----------------------------------------------------------
 
     private void givenCourse() {
         when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course(trainer())));
     }
 
-    private void givenStoredCertificate() throws Exception {
+    /** Both languages' PDFs on disk. */
+    private Certificate givenStoredCertificate() throws Exception {
+        Certificate certificate = certificate(course(trainer()));
+        Path english = storage.resolve(certificate.getCertificateNumber() + "-en.pdf");
+        Path french = storage.resolve(certificate.getCertificateNumber() + "-fr.pdf");
+        Files.write(english, PDF);
+        Files.write(french, PDF_FR);
+        certificate.setFilePath(english.toString());
+        certificate.setFilePathFr(french.toString());
+        when(certificateRepository.findById(CERTIFICATE_ID)).thenReturn(Optional.of(certificate));
+        return certificate;
+    }
+
+    /** Issued before French versions existed: one English PDF, under the old name. */
+    private Certificate givenLegacyCertificate() throws Exception {
         Certificate certificate = certificate(course(trainer()));
         Path file = storage.resolve(certificate.getCertificateNumber() + ".pdf");
         Files.write(file, PDF);
         certificate.setFilePath(file.toString());
         when(certificateRepository.findById(CERTIFICATE_ID)).thenReturn(Optional.of(certificate));
+        return certificate;
     }
 
     private static Certificate certificate(Course course) {

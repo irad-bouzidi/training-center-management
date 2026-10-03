@@ -13,6 +13,9 @@ public interface CertificateRepository extends JpaRepository<Certificate, UUID> 
 
     List<Certificate> findByCourseIdOrderByIssuedAtDesc(UUID courseId);
 
+    /** Certificates on every course one trainer is the primary trainer of. */
+    List<Certificate> findByCoursePrimaryTrainerIdOrderByIssuedAtDesc(UUID trainerId);
+
     Optional<Certificate> findByStudentIdAndCourseId(UUID studentId, UUID courseId);
 
     boolean existsByStudentIdAndCourseId(UUID studentId, UUID courseId);

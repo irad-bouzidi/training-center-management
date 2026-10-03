@@ -108,7 +108,8 @@
       "checkIn": "Check In",
       "myAttendance": "My Attendance",
       "myGrades": "My Grades",
-      "myCertificates": "My Certificates"
+      "myCertificates": "My Certificates",
+      "certificates": "Certificates"
     },
     "comingSoon": "Coming soon",
     "logOut": "Log out"
@@ -238,9 +239,11 @@
     "blockingReason": "This enrollment is {{status}}. It must be marked completed before a certificate can be issued.",
     "table": {
       "course": "Course",
+      "student": "Student",
       "number": "Certificate No.",
       "issued": "Issued",
-      "download": "Download PDF"
+      "preview": "Preview",
+      "download": "PDF ({{language}})"
     },
     "mine": {
       "title": "My Certificates",
@@ -261,6 +264,24 @@
     "toasts": {
       "issued": "Certificate {{number}} issued",
       "downloadFailed": "Failed to download the certificate"
+    },
+    "languages": {
+      "en": "English",
+      "fr": "French"
+    },
+    "preview": {
+      "title": "Certificate {{number}}",
+      "description": "{{course}}, awarded to {{student}} on {{date}}.",
+      "language": "Certificate language",
+      "loading": "Loading the certificate…",
+      "failed": "The certificate could not be loaded.",
+      "download": "Download this PDF",
+      "openInNewTab": "Open in a new tab"
+    },
+    "taught": {
+      "title": "Certificates",
+      "description": "Certificates issued to students on the courses you teach.",
+      "empty": "No certificates have been issued on your courses yet."
     }
   },
   "courses": {
@@ -952,6 +973,7 @@
       "decision": "Decision",
       "primaryTrainerId": "Primary trainer",
       "phone": "Phone"
-    }
+    },
+    "certificateUnsupportedLanguage": "Certificates are only available in English and French (not “{{lang}}”)"
   }
 }
