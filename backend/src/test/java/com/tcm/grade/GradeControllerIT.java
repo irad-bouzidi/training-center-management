@@ -183,6 +183,43 @@ class GradeControllerIT {
                 .andExpect(jsonPath("$.overallGrade").value(90.0));
     }
 
+    @Test
+    void completedStudent_staysInTheGradebook_andCanStillBeGraded() throws Exception {
+        String trainerEmail = uniqueEmail();
+        String courseId = createCourse(createUser(trainer(trainerEmail)));
+        String studentEmail = uniqueEmail();
+        String studentId = approvedStudent(courseId, studentEmail);
+        completeEnrollment(studentId, courseId);
+        String trainerToken = login(trainerEmail, PASSWORD);
+
+        mockMvc.perform(get("/api/v1/courses/" + courseId + "/grades")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(trainerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.students.length()").value(1))
+                .andExpect(jsonPath("$.students[0].studentId").value(studentId));
+
+        grade(trainerToken, studentId, courseId, "18.00", "20.00", "40.00").andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/students/" + studentId + "/grades")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(login(studentEmail, PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.grades.length()").value(1))
+                .andExpect(jsonPath("$.weightedAverage").value(90.0));
+    }
+
+    private void completeEnrollment(String studentId, String courseId) throws Exception {
+        String page = mockMvc.perform(get("/api/v1/enrollments")
+                        .param("courseId", courseId)
+                        .param("studentId", studentId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String enrollmentId = objectMapper.readTree(page).get("content").get(0).get("id").asText();
+        mockMvc.perform(post("/api/v1/enrollments/" + enrollmentId + "/complete")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(adminToken)))
+                .andExpect(status().isOk());
+    }
+
     private ResultActions grade(String token, String studentId, String courseId, String score, String maxScore,
                                  String weight) throws Exception {
         return mockMvc.perform(post("/api/v1/grades")

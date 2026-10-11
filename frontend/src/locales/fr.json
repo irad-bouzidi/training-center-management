@@ -929,7 +929,7 @@
     "qrReplaced": "Ce code QR a été remplacé par un plus récent : demandez le code actuel",
     "paymentExceedsOutstanding": "Ce paiement dépasse les {{amount}} restant dus sur cette facture",
     "scoreExceedsMax": "La note ne doit pas dépasser la note maximale",
-    "noApprovedEnrollment": "L’étudiant {{id}} n’a aucune inscription approuvée dans cette formation",
+    "noApprovedEnrollment": "L’étudiant {{id}} n’a aucune inscription approuvée ou terminée dans cette formation",
     "certificateAlreadyIssued": "Le certificat {{number}} a déjà été délivré à cet étudiant pour cette formation",
     "certificateNotEnrolled": "Cet étudiant n’est pas inscrit à cette formation",
     "certificateNotCompleted": "L’inscription de cet étudiant doit être marquée comme terminée avant la délivrance d’un certificat (elle est actuellement {{status}})",

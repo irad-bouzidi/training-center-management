@@ -94,6 +94,20 @@ class GradeServiceImplTest {
     }
 
     @Test
+    void create_forAStudentWhoseEnrollmentIsCompleted_recordsTheResult() {
+        givenCourse();
+        givenRoster(EnrollmentStatus.COMPLETED, student());
+        when(userRepository.findById(TRAINER_ID)).thenReturn(Optional.of(trainer()));
+        when(gradeRepository.save(any(Grade.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        GradeResponse response = gradeService.create(
+                request(new BigDecimal("15.00"), new BigDecimal("20.00"), new BigDecimal("100.00")),
+                TRAINER_ID, false);
+
+        assertThat(response.percentage()).isEqualTo(75.0);
+    }
+
+    @Test
     void create_forAStudentWithoutAnApprovedEnrollment_isRejected() {
         givenCourse();
         givenApprovedRoster();
@@ -101,7 +115,7 @@ class GradeServiceImplTest {
         assertThatThrownBy(() -> gradeService.create(
                 request(BigDecimal.ONE, BigDecimal.TEN, BigDecimal.TEN), TRAINER_ID, false))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("APPROVED enrollment");
+                .hasMessageContaining("no APPROVED or COMPLETED enrollment");
     }
 
     @Test
@@ -223,13 +237,18 @@ class GradeServiceImplTest {
     }
 
     private void givenApprovedRoster(User... students) {
-        when(enrollmentRepository.findByCourseIdAndStatus(COURSE_ID, EnrollmentStatus.APPROVED))
+        givenRoster(EnrollmentStatus.APPROVED, students);
+    }
+
+    private void givenRoster(EnrollmentStatus status, User... students) {
+        when(enrollmentRepository.findByCourseIdAndStatusIn(
+                COURSE_ID, List.of(EnrollmentStatus.APPROVED, EnrollmentStatus.COMPLETED)))
                 .thenReturn(List.of(students).stream()
                         .map(student -> Enrollment.builder()
                                 .id(UUID.randomUUID())
                                 .student(student)
                                 .course(course())
-                                .status(EnrollmentStatus.APPROVED)
+                                .status(status)
                                 .enrolledAt(Instant.EPOCH)
                                 .build())
                         .toList());

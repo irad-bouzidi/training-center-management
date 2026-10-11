@@ -91,7 +91,7 @@ export const RULES = [
   // grade/
   [/^score must not exceed maxScore$/, 'scoreExceedsMax'],
   [
-    new RegExp(`^Student (${UUID}) has no APPROVED enrollment in this course$`),
+    new RegExp(`^Student (${UUID}) has no APPROVED or COMPLETED enrollment in this course$`),
     'noApprovedEnrollment',
     (m) => ({ id: m[1] }),
   ],

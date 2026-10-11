@@ -38,6 +38,15 @@ public class GradeServiceImpl implements GradeService {
     private final EnrollmentRepository enrollmentRepository;
     private final GradeMapper gradeMapper;
 
+    /**
+     * Who a course's gradebook covers and who may be graded on it: APPROVED
+     * students, plus COMPLETED ones - a student whose enrollment was closed
+     * off before the trainer entered their results must still be gradable,
+     * the same reasoning as AttendanceServiceImpl's ATTENDING_STATUSES.
+     */
+    private static final List<EnrollmentStatus> GRADABLE_STATUSES =
+            List.of(EnrollmentStatus.APPROVED, EnrollmentStatus.COMPLETED);
+
     @Override
     @Transactional
     public GradeResponse create(GradeRequest request, UUID graderId, boolean requesterIsAdmin) {
@@ -45,7 +54,7 @@ public class GradeServiceImpl implements GradeService {
         requireTeaches(course, graderId, requesterIsAdmin);
         validateScore(request);
 
-        User student = approvedStudent(request.studentId(), course);
+        User student = gradableStudent(request.studentId(), course);
         User grader = userRepository.findById(graderId)
                 .orElseThrow(() -> new ResourceNotFoundException("No user with id " + graderId));
 
@@ -118,7 +127,7 @@ public class GradeServiceImpl implements GradeService {
                 .collect(Collectors.groupingBy(grade -> grade.getStudent().getId()));
 
         List<CourseGradebookResponse.StudentRow> rows = enrollmentRepository
-                .findByCourseIdAndStatus(courseId, EnrollmentStatus.APPROVED).stream()
+                .findByCourseIdAndStatusIn(courseId, GRADABLE_STATUSES).stream()
                 .map(Enrollment::getStudent)
                 .sorted(Comparator.comparing(GradeServiceImpl::fullName, String.CASE_INSENSITIVE_ORDER))
                 .map(student -> {
@@ -171,13 +180,13 @@ public class GradeServiceImpl implements GradeService {
         }
     }
 
-    private User approvedStudent(UUID studentId, Course course) {
-        return enrollmentRepository.findByCourseIdAndStatus(course.getId(), EnrollmentStatus.APPROVED).stream()
+    private User gradableStudent(UUID studentId, Course course) {
+        return enrollmentRepository.findByCourseIdAndStatusIn(course.getId(), GRADABLE_STATUSES).stream()
                 .map(Enrollment::getStudent)
                 .filter(student -> student.getId().equals(studentId))
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException(
-                        "Student " + studentId + " has no APPROVED enrollment in this course"));
+                        "Student " + studentId + " has no APPROVED or COMPLETED enrollment in this course"));
     }
 
     /** The course's primary trainer, or an admin. */

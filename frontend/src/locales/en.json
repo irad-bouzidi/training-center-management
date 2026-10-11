@@ -920,7 +920,7 @@
     "qrReplaced": "That QR code has been replaced by a newer one - ask for the current code",
     "paymentExceedsOutstanding": "That payment exceeds the {{amount}} still owed on this invoice",
     "scoreExceedsMax": "The score must not exceed the maximum score",
-    "noApprovedEnrollment": "Student {{id}} has no approved enrollment in this course",
+    "noApprovedEnrollment": "Student {{id}} has no approved or completed enrollment in this course",
     "certificateAlreadyIssued": "Certificate {{number}} has already been issued to this student for this course",
     "certificateNotEnrolled": "This student is not enrolled in this course",
     "certificateNotCompleted": "This student's enrollment must be marked completed before a certificate can be issued (it is currently {{status}})",
